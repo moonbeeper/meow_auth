@@ -1,11 +1,12 @@
-use axum::{
-    routing::get,
-    Router,
-};
+#![warn(clippy::nursery, clippy::pedantic)]
+mod settings;
+
+use axum::{Router, routing::get};
 
 #[tokio::main]
 async fn main() {
     println!("Hello, world!");
+    settings::Settings::parse().unwrap();
 
     // build our application with a single route
     let app = Router::new().route("/", get(|| async { "Hello, World!" }));
