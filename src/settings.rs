@@ -50,7 +50,7 @@ pub struct Settings {
 }
 
 impl Settings {
-    pub fn parse() -> anyhow::Result<Settings> {
+    pub fn parse() -> anyhow::Result<Self> {
         let env = std::env::var("MEOW_ENV").unwrap_or_else(|_| "development".into());
         let settings = Config::builder()
             .add_source(config::File::with_name(&format!("settings/{env}.toml")).required(false))
