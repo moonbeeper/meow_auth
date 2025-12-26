@@ -1,9 +1,52 @@
 use config::Config;
 use smart_default::SmartDefault;
+use std::fs::File;
+use std::io::Write;
+use std::path::{Path, PathBuf};
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, SmartDefault)]
+#[serde(rename_all = "lowercase")]
+pub enum LoggingLevel {
+    Error,
+    Warn,
+    #[default]
+    Info,
+    Debug,
+    Trace,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, SmartDefault)]
+#[serde(rename_all = "lowercase")]
+pub enum LoggingFormat {
+    #[default]
+    Full,
+    Compact,
+    Pretty,
+    Json,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, SmartDefault)]
+pub struct LoggingFile {
+    pub enabled: bool,
+    #[default = "logs"]
+    pub path: PathBuf,
+    #[default = 7]
+    pub max_count: usize,
+    pub format: LoggingFormat,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, SmartDefault)]
+pub struct Logging {
+    #[default = true]
+    pub enabled: bool,
+    pub level: LoggingLevel,
+    pub file: LoggingFile,
+    pub format: LoggingFormat,
+}
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, SmartDefault)]
 pub struct Settings {
-    aaa: String,
+    pub logging: Logging,
 }
 
 impl Settings {
@@ -14,13 +57,18 @@ impl Settings {
             .add_source(config::File::with_name("settings/local.toml").required(false))
             .build()?;
 
+        // REMOVE ME
+        let path = Path::new("settings.toml");
+        let mut file = File::create(path)?;
+        file.write_all(toml::to_string_pretty(&Self::default())?.as_bytes())?;
+
         match settings.try_deserialize() {
             Ok(settings) => {
                 println!("Settings loaded successfully");
                 Ok(settings)
             }
-            Err(_e) => {
-                println!("Encountered an error while parsing the settings.");
+            Err(e) => {
+                println!("Encountered an error while parsing the settings: {e}");
 
                 if env != "development" {
                     println!("Exiting. (production)");

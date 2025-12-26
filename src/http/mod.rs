@@ -27,9 +27,8 @@ pub async fn run(
     let router = router(global_state);
     axum::serve(listener, router)
         .with_graceful_shutdown(async move {
-            shutdown.await.ok();
-            println!("goodnight :)");
-            // std::future::pending::<()>().await;
+            let _ = shutdown.await;
+            tracing::info!("goodnight, sweet bits and bytes...");
         })
         .await
         .expect("The HTTP server has failed its objective.");

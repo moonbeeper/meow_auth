@@ -1,6 +1,7 @@
 #![warn(clippy::nursery, clippy::pedantic)]
 mod global;
 mod http;
+mod logging;
 mod settings;
 
 use std::sync::Arc;
@@ -9,6 +10,7 @@ use std::sync::Arc;
 async fn main() {
     println!("Hello, world!");
     let settings = settings::Settings::parse().expect("Failed trying to load settings.");
+    logging::init(&settings.logging);
     let global = Arc::new(global::GlobalState::new(settings));
 
     let shutdown_channel = tokio::sync::oneshot::channel::<()>();
