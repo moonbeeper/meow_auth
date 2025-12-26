@@ -1,9 +1,6 @@
 #![warn(clippy::nursery, clippy::pedantic)]
-mod global;
-mod http;
-mod logging;
-mod settings;
 
+use meow_auth::{global, http, logging, settings};
 use std::sync::Arc;
 
 #[tokio::main]

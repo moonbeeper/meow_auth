@@ -1,7 +1,7 @@
 /target
 .idea
 notes.md
-settings
+/settings
 
-logs/*
-!logs/.gitkeep
+/logs/*
+!/logs/.gitkeep

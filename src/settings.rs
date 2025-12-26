@@ -57,11 +57,6 @@ impl Settings {
             .add_source(config::File::with_name("settings/local.toml").required(false))
             .build()?;
 
-        // REMOVE ME
-        let path = Path::new("settings.toml");
-        let mut file = File::create(path)?;
-        file.write_all(toml::to_string_pretty(&Self::default())?.as_bytes())?;
-
         match settings.try_deserialize() {
             Ok(settings) => {
                 println!("Settings loaded successfully");
@@ -79,5 +74,17 @@ impl Settings {
                 Ok(Self::default())
             }
         }
+    }
+
+    pub fn generate(name: String, ignore_exists: bool) -> anyhow::Result<()> {
+        let path = Path::new("settings").join(format!("{name}.toml"));
+
+        if !ignore_exists && path.exists() {
+            anyhow::bail!("File already exists: {path:?}. You might want to update it instead?");
+        }
+
+        let mut file = File::create(path)?;
+        file.write_all(toml::to_string_pretty(&Self::default())?.as_bytes())?;
+        Ok(())
     }
 }
