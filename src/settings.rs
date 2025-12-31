@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, SmartDefault)]
+#[derive(Debug, Copy, Clone, serde::Deserialize, serde::Serialize, SmartDefault)]
 #[serde(rename_all = "lowercase")]
 pub enum LoggingLevel {
     Error,
@@ -15,7 +15,7 @@ pub enum LoggingLevel {
     Trace,
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, SmartDefault)]
+#[derive(Debug, Copy, Clone, serde::Deserialize, serde::Serialize, SmartDefault)]
 #[serde(rename_all = "lowercase")]
 pub enum LoggingFormat {
     #[default]
@@ -25,7 +25,7 @@ pub enum LoggingFormat {
     Json,
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, SmartDefault)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, SmartDefault)]
 pub struct LoggingFile {
     pub enabled: bool,
     #[default = "logs"]
@@ -35,7 +35,7 @@ pub struct LoggingFile {
     pub format: LoggingFormat,
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, SmartDefault)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, SmartDefault)]
 pub struct Logging {
     #[default = true]
     pub enabled: bool,
@@ -44,9 +44,20 @@ pub struct Logging {
     pub format: LoggingFormat,
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, SmartDefault)]
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, SmartDefault)]
+pub struct PostgresDB {
+    #[default = "postgres://meow:mypassword@localhost/meow_db"]
+    pub uri: String,
+    #[default = 16]
+    pub max_connections: u32,
+    #[default = 1]
+    pub min_connections: u32,
+}
+
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, SmartDefault)]
 pub struct Settings {
     pub logging: Logging,
+    pub postgres_db: PostgresDB,
 }
 
 impl Settings {
@@ -54,7 +65,9 @@ impl Settings {
         let env = std::env::var("MEOW_ENV").unwrap_or_else(|_| "development".into());
         let settings = Config::builder()
             .add_source(config::File::with_name(&format!("settings/{env}.toml")).required(false))
-            .add_source(config::File::with_name("settings/local.toml").required(false))
+            .add_source(
+                config::File::with_name(&format!("settings/{env}.local.toml")).required(false),
+            )
             .build()?;
 
         match settings.try_deserialize() {
@@ -66,7 +79,7 @@ impl Settings {
                 println!("Encountered an error while parsing the settings: {e}");
 
                 if env != "development" {
-                    println!("Exiting. (production)");
+                    println!("Exiting. (not development environment)");
                     std::process::exit(1);
                 }
 

@@ -1,0 +1,14 @@
+services:
+  database:
+    image: 'postgres:18-alpine'
+    volumes:
+      - meow-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: meow
+      POSTGRES_PASSWORD: meow
+      POSTGRES_DB: meow_dev
+
+volumes:
+  meow-db-data:

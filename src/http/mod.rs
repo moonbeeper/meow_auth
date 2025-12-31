@@ -36,7 +36,7 @@ pub async fn run(
     axum::serve(listener, router)
         .with_graceful_shutdown(async move {
             let _ = shutdown.await;
-            tracing::info!("goodnight, sweet bits and bytes...");
+            tracing::info!("goodnight, sweet bits and packets...");
         })
         .await
         .expect("The HTTP server has failed its objective.");

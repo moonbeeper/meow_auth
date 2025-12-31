@@ -1,0 +1,15 @@
+[logging]
+enabled = true
+level = "info"
+format = "full"
+
+[logging.file]
+enabled = false
+path = "logs"
+max_count = 7
+format = "full"
+
+[postgres_db]
+uri = "postgres://meow:meow@localhost/meow_dev"
+max_connections = 16
+min_connections = 1
