@@ -19,6 +19,8 @@ axum = "0.8.8"
 clap = { version = "4.5.53", features = ["cargo", "derive"] }
 color-print = "0.3.7"
 config = "0.15.19"
+console = "0.16.2"
+dialoguer = { version = "0.12.0", default-features = false }
 human-panic = "2.0.4"
 nu-ansi-term = "0.50.3"
 serde = { version = "1.0.228", features = ["derive"] }
@@ -37,3 +39,7 @@ utoipa = { version = "5.4.0", features = ["axum_extras"] }
 utoipa-axum = "0.2.0"
 utoipa-scalar = { version = "0.3.0", features = ["axum"] }
 uuid = { version = "1.19.0", features = ["serde"] }
+
+[features]
+default = ["hack"]
+hack = []

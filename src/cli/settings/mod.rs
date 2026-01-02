@@ -6,7 +6,7 @@ mod update;
 
 /// Settings related commands
 #[derive(Parser, Default)]
-#[clap(author, help_template = HelpTemplate)]
+#[clap(author, help_template = HelpTemplate, arg_required_else_help(true))]
 pub struct Settings {
     #[clap(subcommand)]
     pub command: Option<SettingsCommand>,
