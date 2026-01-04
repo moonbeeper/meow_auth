@@ -1,2 +1,7 @@
 /target
 .idea
+notes.md
+
+/logs/*
+!/logs/.gitkeep
+/expanded.rs
