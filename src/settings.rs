@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{net::SocketAddr, path::Path};
 
 use clap::Parser;
 use config::Config;
@@ -36,9 +36,25 @@ impl std::fmt::Display for LoggingLevel {
     }
 }
 
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+pub struct HttpSettings {
+    #[default(SocketAddr::from(([127,0,0,1],8080)))]
+    pub bind: SocketAddr,
+    pub api_docs: ApiDocsSettings,
+}
+
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+pub struct ApiDocsSettings {
+    #[default = true]
+    pub enabled: bool,
+    #[default("/scalar".to_string())]
+    pub path: String,
+}
+
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub logging: Logging,
+    pub http: HttpSettings,
 }
 
 impl Settings {

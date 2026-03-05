@@ -1,3 +1,10 @@
 [logging]
 enabled = true
 level = "info"
+
+[http]
+bind = "127.0.0.1:8080"
+
+[http.api_docs]
+enabled = true
+path = "/scalar"
