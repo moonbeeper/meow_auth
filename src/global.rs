@@ -1,13 +1,16 @@
 use std::sync::Arc;
 
-use crate::settings::Settings;
+use crate::{database, settings::Settings};
 
 pub struct GlobalState {
     pub settings: Settings,
+    pub database: sqlx::PgPool,
 }
 
 impl GlobalState {
-    pub fn new(settings: Settings) -> anyhow::Result<Arc<Self>> {
-        Ok(Arc::new(Self { settings }))
+    pub async fn new(settings: Settings) -> anyhow::Result<Arc<Self>> {
+        let database = database::setup_pg_database(&settings.database).await?;
+
+        Ok(Arc::new(Self { settings, database }))
     }
 }

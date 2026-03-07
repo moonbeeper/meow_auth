@@ -1,5 +1,6 @@
 use std::{net::SocketAddr, path::Path};
 
+use anyhow::Context;
 use clap::Parser;
 use config::Config;
 use smart_default::SmartDefault;
@@ -51,14 +52,26 @@ pub struct ApiDocsSettings {
     pub path: String,
 }
 
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+pub struct DatabaseSettings {
+    #[default("postgres://meow:meow_pwd@localhost:5432/meow2_development".to_string())]
+    pub url: String,
+    #[default = 1]
+    pub min_connections: u32,
+    #[default = 10]
+    pub max_connections: u32,
+}
+
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub logging: Logging,
     pub http: HttpSettings,
+    pub database: DatabaseSettings,
 }
 
 impl Settings {
     pub fn new() -> anyhow::Result<Self> {
+        dotenvy::dotenv().context("Failed to load .env file")?;
         let environment = std::env::var("WORK_ENV").unwrap_or_else(|_| "development".to_string());
         println!("Loading settings for environment '{environment}'");
         Self::create_if_not_exists(&environment)?;
@@ -66,7 +79,7 @@ impl Settings {
             .add_source(config::File::with_name(&format!(
                 "settings/{environment}.toml"
             )))
-            .add_source(config::Environment::with_prefix("MEOW_"))
+            .add_source(config::Environment::with_prefix("MEOW").separator("__"))
             .build()?;
 
         match settings.try_deserialize() {

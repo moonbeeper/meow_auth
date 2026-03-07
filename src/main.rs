@@ -11,7 +11,9 @@ async fn main() -> anyhow::Result<()> {
     logger::init(&settings.logging);
 
     tracing::info!("hi from mr app (creating global state)");
-    let global = GlobalState::new(settings).context("Failed to create global state")?;
+    let global = GlobalState::new(settings)
+        .await
+        .context("Failed to create global state")?;
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
 
     let http = tokio::spawn(http::run(global, shutdown_rx));

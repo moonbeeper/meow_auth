@@ -8,3 +8,8 @@ bind = "127.0.0.1:8080"
 [http.api_docs]
 enabled = true
 path = "/scalar"
+
+[database]
+url = "postgres://meow:meow_pwd@localhost:5432/meow2_development"
+min_connections = 1
+max_connections = 10
