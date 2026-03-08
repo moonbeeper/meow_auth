@@ -1,3 +1,3 @@
 -- Add down migration script here
 
-drop table hello_world;
+drop table if exists hello_world;

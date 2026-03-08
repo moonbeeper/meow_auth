@@ -6,15 +6,17 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.102"
 axum = "0.8.8"
+chrono = { version = "0.4.44", features = ["serde"] }
 clap = { version = "4.5.60", features = ["derive"] }
 config = { version = "0.15.19", features = ["toml"] }
 dotenvy = "0.15.7"
 serde = { version = "1.0.228", features = ["derive"] }
 smart-default = "0.7.1"
-sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio", "uuid"] }
+sqlx = { version = "0.8.6", features = ["chrono", "postgres", "runtime-tokio", "uuid"] }
 tokio = { version = "1.50.0", features = ["full"] }
 toml = "1.0.6"
 toml_edit = "0.25.4"
+tower-cookies = { version = "0.11.0", features = ["private"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 typed-builder = "0.23.2"

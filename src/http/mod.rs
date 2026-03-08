@@ -1,3 +1,5 @@
+mod v1;
+
 use std::{net::SocketAddr, sync::Arc};
 
 use anyhow::Context;
@@ -16,6 +18,7 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
     let openapi = ApiDocs::openapi();
     OpenApiRouter::with_openapi(openapi)
         .route("/", get(|| async { "Hello, World!" }))
+        .nest("/v1", v1::routes())
         .with_state(global)
 }
 
