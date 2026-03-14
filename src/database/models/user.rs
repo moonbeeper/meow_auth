@@ -13,7 +13,9 @@ pub struct User {
     pub email: String,
     pub email_verified: bool,
     pub password_hash: Option<String>,
+    #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
+    #[builder(default = chrono::Utc::now())]
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
@@ -55,7 +57,7 @@ impl User {
         Ok(())
     }
 
-    pub async fn find_by_id(&self, id: UserId, pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
+    pub async fn find_by_id(id: UserId, pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -76,7 +78,6 @@ impl User {
     }
 
     pub async fn find_many_by_id(
-        &self,
         ids: Vec<UserId>,
         pool: &PgPool,
     ) -> Result<Vec<Self>, sqlx::Error> {

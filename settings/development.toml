@@ -13,3 +13,10 @@ path = "/scalar"
 url = "postgres://meow:meow_pwd@localhost:5432/meow2_development"
 min_connections = 1
 max_connections = 10
+
+[session]
+cookie_name = "meow_sess"
+secret_key = "12009604c248308c35a8609807c2d139f5fa585d252ea8de33752d2216e55508"
+expire_age_seconds = 2592000
+active_expire_age_seconds = 604800
+update_threshold_seconds = 600

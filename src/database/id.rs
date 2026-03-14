@@ -1,3 +1,6 @@
+use std::fmt::Display;
+use std::str::FromStr;
+
 use sqlx::encode::IsNull;
 use sqlx::error::BoxDynError;
 use sqlx::postgres::{PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueFormat, PgValueRef};
@@ -34,6 +37,20 @@ impl From<uuid::Uuid> for UlidId {
 impl From<UlidId> for uuid::Uuid {
     fn from(value: UlidId) -> Self {
         value.0.into()
+    }
+}
+
+impl FromStr for UlidId {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(ulid::Ulid::from_str(s)?))
+    }
+}
+
+impl Display for UlidId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
     }
 }
 

@@ -1,3 +1,4 @@
+pub mod middleware;
 mod v1;
 
 use std::{net::SocketAddr, sync::Arc};
@@ -5,11 +6,12 @@ use std::{net::SocketAddr, sync::Arc};
 use anyhow::Context;
 use axum::routing::get;
 use tokio::{net::TcpSocket, sync::oneshot};
+use tower_cookies::CookieManagerLayer;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable};
 
-use crate::global::GlobalState;
+use crate::{global::GlobalState, http::middleware::auth_manager::AuthManagerLayer};
 
 #[derive(OpenApi)]
 struct ApiDocs;
@@ -17,9 +19,18 @@ struct ApiDocs;
 fn router(global: Arc<GlobalState>) -> OpenApiRouter {
     let openapi = ApiDocs::openapi();
     OpenApiRouter::with_openapi(openapi)
-        .route("/", get(|| async { "Hello, World!" }))
+        .route(
+            "/",
+            get(|| async {
+                println!("HEY");
+                "Hello, World!"
+            }),
+        )
         .nest("/v1", v1::routes())
+        .layer(AuthManagerLayer::new(global.clone()))
+        .layer(CookieManagerLayer::new())
         .with_state(global)
+    // middlewares go from bottom to top for requests, and top to bottom for responses.
 }
 
 pub async fn run(global: Arc<GlobalState>, signal: oneshot::Receiver<()>) -> anyhow::Result<()> {

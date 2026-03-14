@@ -3,6 +3,7 @@ use std::{net::SocketAddr, path::Path};
 use anyhow::Context;
 use clap::Parser;
 use config::Config;
+use rand::Rng;
 use smart_default::SmartDefault;
 use toml_edit::{Document, DocumentMut};
 
@@ -62,11 +63,27 @@ pub struct DatabaseSettings {
     pub max_connections: u32,
 }
 
+// TODO: Should find a better name for this.
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+pub struct SessionSettings {
+    #[default("meow_sess")]
+    pub cookie_name: String,
+    #[default(generate_secret_key(32))]
+    pub secret_key: String,
+    #[default(60 * 60 * 24 * 30)]
+    pub expire_age_seconds: i64,
+    #[default(60 * 60 * 24 * 7)]
+    pub active_expire_age_seconds: i64,
+    #[default(60 * 10)]
+    pub update_threshold_seconds: i64,
+}
+
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub logging: Logging,
     pub http: HttpSettings,
     pub database: DatabaseSettings,
+    pub session: SessionSettings,
 }
 
 impl Settings {
@@ -76,9 +93,9 @@ impl Settings {
         println!("Loading settings for environment '{environment}'");
         Self::create_if_not_exists(&environment)?;
         let settings = Config::builder()
-            .add_source(config::File::with_name(&format!(
-                "settings/{environment}.toml"
-            )))
+            .add_source(
+                config::File::with_name(&format!("settings/{environment}.toml")).required(false),
+            )
             .add_source(config::Environment::with_prefix("MEOW").separator("__"))
             .build()?;
 
@@ -213,4 +230,11 @@ fn update_toml_table(
             new_table.insert(key, value.clone());
         }
     }
+}
+
+fn generate_secret_key(len: usize) -> String {
+    let mut rng = rand::rng();
+    let mut bytes = vec![0u8; len];
+    rng.fill_bytes(&mut bytes);
+    hex::encode(bytes)
 }

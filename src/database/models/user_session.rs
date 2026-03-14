@@ -15,7 +15,9 @@ pub struct UserSession {
     pub pid: PIDUserSessionId,
     pub active_expires_at: chrono::DateTime<chrono::Utc>,
     pub expires_at: chrono::DateTime<chrono::Utc>,
+    #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
+    #[builder(default = chrono::Utc::now())]
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
@@ -42,12 +44,10 @@ impl UserSession {
         sqlx::query!(
             "update user_sessions set
                 active_expires_at = $2,
-                expires_at = $3,
                 updated_at = now()
              where id = $1",
             self.id as UserSessionId,
             self.active_expires_at,
-            self.updated_at,
         )
         .execute(&mut **transaction)
         .await?;
@@ -55,11 +55,7 @@ impl UserSession {
         Ok(())
     }
 
-    pub async fn find_by_id(
-        &self,
-        id: UserSessionId,
-        pool: &PgPool,
-    ) -> Result<Option<Self>, sqlx::Error> {
+    pub async fn find_by_id(id: UserSessionId, pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -80,7 +76,6 @@ impl UserSession {
     }
 
     pub async fn find_many_by_id(
-        &self,
         ids: Vec<UserSessionId>,
         pool: &PgPool,
     ) -> Result<Vec<Self>, sqlx::Error> {
@@ -103,11 +98,7 @@ impl UserSession {
         Ok(data)
     }
 
-    pub async fn find_by_user_id(
-        &self,
-        id: UserId,
-        pool: &PgPool,
-    ) -> Result<Option<Self>, sqlx::Error> {
+    pub async fn find_by_user_id(id: UserId, pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -120,6 +111,29 @@ impl UserSession {
                 updated_at
              from user_sessions where user_id = $1",
             id as UserSessionId
+        )
+        .fetch_optional(pool)
+        .await?;
+
+        Ok(data)
+    }
+
+    pub async fn find_by_pid(
+        id: PIDUserSessionId,
+        pool: &PgPool,
+    ) -> Result<Option<Self>, sqlx::Error> {
+        let data = sqlx::query_as!(
+            Self,
+            "select
+                id,
+                user_id,
+                pid,
+                active_expires_at,
+                expires_at,
+                created_at,
+                updated_at
+             from user_sessions where pid = $1",
+            id as PIDUserSessionId
         )
         .fetch_optional(pool)
         .await?;
