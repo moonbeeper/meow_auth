@@ -78,20 +78,37 @@ pub struct SessionSettings {
     pub update_threshold_seconds: i64,
 }
 
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+pub struct MailerSettings {
+    #[default("localhost".to_string())]
+    pub smtp_host: String,
+    pub smtp_username: String,
+    pub smtp_password: String,
+    #[default = 1025]
+    pub smtp_port: u16,
+    #[default = false]
+    pub smtp_secure: bool,
+    #[default("meow@meow.com".to_string())]
+    pub from_email: String,
+    #[default = false]
+    pub test_connection: bool,
+}
+
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub logging: Logging,
     pub http: HttpSettings,
     pub database: DatabaseSettings,
     pub session: SessionSettings,
+    pub mailer: MailerSettings,
 }
 
 impl Settings {
     pub fn new() -> anyhow::Result<Self> {
-        dotenvy::dotenv().context("Failed to load .env file")?;
+        dotenvy::dotenv().context("Failed to load .env* file")?;
         let environment = std::env::var("WORK_ENV").unwrap_or_else(|_| "development".to_string());
         println!("Loading settings for environment '{environment}'");
-        Self::create_if_not_exists(&environment)?;
+        // Self::create_if_not_exists(&environment)?; shouldn't be auto creating the file.
         let settings = Config::builder()
             .add_source(
                 config::File::with_name(&format!("settings/{environment}.toml")).required(false),

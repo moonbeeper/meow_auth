@@ -20,3 +20,12 @@ secret_key = "12009604c248308c35a8609807c2d139f5fa585d252ea8de33752d2216e55508"
 expire_age_seconds = 2592000
 active_expire_age_seconds = 604800
 update_threshold_seconds = 600
+
+[mailer]
+smtp_host = "localhost"
+smtp_username = ""
+smtp_password = ""
+smtp_port = 1025
+smtp_secure = false
+from_email = "meow@meow.com"
+test_connection = false

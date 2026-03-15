@@ -5,7 +5,10 @@ use sqlx::PgPool;
 use tower_cookies::{Cookies, cookie};
 
 use crate::{
-    database::models::{user::UserId, user_session::UserSession},
+    database::models::{
+        user::UserId,
+        user_session::{PIDUserSessionId, UserSession},
+    },
     settings::Settings,
 };
 
@@ -14,8 +17,8 @@ static COOKIE_SESSION_KEY: OnceLock<cookie::Key> = OnceLock::new();
 pub async fn create_session(
     user_id: UserId,
     db: &PgPool,
-    settings: Settings,
-) -> anyhow::Result<()> {
+    settings: &Settings,
+) -> anyhow::Result<PIDUserSessionId> {
     let expires_at =
         chrono::Utc::now() + chrono::Duration::seconds(settings.session.expire_age_seconds);
     let active_expires_at =
@@ -29,7 +32,7 @@ pub async fn create_session(
         .build();
     session.insert(&mut transaction).await?;
     transaction.commit().await?;
-    Ok(())
+    Ok(session.pid)
 }
 
 // TODO: should really use the session model to create the cookie to be able to set the expire time on the cookie

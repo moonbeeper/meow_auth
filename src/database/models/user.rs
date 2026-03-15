@@ -5,13 +5,16 @@ use crate::database::id::UlidId;
 
 pub type UserId = UlidId;
 
+// TODO: add pid to user for external clients or providers.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, TypedBuilder)]
 pub struct User {
     #[builder(default = UserId::new())]
     pub id: UserId,
     pub login: String,
     pub email: String,
+    #[builder(default = false)]
     pub email_verified: bool,
+    #[builder(default = None)]
     pub password_hash: Option<String>,
     #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -95,6 +98,51 @@ impl User {
             &ids as &[UserId]
         )
         .fetch_all(pool)
+        .await?;
+
+        Ok(data)
+    }
+
+    pub async fn find_by_email(email: String, pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
+        let data = sqlx::query_as!(
+            Self,
+            "select
+                id,
+                login,
+                email,
+                email_verified,
+                password_hash,
+                created_at,
+                updated_at
+             from users where email = $1",
+            email
+        )
+        .fetch_optional(pool)
+        .await?;
+
+        Ok(data)
+    }
+
+    pub async fn find_by_email_and_login(
+        email: String,
+        login: String,
+        pool: &PgPool,
+    ) -> Result<Option<Self>, sqlx::Error> {
+        let data = sqlx::query_as!(
+            Self,
+            "select
+                id,
+                login,
+                email,
+                email_verified,
+                password_hash,
+                created_at,
+                updated_at
+             from users where email = $1 or login = lower($2)",
+            email,
+            login
+        )
+        .fetch_optional(pool)
         .await?;
 
         Ok(data)

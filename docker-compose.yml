@@ -10,5 +10,17 @@ services:
       POSTGRES_PASSWORD: meow_pwd
       POSTGRES_DB: meow2_development
 
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - 1025:1025
+      - 8025:8025
+    volumes:
+      - "mailpit-data:/data"
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
 volumes:
   meow-db-data:
+  mailpit-data:

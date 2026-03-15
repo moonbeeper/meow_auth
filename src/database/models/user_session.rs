@@ -6,6 +6,7 @@ use crate::database::{id::UlidId, models::user::UserId};
 pub type UserSessionId = UlidId;
 pub type PIDUserSessionId = UlidId;
 
+// remember: PIDs will be shown to the user to close their sessions.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, TypedBuilder)]
 pub struct UserSession {
     #[builder(default = UserSessionId::new())]

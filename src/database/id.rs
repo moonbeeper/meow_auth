@@ -54,6 +54,26 @@ impl Display for UlidId {
     }
 }
 
+impl utoipa::PartialSchema for UlidId {
+    fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
+        utoipa::openapi::RefOr::T(utoipa::openapi::Schema::Object(
+            utoipa::openapi::ObjectBuilder::new()
+                .schema_type(utoipa::openapi::schema::Type::String)
+                .format(Some(utoipa::openapi::SchemaFormat::KnownFormat(
+                    utoipa::openapi::KnownFormat::Ulid,
+                )))
+                .build(),
+        ))
+    }
+}
+
+// will this be a problem in the future? because it is shown in the openapi schema and stuff idk man I AM not an expert at these things.
+impl utoipa::ToSchema for UlidId {
+    fn name() -> std::borrow::Cow<'static, str> {
+        std::borrow::Cow::Borrowed("UlidId")
+    }
+}
+
 // sqlx postgres mapping ----->
 impl Type<Postgres> for UlidId {
     fn type_info() -> PgTypeInfo {

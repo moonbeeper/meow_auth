@@ -8,9 +8,7 @@ use tower::{Layer, Service};
 use tower_cookies::Cookies;
 
 use crate::{
-    auth::session::{
-        create_session_cookie, delete_session_cookie, get_session_cookie, renew_session,
-    },
+    auth::session::{delete_session_cookie, get_session_cookie, renew_session},
     database::models::{
         user::UserId,
         user_session::{PIDUserSessionId, UserSession, UserSessionId},
@@ -122,6 +120,9 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
     // create_session_cookie("meow".to_string(), cookies, &global_state.settings).await;
     let Some(cookie) = get_session_cookie(cookies, &global_state.settings) else {
         tracing::info!("no cookies for me :(");
+        request
+            .extensions_mut()
+            .insert(AuthContext::Unauthenticated);
         return;
     };
 
@@ -131,6 +132,9 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
         Err(e) => {
             tracing::error!("failed parsing PID cookie value: {}", e);
             delete_session_cookie(cookies, &global_state.settings);
+            request
+                .extensions_mut()
+                .insert(AuthContext::Unauthenticated);
             return;
         }
     };
@@ -141,6 +145,9 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
     let Ok(Some(mut session)) = UserSession::find_by_pid(pid, &global_state.database).await else {
         tracing::error!("failed fetching from db or session does not exist");
         delete_session_cookie(cookies, &global_state.settings);
+        request
+            .extensions_mut()
+            .insert(AuthContext::Unauthenticated);
         return;
     };
 

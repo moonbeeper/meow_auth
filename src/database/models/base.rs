@@ -51,11 +51,7 @@ impl HelloWorld {
         Ok(())
     }
 
-    pub async fn find_by_id(
-        &self,
-        id: HelloWorldId,
-        pool: &PgPool,
-    ) -> Result<Option<Self>, sqlx::Error> {
+    pub async fn find_by_id(id: HelloWorldId, pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
         let data = sqlx::query_as!(
             Self,
             "select * from hello_world where id = $1",
@@ -68,7 +64,6 @@ impl HelloWorld {
     }
 
     pub async fn find_many_by_id(
-        &self,
         ids: Vec<HelloWorldId>,
         pool: &PgPool,
     ) -> Result<Vec<Self>, sqlx::Error> {
