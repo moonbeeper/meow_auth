@@ -1,3 +1,4 @@
+pub mod error;
 pub mod middleware;
 mod v1;
 

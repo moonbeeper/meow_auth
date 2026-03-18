@@ -15,11 +15,14 @@ use crate::{
         },
     },
     global::GlobalState,
-    http::middleware::auth_manager::AuthContext,
+    http::{
+        error::{ApiError, ApiErrorCodes},
+        middleware::auth_manager::AuthContext,
+    },
 };
 
+// TODO: should use correctly errors.
 // TODO: should have validation of these things
-// TODO: should have a big monolith error enum
 // TODO: should let the user log in via their username, maybe by using a regex to determine if the input is an email or login
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
@@ -39,15 +42,16 @@ pub struct LoginResponse {
     request_body = LoginRequest,
     responses(
         (status = 200, description = "login flow created", body = LoginResponse),
+        (status = 500, description = "internal server error", body = ApiError)
     )
 )]
 pub async fn login(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<LoginRequest>,
-) -> Result<Json<Option<LoginResponse>>, ()> {
+) -> Result<Json<Option<LoginResponse>>, ApiErrorCodes> {
     if auth.is_authenticated() {
-        return Ok(Json(None));
+        return Err(ApiErrorCodes::AlreadyAuthenticated);
     }
 
     let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
@@ -63,10 +67,7 @@ pub async fn login(
 
     let argon2 = Argon2::default();
     let code_hash = argon2
-        .hash_password(code.to_uppercase().as_bytes())
-        .map_err(|e| {
-            tracing::error!("failed hashing code: {}", e);
-        })?
+        .hash_password(code.to_uppercase().as_bytes())?
         .to_string();
 
     let login_request = UserLoginRequest::builder()
@@ -75,15 +76,10 @@ pub async fn login(
         .secret(Some(code_hash))
         .expires_at(chrono::Utc::now() + chrono::Duration::minutes(10))
         .build();
-    let mut transaction = global.database.begin().await.map_err(|e| {
-        tracing::error!("failed starting transaction: {}", e);
-    })?;
-    login_request.insert(&mut transaction).await.map_err(|e| {
-        tracing::error!("failed inserting login request: {}", e);
-    })?;
-    transaction.commit().await.map_err(|e| {
-        tracing::error!("failed committing transaction: {}", e);
-    })?;
+
+    let mut transaction = global.database.begin().await?;
+    login_request.insert(&mut transaction).await?;
+    transaction.commit().await?;
 
     global
         .mailer
@@ -119,13 +115,14 @@ pub struct RegisterResponse {
     request_body = RegisterRequest,
     responses(
         (status = 200, description = "registration flow created", body = RegisterResponse),
+        (status = 500, description = "internal server error", body = ApiError)
     )
 )]
 pub async fn register(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<RegisterRequest>,
-) -> Result<Json<Option<RegisterResponse>>, ()> {
+) -> Result<Json<Option<RegisterResponse>>, ApiErrorCodes> {
     if auth.is_authenticated() {
         return Ok(Json(None));
     }
@@ -135,8 +132,7 @@ pub async fn register(
         request.login.clone(),
         &global.database,
     )
-    .await
-    .map_err(|e| tracing::error!("woops from database: {}", e))?
+    .await?
     .is_some()
     {
         return Ok(Json(None));
@@ -150,10 +146,7 @@ pub async fn register(
 
     let argon2 = Argon2::default();
     let code_hash = argon2
-        .hash_password(code.to_uppercase().as_bytes())
-        .map_err(|e| {
-            tracing::error!("failed hashing code: {}", e);
-        })?
+        .hash_password(code.to_uppercase().as_bytes())?
         .to_string();
 
     let user = User::builder()
@@ -168,18 +161,10 @@ pub async fn register(
         .expires_at(chrono::Utc::now() + chrono::Duration::minutes(10))
         .build();
 
-    let mut transaction = global.database.begin().await.map_err(|e| {
-        tracing::error!("failed starting transaction: {}", e);
-    })?;
-    user.insert(&mut transaction).await.map_err(|e| {
-        tracing::error!("failed inserting new user: {}", e);
-    })?;
-    login_request.insert(&mut transaction).await.map_err(|e| {
-        tracing::error!("failed inserting login request: {}", e);
-    })?;
-    transaction.commit().await.map_err(|e| {
-        tracing::error!("failed committing transaction: {}", e);
-    })?;
+    let mut transaction = global.database.begin().await?;
+    user.insert(&mut transaction).await?;
+    login_request.insert(&mut transaction).await?;
+    transaction.commit().await?;
 
     // todo: holy shit this takes ages if done this way. must have next a queue worker for this.
     global
@@ -208,14 +193,19 @@ pub struct ExchangeRequest {
 #[utoipa::path(
     post,
     path = "/exchange",
-    request_body = ExchangeRequest
+    request_body = ExchangeRequest,
+    responses(
+        (status = 200, description = "code exchanged successfully"),
+        (status = 500, description = "internal server error", body = ApiError)
+    )
+
 )]
 pub async fn exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<ExchangeRequest>,
-) -> Result<(), ()> {
+) -> Result<(), ApiErrorCodes> {
     if auth.is_authenticated() {
         return Ok(());
     }
@@ -248,16 +238,10 @@ pub async fn exchange(
         return Ok(());
     }
 
-    let mut transaction = global.database.begin().await.map_err(|e| {
-        tracing::error!("failed starting transaction: {}", e);
-    })?;
+    let mut transaction = global.database.begin().await?;
     flow.state = LoginFlowState::Completed;
-    flow.update(&mut transaction).await.map_err(|e| {
-        tracing::error!("failed setting the flow state to completed: {}", e);
-    })?;
-    transaction.commit().await.map_err(|e| {
-        tracing::error!("failed committing transaction: {}", e);
-    })?;
+    flow.update(&mut transaction).await?;
+    transaction.commit().await?;
 
     let Ok(Some(user)) = User::find_by_id(flow.user_id, &global.database).await else {
         return Ok(());

@@ -1,7 +1,7 @@
 use sqlx::{PgPool, PgTransaction};
 use typed_builder::TypedBuilder;
 
-use crate::database::id::UlidId;
+use crate::database::{error::DatabaseError, id::UlidId};
 
 pub type UserId = UlidId;
 
@@ -23,7 +23,7 @@ pub struct User {
 }
 
 impl User {
-    pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), sqlx::Error> {
+    pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "insert into
                 users (id, login, email, created_at, updated_at)
@@ -39,7 +39,7 @@ impl User {
         Ok(())
     }
 
-    pub async fn update(&self, transaction: &mut PgTransaction<'_>) -> Result<(), sqlx::Error> {
+    pub async fn update(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "update users set
                 login = $2,
@@ -60,7 +60,7 @@ impl User {
         Ok(())
     }
 
-    pub async fn find_by_id(id: UserId, pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
+    pub async fn find_by_id(id: UserId, pool: &PgPool) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -83,7 +83,7 @@ impl User {
     pub async fn find_many_by_id(
         ids: Vec<UserId>,
         pool: &PgPool,
-    ) -> Result<Vec<Self>, sqlx::Error> {
+    ) -> Result<Vec<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -103,7 +103,10 @@ impl User {
         Ok(data)
     }
 
-    pub async fn find_by_email(email: String, pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
+    pub async fn find_by_email(
+        email: String,
+        pool: &PgPool,
+    ) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -127,7 +130,7 @@ impl User {
         email: String,
         login: String,
         pool: &PgPool,
-    ) -> Result<Option<Self>, sqlx::Error> {
+    ) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
             "select

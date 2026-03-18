@@ -1,7 +1,7 @@
 use sqlx::{PgPool, PgTransaction};
 use typed_builder::TypedBuilder;
 
-use crate::database::{id::UlidId, models::user::UserId};
+use crate::database::{error::DatabaseError, id::UlidId, models::user::UserId};
 
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, Default, PartialEq, Eq, PartialOrd, Ord,
@@ -78,7 +78,7 @@ pub struct UserLoginRequest {
 }
 
 impl UserLoginRequest {
-    pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), sqlx::Error> {
+    pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "insert into
                 user_login_requests (id, user_id, kind, secret, state, expires_at, created_at, updated_at)
@@ -97,7 +97,7 @@ impl UserLoginRequest {
         Ok(())
     }
 
-    pub async fn update(&self, transaction: &mut PgTransaction<'_>) -> Result<(), sqlx::Error> {
+    pub async fn update(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "update user_login_requests set state = $2 where id = $1",
             self.id as UserLoginRequestId,
@@ -112,7 +112,7 @@ impl UserLoginRequest {
     pub async fn find_by_id(
         id: UserLoginRequestId,
         pool: &PgPool,
-    ) -> Result<Option<Self>, sqlx::Error> {
+    ) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query!(
             "select * from user_login_requests where id = $1 and expires_at > now() and state = 'pending'",
             id as UserLoginRequestId
@@ -136,7 +136,7 @@ impl UserLoginRequest {
     pub async fn find_many_by_id(
         ids: Vec<UserLoginRequestId>,
         pool: &PgPool,
-    ) -> Result<Vec<Self>, sqlx::Error> {
+    ) -> Result<Vec<Self>, DatabaseError> {
         let data = sqlx::query!(
             "select * from user_login_requests where id = ANY($1) and expires_at > now() and state = 'pending'",
             &ids as &[UserLoginRequestId]

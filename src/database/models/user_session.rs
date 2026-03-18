@@ -1,7 +1,7 @@
 use sqlx::{PgPool, PgTransaction};
 use typed_builder::TypedBuilder;
 
-use crate::database::{id::UlidId, models::user::UserId};
+use crate::database::{error::DatabaseError, id::UlidId, models::user::UserId};
 
 pub type UserSessionId = UlidId;
 pub type PIDUserSessionId = UlidId;
@@ -23,7 +23,7 @@ pub struct UserSession {
 }
 
 impl UserSession {
-    pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), sqlx::Error> {
+    pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "insert into
                 user_sessions (id, user_id, pid, active_expires_at, expires_at, created_at, updated_at)
@@ -41,7 +41,7 @@ impl UserSession {
         Ok(())
     }
 
-    pub async fn update(&self, transaction: &mut PgTransaction<'_>) -> Result<(), sqlx::Error> {
+    pub async fn update(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "update user_sessions set
                 active_expires_at = $2,
@@ -56,7 +56,10 @@ impl UserSession {
         Ok(())
     }
 
-    pub async fn find_by_id(id: UserSessionId, pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
+    pub async fn find_by_id(
+        id: UserSessionId,
+        pool: &PgPool,
+    ) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -79,7 +82,7 @@ impl UserSession {
     pub async fn find_many_by_id(
         ids: Vec<UserSessionId>,
         pool: &PgPool,
-    ) -> Result<Vec<Self>, sqlx::Error> {
+    ) -> Result<Vec<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -99,7 +102,7 @@ impl UserSession {
         Ok(data)
     }
 
-    pub async fn find_by_user_id(id: UserId, pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
+    pub async fn find_by_user_id(id: UserId, pool: &PgPool) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -122,7 +125,7 @@ impl UserSession {
     pub async fn find_by_pid(
         id: PIDUserSessionId,
         pool: &PgPool,
-    ) -> Result<Option<Self>, sqlx::Error> {
+    ) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
             "select
