@@ -1,7 +1,13 @@
 #![warn(clippy::nursery, clippy::pedantic)]
+use std::time::Duration;
+
 use anyhow::Context as _;
-use meow_auth2::{global::GlobalState, http, logger, settings};
-use tokio::sync::oneshot;
+use meow_auth2::{
+    global::GlobalState,
+    http, logger,
+    manager::Watcher,
+    settings::{self, Settings},
+};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -14,24 +20,52 @@ async fn main() -> anyhow::Result<()> {
     let global = GlobalState::new(settings)
         .await
         .context("Failed to create global state")?;
-    let (shutdown_tx, shutdown_rx) = oneshot::channel();
+    let watcher = Watcher::new();
 
-    let http = tokio::spawn(http::run(global, shutdown_rx));
+    spawn_service("http", http::run(global.clone(), watcher.child()));
 
-    // all of this below is shit. bad. and bad. It should be replaced with a better way when there's more than one service running.
-    tokio::spawn(async move {
-        let _ = tokio::signal::ctrl_c().await;
-        let _ = shutdown_tx.send(());
-    });
+    let _ = tokio::signal::ctrl_c().await;
+    watcher.stop();
+
     tokio::select! {
-        r = http => match r {
-            Ok(Ok(())) => tracing::info!("HTTP server exited normally"),
-            Ok(Err(e)) => tracing::error!("HTTP server exited with an error: {e}"),
-            Err(e) => tracing::error!("HTTP server panicked: {e}")
-        },
+        () = watcher.wait() => {tracing::info!("all services stopped gracefully")}
+        _ = tokio::signal::ctrl_c() => {tracing::warn!("forcing shutdown")}
+        () = kill_timeout(&global.settings) => {tracing::info!("timeout reached, force shutdown")}
     }
 
     tracing::info!("goodnight");
 
     Ok(())
+}
+
+fn spawn_service<F>(name: &'static str, fut: F)
+where
+    F: Future<Output = anyhow::Result<()>> + Send + 'static,
+{
+    tokio::spawn(async move {
+        let inner = tokio::spawn(fut);
+        match inner.await {
+            Ok(Ok(())) => tracing::info!("{name} exited normally"),
+            Ok(Err(e)) => tracing::error!("{name} exited with an error: {e}"),
+            Err(e) => tracing::error!("{name} panicked: {e}"),
+        }
+    });
+}
+
+async fn kill_timeout(settings: &Settings) {
+    let timeout = settings
+        .application
+        .shutdown_timeout_seconds
+        .unwrap_or_default();
+    if !settings
+        .application
+        .shutdown_timeout_enabled
+        .unwrap_or_default()
+        || timeout == 0
+    {
+        std::future::pending::<()>().await;
+    }
+
+    tracing::info!("forcing shutdown in {} seconds", timeout);
+    tokio::time::sleep(Duration::from_secs(timeout)).await;
 }

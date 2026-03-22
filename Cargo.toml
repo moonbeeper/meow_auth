@@ -9,7 +9,7 @@ argon2 = { version = "0.6.0-rc.7", features = ["rand_core"] }
 axum = { version = "0.8.8", features = ["macros"] }
 chrono = { version = "0.4.44", features = ["serde"] }
 clap = { version = "4.6.0", features = ["derive"] }
-config = { version = "0.15.21", features = ["toml"] }
+config = { version = "0.15.22", features = ["toml"] }
 dotenvy = "0.15.7"
 futures-util = "0.3.32"
 hex = "0.4.3"
@@ -19,6 +19,7 @@ lettre = { version = "0.11.19", default-features = false, features = [
     "smtp-transport",
     "hostname",
 ] }
+pin-project = "1.1.11"
 rand = "0.10.0"
 serde = { version = "1.0.228", features = ["derive"] }
 smart-default = "0.7.1"
@@ -31,8 +32,9 @@ sqlx = { version = "0.8.6", features = [
 strum = { version = "0.28.0", features = ["derive"] }
 thiserror = "2.0.18"
 tokio = { version = "1.50.0", features = ["full"] }
-toml = "1.0.6"
-toml_edit = "0.25.4"
+tokio-util = "0.7.18"
+toml = "1.0.7"
+toml_edit = "0.25.5"
 tower = "0.5.3"
 tower-cookies = { version = "0.11.0", features = ["private"] }
 tracing = "0.1.44"

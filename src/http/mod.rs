@@ -6,13 +6,15 @@ use std::{net::SocketAddr, sync::Arc};
 
 use anyhow::Context;
 use axum::routing::get;
-use tokio::{net::TcpSocket, sync::oneshot};
+use tokio::net::TcpSocket;
 use tower_cookies::CookieManagerLayer;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable};
 
-use crate::{global::GlobalState, http::middleware::auth_manager::AuthManagerLayer};
+use crate::{
+    global::GlobalState, http::middleware::auth_manager::AuthManagerLayer, manager::WatcherChild,
+};
 
 #[derive(OpenApi)]
 struct ApiDocs;
@@ -34,7 +36,7 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
     // middlewares go from bottom to top for requests, and top to bottom for responses.
 }
 
-pub async fn run(global: Arc<GlobalState>, signal: oneshot::Receiver<()>) -> anyhow::Result<()> {
+pub async fn run(global: Arc<GlobalState>, watcher: WatcherChild) -> anyhow::Result<()> {
     let settings = global.settings.http.clone();
     let socket = match settings.bind {
         SocketAddr::V4(_) => TcpSocket::new_v4()?,
@@ -61,7 +63,7 @@ pub async fn run(global: Arc<GlobalState>, signal: oneshot::Receiver<()>) -> any
 
     axum::serve(listener, router)
         .with_graceful_shutdown(async move {
-            let _ = signal.await;
+            watcher.cancelled().await;
             tracing::info!("goodnight, sweet bits and flying toasters with wings");
         })
         .await

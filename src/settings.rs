@@ -94,6 +94,14 @@ pub struct MailerSettings {
     pub test_connection: bool,
 }
 
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+pub struct ApplicationSettings {
+    #[default(Some(60*2))]
+    pub shutdown_timeout_seconds: Option<u64>,
+    #[default(Some(true))]
+    pub shutdown_timeout_enabled: Option<bool>,
+}
+
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub logging: Logging,
@@ -101,6 +109,8 @@ pub struct Settings {
     pub database: DatabaseSettings,
     pub session: SessionSettings,
     pub mailer: MailerSettings,
+    #[serde(default)]
+    pub application: ApplicationSettings,
 }
 
 impl Settings {
