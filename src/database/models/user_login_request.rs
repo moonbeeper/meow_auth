@@ -43,17 +43,17 @@ pub enum LoginFlowState {
 impl LoginFlowState {
     pub fn as_str(&self) -> &'static str {
         match self {
-            LoginFlowState::Pending => "pending",
-            LoginFlowState::Completed => "completed",
-            LoginFlowState::Expired => "expired",
+            Self::Pending => "pending",
+            Self::Completed => "completed",
+            Self::Expired => "expired",
         }
     }
 
     pub fn from_str(s: &str) -> Self {
         match s {
-            "pending" => LoginFlowState::Pending,
-            "completed" => LoginFlowState::Completed,
-            "expired" => LoginFlowState::Expired,
+            "pending" => Self::Pending,
+            "completed" => Self::Completed,
+            "expired" => Self::Expired,
             _ => Self::default(),
         }
     }

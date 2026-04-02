@@ -9,6 +9,7 @@ use crate::settings::Settings;
 
 // TODO: should have a bg worker for sending emails. This would let routes return faster by just queuing emails to be sent by these workers.
 
+#[derive(Debug)]
 pub struct Mailer {
     transport: Arc<AsyncSmtpTransport<Tokio1Executor>>,
     from_email: String,

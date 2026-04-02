@@ -4,7 +4,9 @@ use std::time::Duration;
 use anyhow::Context as _;
 use meow_auth2::{
     global::GlobalState,
-    http, logger,
+    http,
+    job_queue::{QueueRegistry, TestJob},
+    logger,
     manager::Watcher,
     settings::{self, Settings},
 };
@@ -21,8 +23,9 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed to create global state")?;
     let watcher = Watcher::new();
-
+    let queues = QueueRegistry::new(global.clone()).register(TestJob);
     spawn_service("http", http::run(global.clone(), watcher.child()));
+    spawn_service("queues", queues.run(watcher.child()));
 
     let _ = tokio::signal::ctrl_c().await;
     watcher.stop();

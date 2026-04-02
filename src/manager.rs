@@ -7,9 +7,13 @@ use tokio_util::sync::{CancellationToken, WaitForCancellationFuture};
 
 pub struct WatcherChild(Arc<WatcherInner>);
 
-impl<'a> WatcherChild {
-    pub fn cancelled(&'a self) -> WaitForCancellationFuture<'a> {
+impl WatcherChild {
+    pub fn cancelled(&self) -> WaitForCancellationFuture<'_> {
         self.0.token.cancelled()
+    }
+
+    pub fn token(&self) -> CancellationToken {
+        self.0.token.clone()
     }
 }
 

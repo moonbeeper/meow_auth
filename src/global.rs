@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::{database, mailer::Mailer, settings::Settings};
 
+#[derive(Debug)]
 pub struct GlobalState {
     pub settings: Settings,
     pub database: sqlx::PgPool,
