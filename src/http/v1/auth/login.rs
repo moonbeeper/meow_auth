@@ -19,6 +19,8 @@ use crate::{
         error::{ApiError, ApiErrorCodes},
         middleware::auth_manager::AuthContext,
     },
+    job_queue::QueuedJob,
+    mailer::{Email, MailerJob},
 };
 
 // TODO: should use correctly errors.
@@ -81,17 +83,13 @@ pub async fn login(
     login_request.insert(&mut transaction).await?;
     transaction.commit().await?;
 
-    global
-        .mailer
-        .mail(
-            user.email,
-            format!("hi your code is this {}", code.to_uppercase()),
-        )
-        .await
-        .map_err(|e| {
-            tracing::error!("failed sending mail: {}", e);
-        })?;
+    let email = Email::builder()
+        .text(format!("hi your code is this {}", code.to_uppercase()))
+        .to(user.email)
+        .subject("login code".to_string())
+        .build();
 
+    MailerJob::dispatch(global, email).await.unwrap();
     Ok(Json(Some(LoginResponse {
         flow_id: login_request.id,
     })))
@@ -166,17 +164,13 @@ pub async fn register(
     login_request.insert(&mut transaction).await?;
     transaction.commit().await?;
 
-    // todo: holy shit this takes ages if done this way. must have next a queue worker for this.
-    global
-        .mailer
-        .mail(
-            user.email.clone(),
-            format!("hi your code is this {}", code.to_uppercase()),
-        )
-        .await
-        .map_err(|e| {
-            tracing::error!("failed sending mail: {}", e);
-        })?;
+    let email = Email::builder()
+        .text(format!("hi your code is this {}", code.to_uppercase()))
+        .to(user.email)
+        .subject("register code".to_string())
+        .build();
+
+    MailerJob::dispatch(global, email).await.unwrap();
     tracing::info!("is this maybe?");
 
     Ok(Json(Some(RegisterResponse {

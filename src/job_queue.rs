@@ -13,10 +13,14 @@ use tokio_util::sync::CancellationToken;
 
 use crate::{database::id::UlidId, global::GlobalState, manager::WatcherChild};
 
-pub trait QueuedJob: Send + Sync + 'static + Sized {
+pub trait QueuedJob: Send + Sync + 'static {
     type Input: serde::Serialize + serde::de::DeserializeOwned + Send + 'static;
 
-    fn run(&self, input: Self::Input) -> impl Future<Output = anyhow::Result<()>> + Send;
+    fn run(
+        &self,
+        global: Arc<GlobalState>,
+        input: Self::Input,
+    ) -> impl Future<Output = anyhow::Result<()>> + Send;
     fn name() -> &'static str {
         std::any::type_name::<Self>()
     }
@@ -49,17 +53,6 @@ pub trait QueuedJob: Send + Sync + 'static + Sized {
     }
 }
 
-pub struct TestJob;
-impl QueuedJob for TestJob {
-    type Input = ();
-
-    async fn run(&self, _input: Self::Input) -> anyhow::Result<()> {
-        // println!("I RAN!!");
-        // println!(" THIS IS MY STRING: {}", input);
-        Ok(())
-    }
-}
-
 type JobHandler = Box<dyn Fn(Vec<u8>) -> BoxFuture<'static, anyhow::Result<()>> + Send + Sync>;
 
 pub struct QueueRegistry {
@@ -83,12 +76,17 @@ impl QueueRegistry {
 
     pub fn register<J: QueuedJob>(mut self, job: J) -> Self {
         let job = Arc::new(job);
+        let global = self.global.clone();
         let handler = Box::new(move |value: Vec<u8>| {
             let job = job.clone();
+            let global = global.clone();
             Box::pin(async move {
                 let input: J::Input = postcard::from_bytes(&value)
                     .map_err(|e| anyhow::anyhow!("decode failed: {e}"))?;
-                match AssertUnwindSafe(job.run(input)).catch_unwind().await {
+                match AssertUnwindSafe(job.run(global, input))
+                    .catch_unwind()
+                    .await
+                {
                     Ok(res) => res,
                     Err(panic) => {
                         let panic_msg = panic

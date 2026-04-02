@@ -1,18 +1,20 @@
 use std::sync::Arc;
 
 use lettre::{
-    AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor,
+    AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor, message::MultiPart,
     transport::smtp::authentication::Credentials,
 };
 
-use crate::settings::Settings;
-
-// TODO: should have a bg worker for sending emails. This would let routes return faster by just queuing emails to be sent by these workers.
+use crate::{
+    global::GlobalState,
+    job_queue::QueuedJob,
+    settings::{MailerSettings, Settings},
+};
 
 #[derive(Debug)]
 pub struct Mailer {
     transport: Arc<AsyncSmtpTransport<Tokio1Executor>>,
-    from_email: String,
+    settings: MailerSettings,
 }
 
 impl Mailer {
@@ -46,17 +48,52 @@ impl Mailer {
 
         Ok(Self {
             transport: Arc::new(transport),
-            from_email: settings.mailer.from_email.clone(),
+            settings: settings.mailer.clone(),
         })
     }
 
-    pub async fn mail(&self, to: String, text: String) -> anyhow::Result<()> {
-        let email = Message::builder()
-            .from(self.from_email.parse()?)
-            .to(to.parse()?)
-            .body(text)?;
+    pub async fn mail(&self, email: &Email) -> anyhow::Result<()> {
+        let m = Message::builder()
+            .from(format!("System <{}>", self.settings.from_email).parse()?)
+            .to(email.to.parse()?)
+            .subject(email.subject.clone());
 
-        self.transport.send(email).await?;
+        let msg = if let Some(html) = email.html.as_ref() {
+            m.multipart(MultiPart::alternative_plain_html(
+                email.text.clone(),
+                html.clone(),
+            ))?
+        } else {
+            m.body(email.text.clone())?
+        };
+
+        self.transport.send(msg).await?;
         Ok(())
+    }
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, typed_builder::TypedBuilder)]
+pub struct Email {
+    pub to: String,
+    #[builder(default = "no subject".to_string())]
+    pub subject: String,
+    pub text: String,
+    #[builder(default)]
+    pub html: Option<String>,
+}
+
+pub struct MailerJob;
+
+impl QueuedJob for MailerJob {
+    type Input = Email;
+
+    async fn run(&self, global: Arc<GlobalState>, input: Self::Input) -> anyhow::Result<()> {
+        match global.mailer.mail(&input).await {
+            Ok(()) => return Ok(()),
+            Err(e) => {
+                tracing::error!("something went wrong while trying to send an email: {e}");
+                Err(e)?
+            }
+        }
     }
 }
