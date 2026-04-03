@@ -14,6 +14,8 @@ pub enum ApiErrorCodes {
     OtpExpired,
     #[error("you are already authenticated")]
     AlreadyAuthenticated,
+    #[error("you are unauthenticated")]
+    Unauthenticated,
     #[error("an error occurred while hashing a secret")]
     HashingError(#[from] argon2::password_hash::Error),
     #[error("meow *blep*")]
@@ -22,6 +24,12 @@ pub enum ApiErrorCodes {
     Database(#[from] DatabaseError),
     #[error("an error occurred while interacting with the database")]
     RouteDatabase(#[from] sqlx::Error),
+    #[error("an unknown error occurred")]
+    InternalServerError,
+    #[error("the requested session was not found")]
+    SessionNotFound,
+    #[error("the provided OTP code is invalid or expired")]
+    InvalidOTPCode,
 }
 
 // wtf
@@ -47,6 +55,10 @@ impl ApiErrorCodes {
             ApiErrorCodes::Meow => StatusCode::IM_A_TEAPOT,
             ApiErrorCodes::Database(..) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiErrorCodes::RouteDatabase(..) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiErrorCodes::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiErrorCodes::Unauthenticated => StatusCode::UNAUTHORIZED,
+            ApiErrorCodes::SessionNotFound => StatusCode::NOT_FOUND,
+            ApiErrorCodes::InvalidOTPCode => StatusCode::UNAUTHORIZED,
         }
     }
 }

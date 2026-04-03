@@ -125,6 +125,10 @@ impl QueueRegistry {
             self.batch_size,
             self.concurrency
         );
+        tracing::info!(
+            "queue registry has these handlers registered: {:?}",
+            self.job_handlers.keys().collect::<Vec<_>>()
+        );
 
         let mut tick = tokio::time::interval(tick);
         let mut listener = PgListener::connect_with(&self.global.database).await?;

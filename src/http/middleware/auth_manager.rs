@@ -37,7 +37,7 @@ impl AuthContext {
         }
     }
 
-    pub fn session_id(&self) -> UserId {
+    pub fn session_id(&self) -> UserSessionId {
         match self {
             AuthContext::Authenticated { session_id, .. } => *session_id,
             AuthContext::Unauthenticated => UserSessionId::nil(),
@@ -55,10 +55,10 @@ impl AuthManagerLayer {
 }
 
 impl<S> Layer<S> for AuthManagerLayer {
-    type Service = AuthManangerMiddleware<S>;
+    type Service = AuthManagerMiddleware<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        AuthManangerMiddleware {
+        AuthManagerMiddleware {
             inner,
             global_state: self.0.clone(),
         }
@@ -66,12 +66,12 @@ impl<S> Layer<S> for AuthManagerLayer {
 }
 
 #[derive(Clone)]
-pub struct AuthManangerMiddleware<S> {
+pub struct AuthManagerMiddleware<S> {
     inner: S,
     global_state: Arc<GlobalState>,
 }
 
-impl<S> Service<Request> for AuthManangerMiddleware<S>
+impl<S> Service<Request> for AuthManagerMiddleware<S>
 where
     S: Service<Request, Response = Response> + Send + Clone + 'static,
     S::Future: Send + 'static,
@@ -91,24 +91,17 @@ where
         let global_state = self.global_state.clone();
 
         Box::pin(async move {
-            let Some(cookies) = request.extensions().get::<Cookies>().cloned() else {
+            let cookies = request.extensions().get::<Cookies>().cloned();
+            if let Some(cookies) = &cookies {
+                do_work(&mut request, cookies, &global_state).await;
+            } else {
                 tracing::error!(
                     "Somehow cookies were not set on the request extensions. are the layers in the wrong order?"
                 );
-                return Ok(Response::default());
+                request
+                    .extensions_mut()
+                    .insert(AuthContext::Unauthenticated);
             };
-            // create_session_cookie(
-            //     "4207FQ5S33961BNXG6X5VB0SAT".to_string(),
-            //     &cookies,
-            //     &global_state.settings,
-            // );
-
-            do_work(&mut request, &cookies, &global_state).await;
-
-            // TODO: check if the user is authenticated and append user info to the request extensions.
-            // TODO: check session age and update active expires and expires if over threshold.
-            // TODO: check if the session is expired and if so, delete the session and append user info as always.
-            // TODO: use tracing spans to not have to hecking pass PID each single time i want to use bruh
 
             let response: Response = inner.call(request).await?; // <-- goes into handler then makes the response.
             Ok(response)
@@ -117,9 +110,8 @@ where
 }
 
 async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<GlobalState>) {
-    // create_session_cookie("meow".to_string(), cookies, &global_state.settings).await;
     let Some(cookie) = get_session_cookie(cookies, &global_state.settings) else {
-        tracing::info!("no cookies for me :(");
+        // tracing::info!("no cookies for me :(");
         request
             .extensions_mut()
             .insert(AuthContext::Unauthenticated);

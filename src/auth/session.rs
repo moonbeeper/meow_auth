@@ -42,6 +42,7 @@ pub fn create_session_cookie(session_id: String, cookies: &Cookies, settings: &S
     let cookie_jar = cookies.private(encrypted_key);
     let cookie = cookie::Cookie::build((settings.session.cookie_name.clone(), session_id))
         .http_only(true)
+        .path("/")
         .permanent(); // future muaahahah
     cookie_jar.add(cookie.into());
 }
@@ -57,7 +58,9 @@ pub fn get_session_cookie(
 }
 
 pub fn delete_session_cookie(cookies: &Cookies, settings: &Settings) {
-    let cookie = cookie::Cookie::build(settings.session.cookie_name.clone()).http_only(true);
+    let cookie = cookie::Cookie::build(settings.session.cookie_name.clone())
+        .http_only(true)
+        .path("/");
     cookies.remove(cookie.into());
 }
 

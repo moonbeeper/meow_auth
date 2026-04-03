@@ -56,6 +56,31 @@ impl UserSession {
         Ok(())
     }
 
+    pub async fn delete(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
+        sqlx::query!(
+            "delete from user_sessions where id = $1",
+            self.id as UserSessionId,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn delete_many_by_id(
+        ids: Vec<UserSessionId>,
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<(), DatabaseError> {
+        sqlx::query!(
+            "delete from user_sessions where id = any($1)",
+            &ids as &[UserSessionId]
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn find_by_id(
         id: UserSessionId,
         pool: &PgPool,
@@ -79,7 +104,7 @@ impl UserSession {
         Ok(data)
     }
 
-    pub async fn find_many_by_id(
+    pub async fn find_many_by_ids(
         ids: Vec<UserSessionId>,
         pool: &PgPool,
     ) -> Result<Vec<Self>, DatabaseError> {
@@ -95,6 +120,29 @@ impl UserSession {
                 updated_at
              from user_sessions where id = any($1)",
             &ids as &[UserSessionId]
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(data)
+    }
+
+    pub async fn find_many_by_user_id(
+        id: UserId,
+        pool: &PgPool,
+    ) -> Result<Vec<Self>, DatabaseError> {
+        let data = sqlx::query_as!(
+            Self,
+            "select
+                id,
+                user_id,
+                pid,
+                active_expires_at,
+                expires_at,
+                created_at,
+                updated_at
+             from user_sessions where user_id = $1",
+            id as UserSessionId
         )
         .fetch_all(pool)
         .await?;

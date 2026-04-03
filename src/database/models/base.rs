@@ -51,6 +51,17 @@ impl HelloWorld {
         Ok(())
     }
 
+    pub async fn delete(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
+        sqlx::query!(
+            "delete from hello_world where id = $1",
+            self.id as HelloWorldId,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn find_by_id(
         id: HelloWorldId,
         pool: &PgPool,
