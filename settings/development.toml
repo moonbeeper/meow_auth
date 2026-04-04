@@ -29,3 +29,12 @@ smtp_port = 1025
 smtp_secure = false
 from_email = "meow@meow.com"
 test_connection = false
+
+[application]
+shutdown_timeout_seconds = 120
+shutdown_timeout_enabled = true
+
+[totp]
+issuer = "meow_auth"
+encryption_secret = "852f529daf9b8b19413ef070a3252ed5aa281ef1b38c59debfebeb8aec6bb0d9"
+digits = 6

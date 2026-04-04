@@ -29,7 +29,17 @@ pub enum ApiErrorCodes {
     #[error("the requested session was not found")]
     SessionNotFound,
     #[error("the provided OTP code is invalid or expired")]
-    InvalidOTPCode,
+    InvalidOTPCode, // TODO: should merge the use of the code stuff like a literal InvalidCode and that's it
+    #[error("totp is already enabled for this account")]
+    TotpAlreadyEnabled,
+    #[error("the totp flow was not started before exchanging")]
+    TotpFlowNotFound,
+    #[error("the provided totp code is invalid")]
+    TotpInvalidCode,
+    #[error("totp is not enabled for this account")]
+    TotpNotEnabled,
+    #[error("totp recovery code is already used")]
+    TotpRecoveryAlreadyUsed,
 }
 
 // wtf
@@ -59,6 +69,11 @@ impl ApiErrorCodes {
             ApiErrorCodes::Unauthenticated => StatusCode::UNAUTHORIZED,
             ApiErrorCodes::SessionNotFound => StatusCode::NOT_FOUND,
             ApiErrorCodes::InvalidOTPCode => StatusCode::UNAUTHORIZED,
+            ApiErrorCodes::TotpAlreadyEnabled => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::TotpFlowNotFound => StatusCode::NOT_FOUND,
+            ApiErrorCodes::TotpInvalidCode => StatusCode::UNAUTHORIZED,
+            ApiErrorCodes::TotpNotEnabled => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::TotpRecoveryAlreadyUsed => StatusCode::BAD_REQUEST,
         }
     }
 }

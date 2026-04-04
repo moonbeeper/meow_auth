@@ -9,6 +9,7 @@ mod auth;
 mod me;
 mod types;
 
+// TODO: should have a middleware that check if the user is authenticated. (maybe?)
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .nest("/auth", auth::routes())

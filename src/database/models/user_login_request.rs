@@ -11,12 +11,14 @@ pub enum LoginFlowKind {
     #[default]
     Unknown,
     Otp,
+    Totp,
 }
 
 impl LoginFlowKind {
     pub fn as_str(&self) -> &'static str {
         match self {
             LoginFlowKind::Otp => "otp",
+            LoginFlowKind::Totp => "totp",
             LoginFlowKind::Unknown => "unknown",
         }
     }
@@ -24,6 +26,7 @@ impl LoginFlowKind {
     pub fn from_str(s: &str) -> Self {
         match s {
             "otp" => LoginFlowKind::Otp,
+            "totp" => LoginFlowKind::Totp,
             _ => Self::default(),
         }
     }

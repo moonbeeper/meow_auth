@@ -7,6 +7,7 @@ pub type UserSessionId = UlidId;
 pub type PIDUserSessionId = UlidId;
 
 // remember: PIDs will be shown to the user to close their sessions.
+// ^ that is actually uhh useless? great me.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, TypedBuilder)]
 pub struct UserSession {
     #[builder(default = UserSessionId::new())]

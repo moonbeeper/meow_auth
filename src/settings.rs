@@ -102,6 +102,16 @@ pub struct ApplicationSettings {
     pub shutdown_timeout_enabled: Option<bool>,
 }
 
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+pub struct TotpSettings {
+    #[default("meow_auth".to_string())]
+    pub issuer: String,
+    #[default(generate_secret_key(32))]
+    pub encryption_secret: String,
+    #[default(6)]
+    pub digits: usize,
+}
+
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub logging: Logging,
@@ -111,6 +121,7 @@ pub struct Settings {
     pub mailer: MailerSettings,
     #[serde(default)]
     pub application: ApplicationSettings,
+    pub totp: TotpSettings,
 }
 
 impl Settings {

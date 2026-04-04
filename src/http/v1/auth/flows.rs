@@ -6,12 +6,16 @@ use rand::{RngExt, distr::Alphanumeric};
 use tower_cookies::Cookies;
 
 use crate::{
-    auth::session::{create_session, create_session_cookie},
+    auth::{
+        session::{create_session, create_session_cookie},
+        totp::{check_recovery_code, decrypt_secrets, make_totp, set_recovery_code_used},
+    },
     database::{
         id::UlidId,
         models::{
             user::User,
             user_login_request::{LoginFlowKind, LoginFlowState, UserLoginRequest},
+            user_totp::UserTotp,
         },
     },
     global::GlobalState,
@@ -26,6 +30,7 @@ use crate::{
 // TODO: should use correctly errors.
 // TODO: should have validation of these things
 // TODO: should let the user log in via their username, maybe by using a regex to determine if the input is an email or login
+// TODO: STOP using Option<Json<?>> because None return "null" in responses...
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
 pub struct LoginRequest {
@@ -83,10 +88,12 @@ pub async fn login(
         .subject("login code".to_string())
         .build();
 
-    MailerJob::dispatch(global, email).await.map_err(|e| {
-        tracing::error!("failed dispatching job: {e}");
-        ApiErrorCodes::InternalServerError
-    })?;
+    MailerJob::dispatch(&global.database, email)
+        .await
+        .map_err(|e| {
+            tracing::error!("failed dispatching job: {e}");
+            ApiErrorCodes::InternalServerError
+        })?;
 
     Ok(Json(Some(FlowResponse {
         flow_id: login_request.id,
@@ -155,10 +162,12 @@ pub async fn register(
         .subject("register code".to_string())
         .build();
 
-    MailerJob::dispatch(global, email).await.map_err(|e| {
-        tracing::error!("failed dispatching job: {e}");
-        ApiErrorCodes::InternalServerError
-    })?;
+    MailerJob::dispatch(&global.database, email)
+        .await
+        .map_err(|e| {
+            tracing::error!("failed dispatching job: {e}");
+            ApiErrorCodes::InternalServerError
+        })?;
 
     Ok(Json(Some(FlowResponse {
         flow_id: login_request.id,
@@ -186,7 +195,7 @@ pub async fn exchange(
     Extension(auth): Extension<AuthContext>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<ExchangeRequest>,
-) -> Result<(), ApiErrorCodes> {
+) -> Result<Json<Option<FlowResponse>>, ApiErrorCodes> {
     if auth.is_authenticated() {
         return Err(ApiErrorCodes::AlreadyAuthenticated);
     }
@@ -197,10 +206,7 @@ pub async fn exchange(
     };
 
     let now = chrono::Utc::now();
-    if flow.expires_at < now
-        || flow.state != LoginFlowState::Pending
-        || flow.kind != LoginFlowKind::Otp
-    {
+    if flow.expires_at < now {
         return Err(ApiErrorCodes::InvalidOTPCode);
     }
 
@@ -208,6 +214,16 @@ pub async fn exchange(
     flow.state = LoginFlowState::Completed;
     flow.update(&mut transaction).await?;
     transaction.commit().await?;
+
+    // TODO: should shortcircuit code and then come back up to this to not have the session created copied in both places
+    match flow.kind {
+        LoginFlowKind::Otp => (),
+        // this might actually be in the future its own route (probs adding passkeys)
+        LoginFlowKind::Totp => {
+            return exchange_totp(global, cookies, request, flow).await;
+        }
+        _ => return Err(ApiErrorCodes::InvalidOTPCode),
+    };
 
     let argon2 = Argon2::default();
     let code = request.code.to_uppercase();
@@ -230,6 +246,22 @@ pub async fn exchange(
         return Err(ApiErrorCodes::InvalidOTPCode);
     };
 
+    if user.totp_enabled {
+        let login_request = UserLoginRequest::builder()
+            .user_id(user.id)
+            .kind(LoginFlowKind::Totp)
+            .secret(None)
+            .expires_at(chrono::Utc::now() + chrono::Duration::minutes(5))
+            .build();
+
+        let mut transaction = global.database.begin().await?;
+        login_request.insert(&mut transaction).await?;
+        transaction.commit().await?;
+        return Ok(Json(Some(FlowResponse {
+            flow_id: login_request.id,
+        })));
+    }
+
     let session_id = create_session(user.id, &global.database, &global.settings)
         .await
         .map_err(|e| {
@@ -238,7 +270,20 @@ pub async fn exchange(
         })?;
     create_session_cookie(session_id.to_string(), &cookies, &global.settings);
 
-    Ok(())
+    let email = Email::builder()
+        .text("hi you opened a new session :)".to_string())
+        .to(user.email)
+        .subject("new session".to_string())
+        .build();
+
+    MailerJob::dispatch(&global.database, email)
+        .await
+        .map_err(|e| {
+            tracing::error!("failed dispatching job: {e}");
+            ApiErrorCodes::InternalServerError
+        })?;
+
+    Ok(Json(None)) // TODO: this returns "null"
 }
 
 fn generate_otp_code() -> String {
@@ -249,4 +294,84 @@ fn generate_otp_code() -> String {
         .collect();
 
     code.to_uppercase()
+}
+
+async fn exchange_totp(
+    global: Arc<GlobalState>,
+    cookies: Cookies,
+    request: ExchangeRequest,
+    flow: UserLoginRequest,
+) -> Result<Json<Option<FlowResponse>>, ApiErrorCodes> {
+    let Ok(Some(user)) = User::find_by_id(flow.user_id, &global.database).await else {
+        return Err(ApiErrorCodes::TotpInvalidCode);
+    };
+
+    if !user.totp_enabled {
+        return Err(ApiErrorCodes::InternalServerError);
+    }
+
+    let Ok(Some(mut db_totp)) = UserTotp::find_one_by_user(user.id, &global.database).await else {
+        return Err(ApiErrorCodes::InternalServerError);
+    };
+
+    let encrypted_secrets = db_totp.clone().into();
+    let totp = decrypt_secrets(&encrypted_secrets, &global.settings).unwrap();
+
+    // TODO: regex for recovery codes
+    if request.code.len() == 6 {
+        let totp_client = make_totp(user.login.clone(), totp.secret, &global.settings).unwrap();
+
+        if !totp_client.check_current(&request.code).unwrap() {
+            return Err(ApiErrorCodes::TotpInvalidCode);
+        }
+
+        let mut tx = global.database.begin().await?;
+        db_totp.update(&mut tx).await?;
+        tx.commit().await?;
+    } else {
+        let (idx, check) =
+            check_recovery_code(&db_totp, &totp.recovery_secret, request.code.clone());
+        if !check {
+            return Err(ApiErrorCodes::TotpRecoveryAlreadyUsed);
+        }
+
+        set_recovery_code_used(idx, &mut db_totp, &global.database)
+            .await
+            .unwrap();
+        let email = Email::builder()
+            .text("hi you used a recovery code. have a great great night".to_string())
+            .to(user.email.clone())
+            .subject("totp recovery code used".to_string())
+            .build();
+
+        MailerJob::dispatch(&global.database, email)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed dispatching job: {e}");
+                ApiErrorCodes::InternalServerError
+            })?;
+    }
+
+    let session_id = create_session(user.id, &global.database, &global.settings)
+        .await
+        .map_err(|e| {
+            tracing::error!("failed creating session: {}", e);
+            ApiErrorCodes::InternalServerError
+        })?;
+    create_session_cookie(session_id.to_string(), &cookies, &global.settings);
+
+    let email = Email::builder()
+        .text("hi you opened a new session :)".to_string())
+        .to(user.email)
+        .subject("new session".to_string())
+        .build();
+
+    MailerJob::dispatch(&global.database, email)
+        .await
+        .map_err(|e| {
+            tracing::error!("failed dispatching job: {e}");
+            ApiErrorCodes::InternalServerError
+        })?;
+
+    Ok(Json(None))
 }

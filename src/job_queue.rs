@@ -27,10 +27,7 @@ pub trait QueuedJob: Send + Sync + 'static {
     fn expires_in() -> chrono::Duration {
         chrono::Duration::days(1)
     }
-    fn dispatch(
-        global: Arc<GlobalState>,
-        input: Self::Input,
-    ) -> impl Future<Output = anyhow::Result<()>> {
+    fn dispatch(pool: &PgPool, input: Self::Input) -> impl Future<Output = anyhow::Result<()>> {
         async move {
             let input = postcard::to_allocvec(&input)?;
 
@@ -45,7 +42,7 @@ pub trait QueuedJob: Send + Sync + 'static {
                 input,
                 Utc::now() + Self::expires_in()
             )
-            .execute(&global.database)
+            .execute(pool)
             .await?;
 
             Ok(())

@@ -3,7 +3,7 @@ use crate::database::{
     models::{user::UserId, user_session::PIDUserSessionId},
 };
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct User {
     pub id: UserId,
     pub login: String,
@@ -24,7 +24,7 @@ impl From<database::models::user::User> for User {
     }
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 
 pub struct Session {
     pub id: PIDUserSessionId,

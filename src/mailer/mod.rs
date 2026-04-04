@@ -89,7 +89,7 @@ impl QueuedJob for MailerJob {
 
     async fn run(&self, global: Arc<GlobalState>, input: Self::Input) -> anyhow::Result<()> {
         match global.mailer.mail(&input).await {
-            Ok(()) => return Ok(()),
+            Ok(()) => Ok(()),
             Err(e) => {
                 tracing::error!("something went wrong while trying to send an email: {e}");
                 Err(e)?

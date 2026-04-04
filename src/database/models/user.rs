@@ -14,8 +14,8 @@ pub struct User {
     pub email: String,
     #[builder(default = false)]
     pub email_verified: bool,
-    #[builder(default = None)]
-    pub password_hash: Option<String>,
+    #[builder(default = false)]
+    pub totp_enabled: bool,
     #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
@@ -45,14 +45,14 @@ impl User {
                 login = $2,
                 email = $3,
                 email_verified = $4,
-                password_hash = $5,
+                totp_enabled = $5,
                 updated_at = now()
              where id = $1",
             self.id as UserId,
             self.login,
             self.email,
             self.email_verified,
-            self.password_hash.as_ref(),
+            self.totp_enabled,
         )
         .execute(&mut **transaction)
         .await?;
@@ -68,7 +68,7 @@ impl User {
                 login,
                 email,
                 email_verified,
-                password_hash,
+                totp_enabled,
                 created_at,
                 updated_at
              from users where id = $1",
@@ -91,7 +91,7 @@ impl User {
                 login,
                 email,
                 email_verified,
-                password_hash,
+                totp_enabled,
                 created_at,
                 updated_at
              from users where id = any($1)",
@@ -114,7 +114,7 @@ impl User {
                 login,
                 email,
                 email_verified,
-                password_hash,
+                totp_enabled,
                 created_at,
                 updated_at
              from users where email = $1",
@@ -138,7 +138,7 @@ impl User {
                 login,
                 email,
                 email_verified,
-                password_hash,
+                totp_enabled,
                 created_at,
                 updated_at
              from users where email = $1 or login = lower($2)",
