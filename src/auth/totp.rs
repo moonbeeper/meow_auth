@@ -7,9 +7,9 @@ use rand::Rng as _;
 use sqlx::PgPool;
 use totp_rs::Secret;
 
+use crate::global::GlobalState;
 use crate::{
     database::models::{user::UserId, user_totp::UserTotp},
-    global::GlobalState,
     settings::Settings,
 };
 
