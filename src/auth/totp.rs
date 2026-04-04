@@ -7,13 +7,10 @@ use rand::Rng as _;
 use sqlx::PgPool;
 use totp_rs::Secret;
 
-use crate::global::GlobalState;
 use crate::{
     database::models::{user::UserId, user_totp::UserTotp},
     settings::Settings,
 };
-
-// TODO: add custom error type to be handled by the api
 
 pub fn make_totp(
     account: String,
@@ -25,7 +22,7 @@ pub fn make_totp(
         settings.totp.digits,
         1,
         30,
-        Secret::Encoded(secret).to_bytes().unwrap(),
+        Secret::Encoded(secret).to_bytes()?,
         Some(settings.totp.issuer.clone()),
         account,
     )?;

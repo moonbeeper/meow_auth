@@ -315,13 +315,20 @@ async fn exchange_totp(
     };
 
     let encrypted_secrets = db_totp.clone().into();
-    let totp = decrypt_secrets(&encrypted_secrets, &global.settings).unwrap();
+    let totp = decrypt_secrets(&encrypted_secrets, &global.settings).map_err(|e| {
+        tracing::error!("something went wrong while decrypting totp secrets: {e}");
+        ApiErrorCodes::InternalServerError
+    })?;
 
     // TODO: regex for recovery codes
     if request.code.len() == 6 {
-        let totp_client = make_totp(user.login.clone(), totp.secret, &global.settings).unwrap();
+        let totp_client =
+            make_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
+                tracing::error!("something went wrong while creating the totp client: {e}");
+                ApiErrorCodes::InternalServerError
+            })?;
 
-        if !totp_client.check_current(&request.code).unwrap() {
+        if !totp_client.check_current(&request.code).unwrap_or(false) {
             return Err(ApiErrorCodes::TotpInvalidCode);
         }
 
@@ -337,7 +344,13 @@ async fn exchange_totp(
 
         set_recovery_code_used(idx, &mut db_totp, &global.database)
             .await
-            .unwrap();
+            .map_err(|e| {
+                tracing::error!(
+                    "something went wrong while setting the used totp recovery code: {e}"
+                );
+                ApiErrorCodes::InternalServerError
+            })?;
+
         let email = Email::builder()
             .text("hi you used a recovery code. have a great great night".to_string())
             .to(user.email.clone())
