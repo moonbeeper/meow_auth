@@ -290,7 +290,10 @@ pub async fn enable_sudo_exchange(
 
     enable_sudo_tx(auth.session_id(), &global.database, &global.settings)
         .await
-        .unwrap();
+        .map_err(|e| {
+            tracing::error!("failed enabling sudo: {e}");
+            ApiErrorCodes::InternalServerError
+        })?;
 
     Ok(())
 }
