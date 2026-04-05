@@ -7,8 +7,6 @@ use crate::database::{
     models::{user::UserId, user_session::UserSessionId},
 };
 
-// TODO: should swap to use a db enum and parse it with sqlx::from_row
-
 #[derive(
     Debug,
     Clone,
@@ -20,8 +18,11 @@ use crate::database::{
     Eq,
     PartialOrd,
     Ord,
+    sqlx::Type,
 )]
 #[serde(rename_all = "lowercase")]
+#[sqlx(type_name = "user_auth_challenges_kind")]
+#[sqlx(rename_all = "lowercase")]
 pub enum AuthChallengeKind {
     #[default]
     Unknown,
@@ -29,24 +30,6 @@ pub enum AuthChallengeKind {
     Totp,
 }
 
-impl AuthChallengeKind {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            AuthChallengeKind::Otp => "otp",
-            AuthChallengeKind::Totp => "totp",
-            AuthChallengeKind::Unknown => "unknown",
-        }
-    }
-
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "otp" => AuthChallengeKind::Otp,
-            "totp" => AuthChallengeKind::Totp,
-            _ => Self::default(),
-        }
-    }
-}
-
 #[derive(
     Debug,
     Clone,
@@ -58,32 +41,15 @@ impl AuthChallengeKind {
     Eq,
     PartialOrd,
     Ord,
+    sqlx::Type,
 )]
 #[serde(rename_all = "lowercase")]
+#[sqlx(type_name = "user_auth_challenges_state")]
+#[sqlx(rename_all = "lowercase")]
 pub enum AuthChallengeState {
     #[default]
     Pending,
     Completed,
-    Expired,
-}
-
-impl AuthChallengeState {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Pending => "pending",
-            Self::Completed => "completed",
-            Self::Expired => "expired",
-        }
-    }
-
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "pending" => Self::Pending,
-            "completed" => Self::Completed,
-            "expired" => Self::Expired,
-            _ => Self::default(),
-        }
-    }
 }
 
 #[derive(
@@ -97,29 +63,15 @@ impl AuthChallengeState {
     Eq,
     PartialOrd,
     Ord,
+    sqlx::Type,
 )]
 #[serde(rename_all = "lowercase")]
+#[sqlx(type_name = "user_auth_challenges_purpose")]
+#[sqlx(rename_all = "lowercase")]
 pub enum AuthChallengePurpose {
     #[default]
     Login,
     Sudo,
-}
-
-impl AuthChallengePurpose {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Login => "login",
-            Self::Sudo => "sudo",
-        }
-    }
-
-    pub fn from_str(s: &str) -> Self {
-        match s {
-            "login" => Self::Login,
-            "sudo" => Self::Sudo,
-            _ => Self::default(),
-        }
-    }
 }
 
 pub type UserAuthChallengesId = UlidId;
@@ -155,10 +107,10 @@ impl UserAuthChallenges {
             self.id as UserAuthChallengesId,
             self.user_id as UserId,
             self.session_id as Option<UserSessionId>,
-            self.kind.as_str(),
+            self.kind as AuthChallengeKind,
             self.secret.as_ref(),
-            self.state.as_str(),
-            self.purpose.as_str(),
+            self.state as AuthChallengeState,
+            self.purpose as AuthChallengePurpose,
             self.expires_at
         )
         .execute(&mut **transaction)
@@ -171,7 +123,7 @@ impl UserAuthChallenges {
         sqlx::query!(
             "update user_auth_challenges set state = $2 where id = $1",
             self.id as UserAuthChallengesId,
-            self.state.as_str()
+            self.state as AuthChallengeState,
         )
         .execute(&mut **transaction)
         .await?;
@@ -183,24 +135,24 @@ impl UserAuthChallenges {
         id: UserAuthChallengesId,
         pool: &PgPool,
     ) -> Result<Option<Self>, DatabaseError> {
-        let data = sqlx::query!(
-            "select * from user_auth_challenges where id = $1 and expires_at > now() and state = 'pending'",
+        let data = sqlx::query_as!(
+            Self,
+            r#"select
+                id,
+                user_id,
+                user_session_id as "session_id?: UserSessionId",
+                kind as "kind: AuthChallengeKind",
+                state as "state: AuthChallengeState",
+                purpose as "purpose: AuthChallengePurpose",
+                secret,
+                expires_at,
+                created_at,
+                updated_at
+            from user_auth_challenges where id = $1 and expires_at > now() and state = 'pending'::user_auth_challenges_state"#,
             id as UserAuthChallengesId
         )
         .fetch_optional(pool)
-        .await?
-        .map(|v| Self {
-            id,
-            user_id: v.user_id.into(),
-            session_id: v.user_session_id.as_ref().map(|v| v.into()),
-            kind: AuthChallengeKind::from_str(&v.kind),
-            secret: v.secret,
-            state: AuthChallengeState::from_str(&v.state),
-            purpose: AuthChallengePurpose::from_str(&v.purpose),
-            expires_at: v.expires_at,
-            created_at: v.created_at,
-            updated_at: v.updated_at,
-        });
+        .await?;
 
         Ok(data)
     }
@@ -209,26 +161,24 @@ impl UserAuthChallenges {
         ids: Vec<UserAuthChallengesId>,
         pool: &PgPool,
     ) -> Result<Vec<Self>, DatabaseError> {
-        let data = sqlx::query!(
-            "select * from user_auth_challenges where id = ANY($1) and expires_at > now() and state = 'pending'",
+        let data = sqlx::query_as!(
+            Self,
+            r#"select
+                id,
+                user_id,
+                user_session_id as "session_id?: UserSessionId",
+                kind as "kind: AuthChallengeKind",
+                state as "state: AuthChallengeState",
+                purpose as "purpose: AuthChallengePurpose",
+                secret,
+                expires_at,
+                created_at,
+                updated_at
+            from user_auth_challenges where id = any($1) and expires_at > now() and state = 'pending'::user_auth_challenges_state"#,
             &ids as &[UserAuthChallengesId]
         )
         .fetch_all(pool)
-        .await?
-        .into_iter()
-        .map(|v| Self {
-            id: v.id.into(),
-            user_id: v.user_id.into(),
-            session_id: v.user_session_id.as_ref().map(|v| v.into()),
-            kind: AuthChallengeKind::from_str(&v.kind),
-            secret: v.secret,
-            state: AuthChallengeState::from_str(&v.state),
-            purpose: AuthChallengePurpose::from_str(&v.purpose),
-            expires_at: v.expires_at,
-            created_at: v.created_at,
-            updated_at: v.updated_at,
-        })
-        .collect();
+        .await?;
 
         Ok(data)
     }
@@ -238,25 +188,25 @@ impl UserAuthChallenges {
         session_id: UserSessionId,
         pool: &PgPool,
     ) -> Result<Option<Self>, DatabaseError> {
-        let data = sqlx::query!(
-            "select * from user_auth_challenges where id = $1 and user_session_id = $2 and expires_at > now() and state = 'pending'",
+        let data = sqlx::query_as!(
+            Self,
+            r#"select
+                id,
+                user_id,
+                user_session_id as "session_id?: UserSessionId",
+                kind as "kind: AuthChallengeKind",
+                state as "state: AuthChallengeState",
+                purpose as "purpose: AuthChallengePurpose",
+                secret,
+                expires_at,
+                created_at,
+                updated_at
+                from user_auth_challenges where id = $1 and user_session_id = $2 and expires_at > now() and state = 'pending'::user_auth_challenges_state"#,
             id as UserAuthChallengesId,
             session_id as UserSessionId
         )
         .fetch_optional(pool)
-        .await?
-        .map(|v| Self {
-            id,
-            user_id: v.user_id.into(),
-            session_id: v.user_session_id.as_ref().map(|v| v.into()),
-            kind: AuthChallengeKind::from_str(&v.kind),
-            secret: v.secret,
-            state: AuthChallengeState::from_str(&v.state),
-            purpose: AuthChallengePurpose::from_str(&v.purpose),
-            expires_at: v.expires_at,
-            created_at: v.created_at,
-            updated_at: v.updated_at,
-        });
+        .await?;
 
         Ok(data)
     }

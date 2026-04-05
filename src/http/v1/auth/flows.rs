@@ -64,7 +64,6 @@ pub async fn login(
         return Ok(Json(None));
     };
 
-    // TODO: maybe swap into using sha256 or sha3 variants for this? argon2 is for passwords and this is just a simple 6 char code.
     let code = generate_otp_code();
     let argon2 = Argon2::default();
     let code_hash = argon2

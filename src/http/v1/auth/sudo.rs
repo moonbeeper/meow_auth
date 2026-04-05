@@ -64,8 +64,6 @@ pub async fn get_enable_options(
     Ok(Json(SudoOptionsResponse { options }))
 }
 
-// do work like send OTP -> exchange
-
 #[derive(Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 pub struct EnableSudoRequest {
     option: SudoOption,
@@ -189,10 +187,6 @@ pub async fn enable_sudo_exchange(
     if flow.session_id != Some(auth.session_id()) {
         return Ok(());
     }
-    // let mut transaction = global.database.begin().await?;
-    // flow.state = AuthChallengeState::Completed;
-    // flow.update(&mut transaction).await?;
-    // transaction.commit().await?;
 
     let sudo_options = get_available_options(auth.user_id(), &global.database).await;
     let sudo_option = SudoOption::from(flow.kind);
@@ -287,6 +281,11 @@ pub async fn enable_sudo_exchange(
         }
         SudoOption::Passkey => todo!(),
     };
+
+    // let mut transaction = global.database.begin().await?;
+    // flow.state = AuthChallengeState::Completed;
+    // flow.update(&mut transaction).await?;
+    // transaction.commit().await?;
 
     enable_sudo_tx(auth.session_id(), &global.database, &global.settings)
         .await
