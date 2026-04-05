@@ -97,6 +97,10 @@ pub async fn delete_session(
         return Err(ApiErrorCodes::Unauthenticated);
     }
 
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
+    }
+
     let Ok(Some(session)) = DbUserSession::find_by_pid(query.id, &global.database).await else {
         return Err(ApiErrorCodes::InternalServerError);
     };
@@ -125,6 +129,10 @@ pub async fn delete_all_sessions(
 ) -> Result<(), ApiErrorCodes> {
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
+    }
+
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
     }
 
     let Ok(sessions) = DbUserSession::find_many_by_user_id(auth.user_id(), &global.database).await

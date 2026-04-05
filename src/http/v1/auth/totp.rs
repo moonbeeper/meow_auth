@@ -46,6 +46,10 @@ pub async fn create_totp(
         return Err(ApiErrorCodes::Unauthenticated);
     }
 
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
+    }
+
     let Ok(Some(user)) = User::find_by_id(auth.user_id(), &global.database).await else {
         return Err(ApiErrorCodes::InternalServerError);
     };
@@ -100,6 +104,10 @@ pub async fn exchange_totp(
 ) -> Result<(), ApiErrorCodes> {
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
+    }
+
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
     }
 
     let Ok(Some(mut user)) = User::find_by_id(auth.user_id(), &global.database).await else {
@@ -171,6 +179,10 @@ pub async fn disable_totp(
 ) -> Result<(), ApiErrorCodes> {
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
+    }
+
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
     }
 
     let Ok(Some(mut user)) = User::find_by_id(auth.user_id(), &global.database).await else {
@@ -247,6 +259,10 @@ pub async fn recovery_codes_totp(
 ) -> Result<Json<RecoveryCodesTotpResponse>, ApiErrorCodes> {
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
+    }
+
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
     }
 
     let Ok(Some(user)) = User::find_by_id(auth.user_id(), &global.database).await else {
