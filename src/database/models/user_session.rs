@@ -17,6 +17,8 @@ pub struct UserSession {
     pub pid: PIDUserSessionId,
     pub active_expires_at: chrono::DateTime<chrono::Utc>,
     pub expires_at: chrono::DateTime<chrono::Utc>,
+    #[builder(default = None)]
+    pub sudo_expires_at: Option<chrono::DateTime<chrono::Utc>>,
     #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
@@ -46,10 +48,12 @@ impl UserSession {
         sqlx::query!(
             "update user_sessions set
                 active_expires_at = $2,
+                sudo_expires_at = $3,
                 updated_at = now()
              where id = $1",
             self.id as UserSessionId,
             self.active_expires_at,
+            self.sudo_expires_at.as_ref(),
         )
         .execute(&mut **transaction)
         .await?;
@@ -93,6 +97,7 @@ impl UserSession {
                 user_id,
                 pid,
                 active_expires_at,
+                sudo_expires_at,
                 expires_at,
                 created_at,
                 updated_at
@@ -116,6 +121,7 @@ impl UserSession {
                 user_id,
                 pid,
                 active_expires_at,
+                sudo_expires_at,
                 expires_at,
                 created_at,
                 updated_at
@@ -139,6 +145,7 @@ impl UserSession {
                 user_id,
                 pid,
                 active_expires_at,
+                sudo_expires_at,
                 expires_at,
                 created_at,
                 updated_at
@@ -159,6 +166,7 @@ impl UserSession {
                 user_id,
                 pid,
                 active_expires_at,
+                sudo_expires_at,
                 expires_at,
                 created_at,
                 updated_at
@@ -182,6 +190,7 @@ impl UserSession {
                 user_id,
                 pid,
                 active_expires_at,
+                sudo_expires_at,
                 expires_at,
                 created_at,
                 updated_at
@@ -192,5 +201,11 @@ impl UserSession {
         .await?;
 
         Ok(data)
+    }
+
+    pub fn is_sudo_enabled(&self) -> bool {
+        self.sudo_expires_at
+            .map(|v| v > chrono::Utc::now())
+            .unwrap_or(false)
     }
 }

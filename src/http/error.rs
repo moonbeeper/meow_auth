@@ -35,11 +35,17 @@ pub enum ApiErrorCodes {
     #[error("the totp flow was not started before exchanging")]
     TotpFlowNotFound,
     #[error("the provided totp code is invalid")]
-    TotpInvalidCode,
+    TotpInvalidCode, // TODO: should merge the use of the code stuff like a literal InvalidCode and that's it
     #[error("totp is not enabled for this account")]
     TotpNotEnabled,
     #[error("totp recovery code is already used")]
     TotpRecoveryAlreadyUsed,
+    #[error("sudo is not enabled for this session")]
+    SudoNotEnabled,
+    #[error("sudo is already enabled for this session")]
+    SudoAlreadyEnabled,
+    #[error("chosen sudo option is not available")]
+    SudoOptionNotAvailable,
 }
 
 // wtf
@@ -74,6 +80,9 @@ impl ApiErrorCodes {
             ApiErrorCodes::TotpInvalidCode => StatusCode::UNAUTHORIZED,
             ApiErrorCodes::TotpNotEnabled => StatusCode::BAD_REQUEST,
             ApiErrorCodes::TotpRecoveryAlreadyUsed => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::SudoNotEnabled => StatusCode::UNAUTHORIZED,
+            ApiErrorCodes::SudoAlreadyEnabled => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::SudoOptionNotAvailable => StatusCode::BAD_REQUEST,
         }
     }
 }

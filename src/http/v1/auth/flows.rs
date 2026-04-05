@@ -8,13 +8,13 @@ use tower_cookies::Cookies;
 use crate::{
     auth::{
         session::{create_session, create_session_cookie},
-        totp::{check_recovery_code, decrypt_secrets, make_totp, set_recovery_code_used},
+        totp::{decrypt_secrets, is_recovery_code_used, make_totp, set_recovery_code_used},
     },
     database::{
         id::UlidId,
         models::{
             user::User,
-            user_login_request::{LoginFlowKind, LoginFlowState, UserLoginRequest},
+            user_auth_challenges::{AuthChallengeKind, AuthChallengeState, UserAuthChallenges},
             user_totp::UserTotp,
         },
     },
@@ -64,18 +64,17 @@ pub async fn login(
         return Ok(Json(None));
     };
 
-    // huh
+    // TODO: maybe swap into using sha256 or sha3 variants for this? argon2 is for passwords and this is just a simple 6 char code.
     let code = generate_otp_code();
     let argon2 = Argon2::default();
     let code_hash = argon2
         .hash_password(code.to_uppercase().as_bytes())?
         .to_string();
 
-    let login_request = UserLoginRequest::builder()
+    let login_request = UserAuthChallenges::builder()
         .user_id(user.id)
-        .kind(LoginFlowKind::Otp)
+        .kind(AuthChallengeKind::Otp)
         .secret(Some(code_hash))
-        .expires_at(chrono::Utc::now() + chrono::Duration::minutes(10))
         .build();
 
     let mut transaction = global.database.begin().await?;
@@ -144,11 +143,10 @@ pub async fn register(
         .login(request.login)
         .build();
 
-    let login_request = UserLoginRequest::builder()
+    let login_request = UserAuthChallenges::builder()
         .user_id(user.id)
-        .kind(LoginFlowKind::Otp)
+        .kind(AuthChallengeKind::Otp)
         .secret(Some(code_hash))
-        .expires_at(chrono::Utc::now() + chrono::Duration::minutes(10))
         .build();
 
     let mut transaction = global.database.begin().await?;
@@ -200,7 +198,8 @@ pub async fn exchange(
         return Err(ApiErrorCodes::AlreadyAuthenticated);
     }
 
-    let Ok(Some(mut flow)) = UserLoginRequest::find_by_id(request.flow_id, &global.database).await
+    let Ok(Some(mut flow)) =
+        UserAuthChallenges::find_by_id(request.flow_id, &global.database).await
     else {
         return Err(ApiErrorCodes::InvalidOTPCode);
     };
@@ -211,15 +210,15 @@ pub async fn exchange(
     }
 
     let mut transaction = global.database.begin().await?;
-    flow.state = LoginFlowState::Completed;
+    flow.state = AuthChallengeState::Completed;
     flow.update(&mut transaction).await?;
     transaction.commit().await?;
 
     // TODO: should shortcircuit code and then come back up to this to not have the session created copied in both places
     match flow.kind {
-        LoginFlowKind::Otp => (),
+        AuthChallengeKind::Otp => (),
         // this might actually be in the future its own route (probs adding passkeys)
-        LoginFlowKind::Totp => {
+        AuthChallengeKind::Totp => {
             return exchange_totp(global, cookies, request, flow).await;
         }
         _ => return Err(ApiErrorCodes::InvalidOTPCode),
@@ -247,9 +246,9 @@ pub async fn exchange(
     };
 
     if user.totp_enabled {
-        let login_request = UserLoginRequest::builder()
+        let login_request = UserAuthChallenges::builder()
             .user_id(user.id)
-            .kind(LoginFlowKind::Totp)
+            .kind(AuthChallengeKind::Totp)
             .secret(None)
             .expires_at(chrono::Utc::now() + chrono::Duration::minutes(5))
             .build();
@@ -286,7 +285,8 @@ pub async fn exchange(
     Ok(Json(None)) // TODO: this returns "null"
 }
 
-fn generate_otp_code() -> String {
+// TODO: to general method pretty please!
+pub fn generate_otp_code() -> String {
     let code: String = rand::rng()
         .sample_iter(&Alphanumeric)
         .take(6)
@@ -300,7 +300,7 @@ async fn exchange_totp(
     global: Arc<GlobalState>,
     cookies: Cookies,
     request: ExchangeRequest,
-    flow: UserLoginRequest,
+    flow: UserAuthChallenges,
 ) -> Result<Json<Option<FlowResponse>>, ApiErrorCodes> {
     let Ok(Some(user)) = User::find_by_id(flow.user_id, &global.database).await else {
         return Err(ApiErrorCodes::TotpInvalidCode);
@@ -337,8 +337,8 @@ async fn exchange_totp(
         tx.commit().await?;
     } else {
         let (idx, check) =
-            check_recovery_code(&db_totp, &totp.recovery_secret, request.code.clone());
-        if !check {
+            is_recovery_code_used(&db_totp, &totp.recovery_secret, request.code.clone());
+        if check {
             return Err(ApiErrorCodes::TotpRecoveryAlreadyUsed);
         }
 

@@ -172,7 +172,7 @@ pub async fn create_user_totp(
     })
 }
 
-pub fn check_recovery_code(
+pub fn is_recovery_code_used(
     user_totp: &UserTotp,
     recovery_secret: &Vec<u8>,
     code: String,
@@ -182,7 +182,7 @@ pub fn check_recovery_code(
         .position(|x| x == code)
         .map_or_else(
             || (0, false),
-            |idx| (idx, !user_totp.is_recovery_code_used(idx)),
+            |idx| (idx, user_totp.is_recovery_code_used(idx)),
         )
 }
 

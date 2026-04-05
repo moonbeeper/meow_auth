@@ -76,6 +76,8 @@ pub struct SessionSettings {
     pub active_expire_age_seconds: i64,
     #[default(60 * 10)]
     pub update_threshold_seconds: i64,
+    #[default(60 * 15)]
+    pub sudo_expire_age_seconds: i64,
 }
 
 #[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]

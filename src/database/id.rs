@@ -34,6 +34,12 @@ impl From<uuid::Uuid> for UlidId {
     }
 }
 
+impl From<&uuid::Uuid> for UlidId {
+    fn from(value: &Uuid) -> Self {
+        UlidId(ulid::Ulid::from(*value))
+    }
+}
+
 impl From<UlidId> for uuid::Uuid {
     fn from(value: UlidId) -> Self {
         value.0.into()

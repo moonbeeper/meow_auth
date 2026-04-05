@@ -6,6 +6,7 @@ use crate::global::GlobalState;
 
 mod flows;
 mod session;
+mod sudo;
 mod totp;
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
@@ -15,4 +16,5 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(flows::register))
         .nest("/session", session::routes())
         .nest("/totp", totp::routes())
+        .nest("/sudo", sudo::routes())
 }

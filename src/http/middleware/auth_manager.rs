@@ -21,6 +21,7 @@ pub enum AuthContext {
     Authenticated {
         user_id: UserId,
         session_id: UserSessionId,
+        is_sudo_enabled: bool,
     },
     Unauthenticated,
 }
@@ -41,6 +42,16 @@ impl AuthContext {
         match self {
             AuthContext::Authenticated { session_id, .. } => *session_id,
             AuthContext::Unauthenticated => UserSessionId::nil(),
+        }
+    }
+
+    pub fn is_sudo_enabled(&self) -> bool {
+        match self {
+            AuthContext::Authenticated {
+                is_sudo_enabled: is_sudo,
+                ..
+            } => *is_sudo,
+            AuthContext::Unauthenticated => false,
         }
     }
 }
@@ -180,6 +191,7 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
         request.extensions_mut().insert(AuthContext::Authenticated {
             user_id: session.user_id,
             session_id: session.id,
+            is_sudo_enabled: session.is_sudo_enabled(),
         });
         return;
     }
@@ -205,6 +217,7 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
         request.extensions_mut().insert(AuthContext::Authenticated {
             user_id: session.user_id,
             session_id: session.id,
+            is_sudo_enabled: session.is_sudo_enabled(),
         });
     }
 }
