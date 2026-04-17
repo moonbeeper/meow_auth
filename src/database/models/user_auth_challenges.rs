@@ -25,9 +25,9 @@ use crate::database::{
 #[sqlx(rename_all = "lowercase")]
 pub enum AuthChallengeKind {
     #[default]
-    Unknown,
     Otp,
     Totp,
+    Webauthn,
 }
 
 #[derive(

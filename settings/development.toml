@@ -4,6 +4,7 @@ level = "info"
 
 [http]
 bind = "127.0.0.1:8080"
+origin = "http://localhost:8080/"
 
 [http.api_docs]
 enabled = true
@@ -39,3 +40,8 @@ shutdown_timeout_enabled = true
 issuer = "meow_auth"
 encryption_secret = "852f529daf9b8b19413ef070a3252ed5aa281ef1b38c59debfebeb8aec6bb0d9"
 digits = 6
+
+[webauthn]
+rp_id = "localhost"
+rp_name = "MeowAuth"
+timeout_seconds = 300

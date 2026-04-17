@@ -8,6 +8,7 @@ mod flows;
 mod session;
 mod sudo;
 mod totp;
+mod webauthn;
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
@@ -17,4 +18,5 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .nest("/session", session::routes())
         .nest("/totp", totp::routes())
         .nest("/sudo", sudo::routes())
+        .nest("/webauthn", webauthn::routes())
 }

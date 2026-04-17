@@ -44,7 +44,7 @@ impl From<AuthChallengeKind> for SudoOption {
         match value {
             AuthChallengeKind::Otp => SudoOption::Otp,
             AuthChallengeKind::Totp => SudoOption::Totp,
-            AuthChallengeKind::Otp => SudoOption::Passkey,
+            AuthChallengeKind::Webauthn => SudoOption::Passkey,
             _ => SudoOption::default(),
         }
     }

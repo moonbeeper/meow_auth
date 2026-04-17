@@ -16,6 +16,8 @@ pub struct User {
     pub email_verified: bool,
     #[builder(default = false)]
     pub totp_enabled: bool,
+    #[builder(default = false)]
+    pub has_webauthn: bool,
     #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
@@ -46,6 +48,7 @@ impl User {
                 email = $3,
                 email_verified = $4,
                 totp_enabled = $5,
+                has_webauthn = $6,
                 updated_at = now()
              where id = $1",
             self.id as UserId,
@@ -53,6 +56,7 @@ impl User {
             self.email,
             self.email_verified,
             self.totp_enabled,
+            self.has_webauthn
         )
         .execute(&mut **transaction)
         .await?;
@@ -69,6 +73,7 @@ impl User {
                 email,
                 email_verified,
                 totp_enabled,
+                has_webauthn,
                 created_at,
                 updated_at
              from users where id = $1",
@@ -92,6 +97,7 @@ impl User {
                 email,
                 email_verified,
                 totp_enabled,
+                has_webauthn,
                 created_at,
                 updated_at
              from users where id = any($1)",
@@ -115,6 +121,7 @@ impl User {
                 email,
                 email_verified,
                 totp_enabled,
+                has_webauthn,
                 created_at,
                 updated_at
              from users where email = $1",
@@ -139,6 +146,7 @@ impl User {
                 email,
                 email_verified,
                 totp_enabled,
+                has_webauthn,
                 created_at,
                 updated_at
              from users where email = $1 or login = lower($2)",

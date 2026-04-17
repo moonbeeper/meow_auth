@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, path::Path};
+use std::{default, net::SocketAddr, path::Path};
 
 use anyhow::Context;
 use clap::Parser;
@@ -6,6 +6,7 @@ use config::Config;
 use rand::Rng;
 use smart_default::SmartDefault;
 use toml_edit::{Document, DocumentMut};
+use url::Url;
 
 #[derive(SmartDefault, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Logging {
@@ -43,6 +44,8 @@ pub struct HttpSettings {
     #[default(SocketAddr::from(([127,0,0,1],8080)))]
     pub bind: SocketAddr,
     pub api_docs: ApiDocsSettings,
+    #[default(Url::parse("http://localhost:8080").expect("failed to parse default origin burh"))]
+    pub origin: Url,
 }
 
 #[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
@@ -114,6 +117,16 @@ pub struct TotpSettings {
     pub digits: usize,
 }
 
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+pub struct WebauthnSettings {
+    #[default("localhost".to_string())]
+    pub rp_id: String,
+    #[default("MeowAuth".to_string())]
+    pub rp_name: String,
+    #[default(60*5)]
+    pub timeout_seconds: i64,
+}
+
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub logging: Logging,
@@ -124,6 +137,7 @@ pub struct Settings {
     #[serde(default)]
     pub application: ApplicationSettings,
     pub totp: TotpSettings,
+    pub webauthn: WebauthnSettings,
 }
 
 impl Settings {

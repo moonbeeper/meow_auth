@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::routing::get;
+use axum::{response::Html, routing::get};
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::global::GlobalState;
@@ -15,4 +15,9 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .nest("/auth", auth::routes())
         .nest("/me", me::routes())
         .route("/", get(|| async { "Hello, World!" }))
+        .route("/pp", get(page))
+}
+
+async fn page() -> Html<&'static str> {
+    Html("chrome devtools please")
 }
