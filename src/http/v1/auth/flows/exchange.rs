@@ -210,6 +210,7 @@ pub async fn webauthn_exchange(
     }
 
     let mut tx = global.database.begin().await.unwrap();
+    passkey.counter += 1;
     passkey.update(&mut tx).await.unwrap();
     tx.commit().await.unwrap();
 
