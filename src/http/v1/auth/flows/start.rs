@@ -3,6 +3,7 @@ use std::sync::Arc;
 use axum::{Extension, Json, extract::State};
 use tower_cookies::Cookies;
 use utoipa_axum::{router::OpenApiRouter, routes};
+use webauthn_rs::prelude::Passkey;
 use webauthn_rs_proto::RequestChallengeResponse;
 
 use crate::{
@@ -198,15 +199,12 @@ pub async fn webauthn_options(
     };
     let passkeys: Vec<_> = passkeys
         .into_iter()
-        .map(|v| serde_json::from_value(v.big_data).unwrap())
+        .flat_map(|v| serde_json::from_value::<Passkey>(v.big_data))
         .collect();
 
-    let (client_challenge, data) = global
-        .webauthn
-        .start_passkey_authentication(&passkeys)
-        .unwrap();
+    let (client_challenge, data) = global.webauthn.start_passkey_authentication(&passkeys)?;
 
-    let data = serde_json::to_value(data).unwrap();
+    let data = serde_json::to_value(data)?;
     let db_challenge = UserWebauthnChallenge::builder()
         .user_id(user.id)
         .big_data(data)
@@ -217,16 +215,15 @@ pub async fn webauthn_options(
         )
         .build();
 
-    let mut tx = global.database.begin().await.unwrap();
+    let mut tx = global.database.begin().await?;
     UserWebauthnChallenge::delete_all_by_user(
         user.id,
         WebauthnChallengeKind::Authenticate,
         &mut tx,
     )
-    .await
-    .unwrap();
-    db_challenge.insert(&mut tx).await.unwrap();
-    tx.commit().await.unwrap();
+    .await?;
+    db_challenge.insert(&mut tx).await?;
+    tx.commit().await?;
 
     create_webauthn_cookie(db_challenge.id, &cookies, &global.settings);
 

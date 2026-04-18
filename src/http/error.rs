@@ -53,6 +53,17 @@ pub enum ApiErrorCodes {
     InvalidCode,
     #[error("webauthn is not enabled for this account")]
     WebauthnNotEnabled,
+    #[error("you need totp enabled to make this action")]
+    TotpRequiredEnabled,
+    #[error("the requested webauthn challenge wasn't found")]
+    WebauthnChallengeNotFound,
+    // idk what to put in this error message. like, service??
+    #[error("an error occurred while interacting with the webauthn service")]
+    WebauthnError(#[from] webauthn_rs::prelude::WebauthnError),
+    #[error("deserialization error: {0}")]
+    Json(#[from] serde_json::Error),
+    #[error("this account's passkey was likely compromised. New attempts will be blocked")]
+    WebauthnCompromised,
 }
 
 // wtf
@@ -94,6 +105,11 @@ impl ApiErrorCodes {
             ApiErrorCodes::EmailAlreadyAssociated => StatusCode::BAD_REQUEST,
             ApiErrorCodes::LoginAlreadyAssociated => StatusCode::BAD_REQUEST,
             ApiErrorCodes::WebauthnNotEnabled => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::TotpRequiredEnabled => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::WebauthnChallengeNotFound => StatusCode::NOT_FOUND,
+            ApiErrorCodes::WebauthnError(..) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiErrorCodes::Json(..) => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::WebauthnCompromised => StatusCode::FORBIDDEN,
         }
     }
 }

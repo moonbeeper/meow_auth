@@ -17,7 +17,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         middleware::auth_manager::AuthContext,
-        v1::types::RegisterPasskeyRequest,
+        v1::types::{AlrightResponse, RegisterPasskeyRequest},
     },
 };
 
@@ -43,20 +43,20 @@ pub async fn register_passkey_options(
         return Err(ApiErrorCodes::Unauthenticated);
     }
 
-    // if auth.is_sudo_enabled() {
-    //     return Err(ApiErrorCodes::SudoAlreadyEnabled);
-    // }
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
+    }
 
     let Ok(Some(user)) = User::find_by_id(auth.user_id(), &global.database).await else {
-        return Err(ApiErrorCodes::Meow);
+        return Err(ApiErrorCodes::InternalServerError);
     };
 
-    // if !user.totp_enabled {
-    //     return Err(ApiErrorCodes::SudoAlreadyEnabled);
-    // }
+    if !user.totp_enabled {
+        return Err(ApiErrorCodes::TotpRequiredEnabled);
+    }
 
     let Ok(passkeys) = UserWebauthn::find_many_by_user_id(user.id, &global.database).await else {
-        return Err(ApiErrorCodes::Meow);
+        return Err(ApiErrorCodes::InternalServerError);
     };
     let credential_ids = passkeys
         .iter()
@@ -64,17 +64,14 @@ pub async fn register_passkey_options(
         .collect();
 
     // exclude credentials are the pid of the already stored passkeys
-    let (client_challenge, data) = global
-        .webauthn
-        .start_passkey_registration(
-            user.id.into(),
-            &user.email,
-            &user.login,
-            Some(credential_ids),
-        )
-        .unwrap();
+    let (client_challenge, data) = global.webauthn.start_passkey_registration(
+        user.id.into(),
+        &user.email,
+        &user.login,
+        Some(credential_ids),
+    )?;
 
-    let data = serde_json::to_value(data).unwrap();
+    let data = serde_json::to_value(data)?;
     let db_challenge = UserWebauthnChallenge::builder()
         .user_id(user.id)
         .big_data(data)
@@ -85,12 +82,11 @@ pub async fn register_passkey_options(
         )
         .build();
 
-    let mut tx = global.database.begin().await.unwrap();
+    let mut tx = global.database.begin().await?;
     UserWebauthnChallenge::delete_all_by_user(user.id, WebauthnChallengeKind::Register, &mut tx)
-        .await
-        .unwrap();
-    db_challenge.insert(&mut tx).await.unwrap();
-    tx.commit().await.unwrap();
+        .await?;
+    db_challenge.insert(&mut tx).await?;
+    tx.commit().await?;
 
     Ok(Json(client_challenge))
 }
@@ -107,24 +103,26 @@ pub async fn register_passkey_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<RegisterPasskeyRequest>,
-) -> Result<(), ApiErrorCodes> {
-    let request: RegisterPublicKeyCredential =
-        request.try_into().map_err(|_| ApiErrorCodes::InvalidCode)?;
+) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
     }
 
-    // if auth.is_sudo_enabled() {
-    //     return Err(ApiErrorCodes::SudoAlreadyEnabled);
-    // }
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
+    }
+
+    let request: RegisterPublicKeyCredential = request
+        .try_into()
+        .map_err(|_| ApiErrorCodes::WebauthnChallengeNotFound)?;
 
     let Ok(Some(mut user)) = User::find_by_id(auth.user_id(), &global.database).await else {
-        return Err(ApiErrorCodes::Meow);
+        return Err(ApiErrorCodes::InternalServerError);
     };
 
-    // if !user.totp_enabled {
-    //     return Err(ApiErrorCodes::SudoAlreadyEnabled);
-    // }
+    if !user.totp_enabled {
+        return Err(ApiErrorCodes::TotpRequiredEnabled);
+    }
 
     let Ok(Some(db_challenge)) = UserWebauthnChallenge::find_by_user_id(
         user.id,
@@ -133,24 +131,21 @@ pub async fn register_passkey_exchange(
     )
     .await
     else {
-        return Err(ApiErrorCodes::SudoOptionNotAvailable);
+        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
-    let mut tx = global.database.begin().await.unwrap();
-    db_challenge.delete(&mut tx).await.unwrap();
-    tx.commit().await.unwrap();
+    let mut tx = global.database.begin().await?;
+    db_challenge.delete(&mut tx).await?;
+    tx.commit().await?;
 
-    let challenge: PasskeyRegistration = serde_json::from_value(db_challenge.big_data).unwrap();
-
+    let client_challenge: PasskeyRegistration = serde_json::from_value(db_challenge.big_data)?;
     let aaguid = get_aaguid(&request.response.attestation_object)
         .ok()
         .map(|v| v.1);
 
     let passkey = global
         .webauthn
-        .finish_passkey_registration(&request, &challenge)
-        .unwrap(); // todo: handle errors properly dude
-
+        .finish_passkey_registration(&request, &client_challenge)?;
     let cred_id = passkey.cred_id().clone();
 
     // assert that the cred id is not already used for another passkey.
@@ -159,13 +154,12 @@ pub async fn register_passkey_exchange(
         .unwrap()
         .is_some()
     {
-        return Err(ApiErrorCodes::InvalidCode);
+        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     }
 
-    let big_data = serde_json::to_value(passkey).unwrap();
-    let current_passkey_count = UserWebauthn::get_count_by_user_id(user.id, &global.database)
-        .await
-        .unwrap();
+    let big_data = serde_json::to_value(passkey)?;
+    let current_passkey_count =
+        UserWebauthn::get_count_by_user_id(user.id, &global.database).await?;
 
     let passkey = UserWebauthn::builder()
         .user_id(user.id)
@@ -175,11 +169,11 @@ pub async fn register_passkey_exchange(
         .big_data(big_data)
         .build();
 
-    let mut tx = global.database.begin().await.unwrap();
+    let mut tx = global.database.begin().await?;
     user.has_webauthn = true;
-    user.update(&mut tx).await.unwrap();
-    passkey.insert(&mut tx).await.unwrap();
-    tx.commit().await.unwrap();
+    user.update(&mut tx).await?;
+    passkey.insert(&mut tx).await?;
+    tx.commit().await?;
 
-    Ok(())
+    Ok(Json(AlrightResponse::default()))
 }

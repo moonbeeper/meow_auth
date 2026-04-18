@@ -153,15 +153,16 @@ pub async fn webauthn_exchange(
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<AuthenticationPasskeyRequest>,
 ) -> Result<RouteEither<Json<FlowResponse>, Json<AlrightResponse>>, ApiErrorCodes> {
-    let request: PublicKeyCredential =
-        request.try_into().map_err(|_| ApiErrorCodes::InvalidCode)?;
-
     if auth.is_authenticated() {
         return Err(ApiErrorCodes::AlreadyAuthenticated);
     }
 
+    let request: PublicKeyCredential = request
+        .try_into()
+        .map_err(|_| ApiErrorCodes::WebauthnChallengeNotFound)?;
+
     let Some(challenge_id) = get_challenge_id_from_cookies(&cookies, &global.settings) else {
-        return Err(ApiErrorCodes::SudoAlreadyEnabled);
+        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
     let Ok(Some(db_challenge)) = UserWebauthnChallenge::find_by_id(
@@ -171,48 +172,48 @@ pub async fn webauthn_exchange(
     )
     .await
     else {
-        return Err(ApiErrorCodes::SudoOptionNotAvailable);
+        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
     let Ok(Some(user)) = User::find_by_id(db_challenge.user_id, &global.database).await else {
         return Err(ApiErrorCodes::Unauthenticated);
     };
 
-    let mut tx = global.database.begin().await.unwrap();
-    db_challenge.delete(&mut tx).await.unwrap();
-    tx.commit().await.unwrap();
+    let mut tx = global.database.begin().await?;
+    db_challenge.delete(&mut tx).await?;
+    tx.commit().await?;
 
-    let challenge: PasskeyAuthentication = serde_json::from_value(db_challenge.big_data).unwrap();
+    let challenge: PasskeyAuthentication = serde_json::from_value(db_challenge.big_data)?;
 
     let auth_result = global
         .webauthn
-        .finish_passkey_authentication(&request, &challenge)
-        .unwrap(); // todo: handle errors properly
+        .finish_passkey_authentication(&request, &challenge)?; // todo: handle errors properly
 
     let Ok(Some(mut passkey)) =
         UserWebauthn::find_by_credential_id(auth_result.cred_id(), &global.database).await
     else {
-        return Err(ApiErrorCodes::InvalidCode);
+        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
     // check counter to account for cloning attackssss
     if auth_result.counter() <= passkey.counter as u32 {
-        return Err(ApiErrorCodes::EmailAlreadyAssociated);
+        // TODO: cloning attack. deactivate passkey and notify via email
+        return Err(ApiErrorCodes::WebauthnCompromised);
     }
     if passkey.user_id != user.id {
-        return Err(ApiErrorCodes::Meow);
+        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     }
 
     if auth_result.needs_update() {
-        let mut big_data: Passkey = serde_json::from_value(passkey.big_data).unwrap();
+        let mut big_data: Passkey = serde_json::from_value(passkey.big_data)?;
         big_data.update_credential(&auth_result);
-        passkey.big_data = serde_json::to_value(big_data).unwrap();
+        passkey.big_data = serde_json::to_value(big_data)?;
     }
 
-    let mut tx = global.database.begin().await.unwrap();
+    let mut tx = global.database.begin().await?;
     passkey.counter += 1;
-    passkey.update(&mut tx).await.unwrap();
-    tx.commit().await.unwrap();
+    passkey.update(&mut tx).await?;
+    tx.commit().await?;
 
     let session_id = create_session(passkey.user_id, &global.database, &global.settings)
         .await
