@@ -6,8 +6,9 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
     auth::{
+        otp::generate_otp_code,
         sudo::{SudoOption, enable_sudo_tx, get_available_options},
-        totp::{decrypt_secrets, is_recovery_code_used, make_totp, set_recovery_code_used},
+        totp::{decrypt_secrets, get_totp, is_recovery_code_used, set_recovery_code_used},
     },
     database::{
         id::UlidId,
@@ -21,7 +22,6 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         middleware::auth_manager::AuthContext,
-        v1::auth::flows::generate_otp_code,
     },
     job_queue::QueuedJob as _,
     mailer::{Email, MailerJob},
@@ -104,7 +104,7 @@ pub async fn enable_sudo(
     let mut secret = None;
     if request.option == SudoOption::Otp {
         let Ok(Some(user)) = User::find_by_id(auth.user_id(), &global.database).await else {
-            return Err(ApiErrorCodes::InvalidOTPCode);
+            return Err(ApiErrorCodes::InvalidCode);
         };
 
         let code = generate_otp_code();
@@ -172,16 +172,16 @@ pub async fn enable_sudo_exchange(
 
     let Ok(Some(flow)) = UserAuthChallenges::find_by_id(request.flow_id, &global.database).await
     else {
-        return Err(ApiErrorCodes::InvalidOTPCode);
+        return Err(ApiErrorCodes::InvalidCode);
     };
 
     if flow.purpose != AuthChallengePurpose::Sudo {
-        return Err(ApiErrorCodes::InvalidOTPCode);
+        return Err(ApiErrorCodes::InvalidCode);
     }
 
     let now = chrono::Utc::now();
     if flow.expires_at < now {
-        return Err(ApiErrorCodes::InvalidOTPCode);
+        return Err(ApiErrorCodes::InvalidCode);
     }
 
     if flow.session_id != Some(auth.session_id()) {
@@ -210,12 +210,12 @@ pub async fn enable_sudo_exchange(
                 .verify_password(code.as_bytes(), &parsed_hash)
                 .is_err()
             {
-                return Err(ApiErrorCodes::InvalidOTPCode);
+                return Err(ApiErrorCodes::InvalidCode);
             }
         }
         SudoOption::Totp => {
             let Ok(Some(user)) = User::find_by_id(auth.user_id(), &global.database).await else {
-                return Err(ApiErrorCodes::InvalidOTPCode);
+                return Err(ApiErrorCodes::InvalidCode);
             };
 
             if !user.totp_enabled {
@@ -235,14 +235,14 @@ pub async fn enable_sudo_exchange(
 
             // TODO: regex for recovery codes
             if request.code.len() == 6 {
-                let totp_client = make_totp(user.login.clone(), totp.secret, &global.settings)
+                let totp_client = get_totp(user.login.clone(), totp.secret, &global.settings)
                     .map_err(|e| {
                         tracing::error!("something went wrong while creating the totp client: {e}");
                         ApiErrorCodes::InternalServerError
                     })?;
 
                 if !totp_client.check_current(&request.code).unwrap_or(false) {
-                    return Err(ApiErrorCodes::TotpInvalidCode);
+                    return Err(ApiErrorCodes::InvalidCode);
                 }
 
                 let mut tx = global.database.begin().await?;

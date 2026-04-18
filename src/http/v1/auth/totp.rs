@@ -4,7 +4,7 @@ use axum::{Extension, Json, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    auth::totp::{create_user_totp, decrypt_secrets, make_totp, usable_recovery_codes},
+    auth::totp::{create_user_totp, decrypt_secrets, get_totp, usable_recovery_codes},
     database::models::{user::User, user_totp::UserTotp as DbUserTotp},
     global::GlobalState,
     http::{
@@ -69,11 +69,10 @@ pub async fn create_totp(
             ApiErrorCodes::InternalServerError
         })?;
 
-    let totp_client =
-        make_totp(user.login, totp.secret.clone(), &global.settings).map_err(|e| {
-            tracing::error!("something went wrong while creating the totp client: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    let totp_client = get_totp(user.login, totp.secret.clone(), &global.settings).map_err(|e| {
+        tracing::error!("something went wrong while creating the totp client: {e}");
+        ApiErrorCodes::InternalServerError
+    })?;
     let uri = totp_client.get_url();
 
     Ok(Json(CreateTotpResponse {
@@ -128,14 +127,13 @@ pub async fn exchange_totp(
         tracing::error!("something went wrong while decrypting totp secrets: {e}");
         ApiErrorCodes::InternalServerError
     })?;
-    let totp_client =
-        make_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
-            tracing::error!("something went wrong while creating the totp client: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    let totp_client = get_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
+        tracing::error!("something went wrong while creating the totp client: {e}");
+        ApiErrorCodes::InternalServerError
+    })?;
 
     if !totp_client.check_current(&request.code).unwrap_or(false) {
-        return Err(ApiErrorCodes::TotpInvalidCode);
+        return Err(ApiErrorCodes::InvalidCode);
     }
 
     let mut tx = global.database.begin().await?;
@@ -203,14 +201,13 @@ pub async fn disable_totp(
         tracing::error!("something went wrong while decrypting totp secrets: {e}");
         ApiErrorCodes::InternalServerError
     })?;
-    let totp_client =
-        make_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
-            tracing::error!("something went wrong while creating the totp client: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    let totp_client = get_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
+        tracing::error!("something went wrong while creating the totp client: {e}");
+        ApiErrorCodes::InternalServerError
+    })?;
 
     if !totp_client.check_current(&request.code).unwrap_or(false) {
-        return Err(ApiErrorCodes::TotpInvalidCode);
+        return Err(ApiErrorCodes::InvalidCode);
     }
 
     let mut tx = global.database.begin().await?;
@@ -283,14 +280,13 @@ pub async fn recovery_codes_totp(
         tracing::error!("something went wrong while decrypting totp secrets: {e}");
         ApiErrorCodes::InternalServerError
     })?;
-    let totp_client =
-        make_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
-            tracing::error!("something went wrong while creating the totp client: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    let totp_client = get_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
+        tracing::error!("something went wrong while creating the totp client: {e}");
+        ApiErrorCodes::InternalServerError
+    })?;
 
     if !totp_client.check_current(&request.code).unwrap_or(false) {
-        return Err(ApiErrorCodes::TotpInvalidCode);
+        return Err(ApiErrorCodes::InvalidCode);
     }
 
     let recovery_codes = usable_recovery_codes(&db_totp, &totp.recovery_secret);

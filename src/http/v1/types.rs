@@ -1,9 +1,6 @@
-use base64urlsafedata::Base64UrlSafeData;
+use axum::response::IntoResponse;
 use webauthn_rs::prelude::RegisterPublicKeyCredential;
-use webauthn_rs_proto::{
-    AuthenticatorAttestationResponseRaw, CreationChallengeResponse,
-    RegistrationExtensionsClientOutputs,
-};
+use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::database::{
     self,
@@ -76,5 +73,61 @@ impl TryFrom<RegisterPasskeyRequest> for RegisterPublicKeyCredential {
 
     fn try_from(value: RegisterPasskeyRequest) -> Result<Self, Self::Error> {
         serde_json::from_value(serde_json::to_value(value)?)
+    }
+}
+
+// Copy and paste from webauthn_rs_proto::PublicKeyCredential with some fields being serde_json::Value. its for the utoipa stuff :)
+#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema)]
+pub struct AuthenticationPasskeyRequest {
+    /// The credential Id, likely base64
+    pub id: String,
+    /// The binary of the credential id.
+    #[serde(rename = "rawId")]
+    pub raw_id: serde_json::Value,
+    /// The authenticator response.
+    pub response: serde_json::Value,
+    /// Unsigned Client processed extensions.
+    #[serde(default, alias = "clientExtensionResults")]
+    pub extensions: serde_json::Value,
+    /// The authenticator type.
+    #[serde(rename = "type")]
+    pub type_: String,
+}
+
+impl TryFrom<AuthenticationPasskeyRequest> for PublicKeyCredential {
+    type Error = serde_json::Error;
+
+    fn try_from(value: AuthenticationPasskeyRequest) -> Result<Self, Self::Error> {
+        serde_json::from_value(serde_json::to_value(value)?)
+    }
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum AuthMethod {
+    Otp,
+    Totp,
+    Passkey,
+}
+
+#[derive(
+    Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema, smart_default::SmartDefault,
+)]
+pub struct AlrightResponse {
+    #[default = true]
+    ok: bool,
+}
+
+pub enum RouteEither<L, R> {
+    Left(L),
+    Right(R),
+}
+
+impl<L: IntoResponse, R: IntoResponse> IntoResponse for RouteEither<L, R> {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            RouteEither::Left(v) => v.into_response(),
+            RouteEither::Right(v) => v.into_response(),
+        }
     }
 }

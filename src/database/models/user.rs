@@ -133,8 +133,7 @@ impl User {
         Ok(data)
     }
 
-    pub async fn find_by_email_and_login(
-        email: String,
+    pub async fn find_by_login(
         login: String,
         pool: &PgPool,
     ) -> Result<Option<Self>, DatabaseError> {
@@ -149,8 +148,7 @@ impl User {
                 has_webauthn,
                 created_at,
                 updated_at
-             from users where email = $1 or login = lower($2)",
-            email,
+             from users where login = lower($1)",
             login
         )
         .fetch_optional(pool)

@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use utoipa_axum::{router::OpenApiRouter, routes};
+use axum::routing::get;
+use utoipa_axum::router::OpenApiRouter;
 
 use crate::global::GlobalState;
 
@@ -12,11 +13,10 @@ mod webauthn;
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(flows::login))
-        .routes(routes!(flows::exchange))
-        .routes(routes!(flows::register))
+        .nest("/flow", flows::routes())
         .nest("/session", session::routes())
         .nest("/totp", totp::routes())
         .nest("/sudo", sudo::routes())
         .nest("/webauthn", webauthn::routes())
+        .route("/", get(|| async { "hi there" }))
 }

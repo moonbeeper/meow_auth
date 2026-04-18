@@ -88,7 +88,36 @@ impl UserWebauthnChallenge {
         Ok(())
     }
 
-    pub async fn find_by_userid(
+    pub async fn find_by_id(
+        id: UserWebauthnChallengeId,
+        kind: WebauthnChallengeKind,
+        pool: &PgPool,
+    ) -> Result<Option<Self>, DatabaseError> {
+        let data = sqlx::query_as!(
+            Self,
+            r#"select
+                id,
+                user_id,
+                kind as "kind: WebauthnChallengeKind",
+                big_data,
+                expires_at,
+                created_at,
+                updated_at
+            from user_webauthn_challenges where id = $1 and expires_at > now() and kind = $2 limit 1"#,
+            id as UserWebauthnChallengeId,
+            kind as WebauthnChallengeKind
+        )
+        .fetch_one(pool)
+        .await;
+
+        match data {
+            Ok(data) => Ok(Some(data)),
+            Err(sqlx::Error::RowNotFound) => Ok(None),
+            Err(e) => Err(e)?,
+        }
+    }
+
+    pub async fn find_by_user_id(
         id: UserId,
         kind: WebauthnChallengeKind,
         pool: &PgPool,

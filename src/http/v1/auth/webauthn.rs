@@ -65,7 +65,7 @@ pub async fn register_passkey_options(
 
     // exclude credentials are the pid of the already stored passkeys
     let (client_challenge, data) = global
-        .webauth
+        .webauthn
         .start_passkey_registration(
             user.id.into(),
             &user.email,
@@ -108,9 +108,8 @@ pub async fn register_passkey_exchange(
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<RegisterPasskeyRequest>,
 ) -> Result<(), ApiErrorCodes> {
-    let request: RegisterPublicKeyCredential = request
-        .try_into()
-        .map_err(|_| ApiErrorCodes::TotpInvalidCode)?;
+    let request: RegisterPublicKeyCredential =
+        request.try_into().map_err(|_| ApiErrorCodes::InvalidCode)?;
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
     }
@@ -119,7 +118,7 @@ pub async fn register_passkey_exchange(
     //     return Err(ApiErrorCodes::SudoAlreadyEnabled);
     // }
 
-    let Ok(Some(user)) = User::find_by_id(auth.user_id(), &global.database).await else {
+    let Ok(Some(mut user)) = User::find_by_id(auth.user_id(), &global.database).await else {
         return Err(ApiErrorCodes::Meow);
     };
 
@@ -127,7 +126,7 @@ pub async fn register_passkey_exchange(
     //     return Err(ApiErrorCodes::SudoAlreadyEnabled);
     // }
 
-    let Ok(Some(db_challenge)) = UserWebauthnChallenge::find_by_userid(
+    let Ok(Some(db_challenge)) = UserWebauthnChallenge::find_by_user_id(
         user.id,
         WebauthnChallengeKind::Register,
         &global.database,
@@ -148,9 +147,10 @@ pub async fn register_passkey_exchange(
         .map(|v| v.1);
 
     let passkey = global
-        .webauth
+        .webauthn
         .finish_passkey_registration(&request, &challenge)
-        .unwrap();
+        .unwrap(); // todo: handle errors properly dude
+
     let cred_id = passkey.cred_id().clone();
 
     // assert that the cred id is not already used for another passkey.
@@ -159,7 +159,7 @@ pub async fn register_passkey_exchange(
         .unwrap()
         .is_some()
     {
-        return Err(ApiErrorCodes::TotpInvalidCode);
+        return Err(ApiErrorCodes::InvalidCode);
     }
 
     let big_data = serde_json::to_value(passkey).unwrap();
@@ -176,6 +176,8 @@ pub async fn register_passkey_exchange(
         .build();
 
     let mut tx = global.database.begin().await.unwrap();
+    user.has_webauthn = true;
+    user.update(&mut tx).await.unwrap();
     passkey.insert(&mut tx).await.unwrap();
     tx.commit().await.unwrap();
 

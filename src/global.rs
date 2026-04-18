@@ -10,7 +10,7 @@ pub struct GlobalState {
     pub settings: Settings,
     pub database: sqlx::PgPool,
     pub mailer: Mailer,
-    pub webauth: Arc<Webauthn>,
+    pub webauthn: Arc<Webauthn>,
 }
 
 impl GlobalState {
@@ -31,7 +31,7 @@ impl GlobalState {
             settings,
             database,
             mailer,
-            webauth: Arc::new(webauth),
+            webauthn: Arc::new(webauth),
         }))
     }
 }

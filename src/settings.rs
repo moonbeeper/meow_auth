@@ -1,4 +1,4 @@
-use std::{default, net::SocketAddr, path::Path};
+use std::{net::SocketAddr, path::Path};
 
 use anyhow::Context;
 use clap::Parser;
@@ -125,6 +125,8 @@ pub struct WebauthnSettings {
     pub rp_name: String,
     #[default(60*5)]
     pub timeout_seconds: i64,
+    #[default(generate_secret_key(32))]
+    pub secret_key: String,
 }
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]

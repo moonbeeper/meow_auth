@@ -12,7 +12,7 @@ use crate::{
     settings::Settings,
 };
 
-pub fn make_totp(
+pub fn get_totp(
     account: String,
     secret: String,
     settings: &Settings,

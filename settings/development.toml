@@ -45,3 +45,4 @@ digits = 6
 rp_id = "localhost"
 rp_name = "MeowAuth"
 timeout_seconds = 300
+secret_key = "566856341c6078c3345fa15738ea96df3e5920585fed0446a0a95b1e7337e64a"

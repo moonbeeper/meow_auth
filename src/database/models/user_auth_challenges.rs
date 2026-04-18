@@ -84,6 +84,7 @@ pub struct UserAuthChallenges {
     #[builder(default = None)]
     pub session_id: Option<UserSessionId>,
     pub kind: AuthChallengeKind,
+    #[builder(default = None)]
     pub secret: Option<String>,
     #[builder(default = AuthChallengeState::default())]
     pub state: AuthChallengeState,

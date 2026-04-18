@@ -18,6 +18,8 @@ pub struct UserWebauthn {
     pub credential_id: Vec<u8>,
     #[builder(default = Some(uuid::Uuid::from_u128(0)))]
     pub aaguid: Option<uuid::Uuid>,
+    #[builder(default = 1)]
+    pub counter: i32,
     pub big_data: serde_json::Value,
     #[builder(default = None)]
     pub last_used_at: Option<chrono::DateTime<chrono::Utc>>,
@@ -53,11 +55,13 @@ impl UserWebauthn {
         sqlx::query!(
             "update user_webauthn set
                 big_data = $2,
+                counter = $3,
                 last_used_at = now(),
                 updated_at = now()
              where id = $1",
             self.id as UserWebauthnId,
             self.big_data,
+            self.counter
         )
         .execute(&mut **transaction)
         .await?;
@@ -117,6 +121,7 @@ impl UserWebauthn {
                 display_name,
                 credential_id,
                 aaguid,
+                counter,
                 big_data,
                 last_used_at,
                 created_at,
@@ -143,6 +148,7 @@ impl UserWebauthn {
                 display_name,
                 credential_id,
                 aaguid,
+                counter,
                 big_data,
                 last_used_at,
                 created_at,
@@ -169,6 +175,7 @@ impl UserWebauthn {
                 display_name,
                 credential_id,
                 aaguid,
+                counter,
                 big_data,
                 last_used_at,
                 created_at,
@@ -192,6 +199,7 @@ impl UserWebauthn {
                 display_name,
                 credential_id,
                 aaguid,
+                counter,
                 big_data,
                 last_used_at,
                 created_at,
@@ -205,8 +213,8 @@ impl UserWebauthn {
         Ok(data)
     }
 
-    pub async fn find_by_credential_id<'a>(
-        id: &'a [u8],
+    pub async fn find_by_credential_id(
+        id: &[u8],
         pool: &PgPool,
     ) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
@@ -218,6 +226,7 @@ impl UserWebauthn {
                 display_name,
                 credential_id,
                 aaguid,
+                counter,
                 big_data,
                 last_used_at,
                 created_at,

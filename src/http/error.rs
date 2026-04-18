@@ -4,6 +4,7 @@ use crate::database::error::DatabaseError;
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct ApiError<'a> {
+    ok: bool,
     code: &'a str,
     message: String,
 }
@@ -28,14 +29,10 @@ pub enum ApiErrorCodes {
     InternalServerError,
     #[error("the requested session was not found")]
     SessionNotFound,
-    #[error("the provided OTP code is invalid or expired")]
-    InvalidOTPCode, // TODO: should merge the use of the code stuff like a literal InvalidCode and that's it
     #[error("totp is already enabled for this account")]
     TotpAlreadyEnabled,
     #[error("the totp flow was not started before exchanging")]
     TotpFlowNotFound,
-    #[error("the provided totp code is invalid")]
-    TotpInvalidCode, // TODO: should merge the use of the code stuff like a literal InvalidCode and that's it
     #[error("totp is not enabled for this account")]
     TotpNotEnabled,
     #[error("totp recovery code is already used")]
@@ -46,6 +43,16 @@ pub enum ApiErrorCodes {
     SudoAlreadyEnabled,
     #[error("chosen sudo option is not available")]
     SudoOptionNotAvailable,
+    #[error("either the provided email or login is invalid")]
+    AccountNotFound, // man. this hurts a bit.
+    #[error("the provided email is already associated with another account")]
+    EmailAlreadyAssociated, // man. this hurts a bit.
+    #[error("the provided login is already associated with another account")]
+    LoginAlreadyAssociated, // man. this hurts a bit.
+    #[error("the provided code is invalid")]
+    InvalidCode,
+    #[error("webauthn is not enabled for this account")]
+    WebauthnNotEnabled,
 }
 
 // wtf
@@ -58,6 +65,7 @@ impl From<()> for ApiErrorCodes {
 impl ApiErrorCodes {
     fn as_api_error<'a>(&self) -> ApiError<'a> {
         ApiError {
+            ok: false,
             code: self.into(),
             message: self.to_string(),
         }
@@ -74,15 +82,18 @@ impl ApiErrorCodes {
             ApiErrorCodes::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
             ApiErrorCodes::Unauthenticated => StatusCode::UNAUTHORIZED,
             ApiErrorCodes::SessionNotFound => StatusCode::NOT_FOUND,
-            ApiErrorCodes::InvalidOTPCode => StatusCode::UNAUTHORIZED,
+            ApiErrorCodes::InvalidCode => StatusCode::UNAUTHORIZED,
             ApiErrorCodes::TotpAlreadyEnabled => StatusCode::BAD_REQUEST,
             ApiErrorCodes::TotpFlowNotFound => StatusCode::NOT_FOUND,
-            ApiErrorCodes::TotpInvalidCode => StatusCode::UNAUTHORIZED,
             ApiErrorCodes::TotpNotEnabled => StatusCode::BAD_REQUEST,
             ApiErrorCodes::TotpRecoveryAlreadyUsed => StatusCode::BAD_REQUEST,
             ApiErrorCodes::SudoNotEnabled => StatusCode::UNAUTHORIZED,
             ApiErrorCodes::SudoAlreadyEnabled => StatusCode::BAD_REQUEST,
             ApiErrorCodes::SudoOptionNotAvailable => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::AccountNotFound => StatusCode::NOT_FOUND,
+            ApiErrorCodes::EmailAlreadyAssociated => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::LoginAlreadyAssociated => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::WebauthnNotEnabled => StatusCode::BAD_REQUEST,
         }
     }
 }
