@@ -1,13 +1,17 @@
 use std::sync::Arc;
 
 use axum::{Extension, Json, extract::State};
+use tower_cookies::Cookies;
 use utoipa_axum::{router::OpenApiRouter, routes};
+use webauthn_rs_proto::RequestChallengeResponse;
 
 use crate::{
-    auth::otp::get_otp_code,
+    auth::{otp::get_otp_code, webauthn::create_webauthn_cookie},
     database::models::{
         user::User,
         user_auth_challenges::{AuthChallengeKind, UserAuthChallenges},
+        user_webauthn::UserWebauthn,
+        user_webauthn_challenges::{UserWebauthnChallenge, WebauthnChallengeKind},
     },
     global::GlobalState,
     http::{
@@ -26,6 +30,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(otp_login))
         .routes(routes!(otp_register))
+        .routes(routes!(webauthn_options))
 }
 
 #[utoipa::path(
@@ -160,4 +165,70 @@ pub async fn otp_register(
         flow_id: login_request.id,
         next_method: vec![AuthMethod::Otp],
     }))
+}
+
+#[utoipa::path(
+    post,
+    path = "/webauthn",
+    responses(
+        (status = 200, description = "login flow created"),
+        (status = 500, description = "internal server error", body = ApiError)
+    )
+)]
+pub async fn webauthn_options(
+    State(global): State<Arc<GlobalState>>,
+    Extension(auth): Extension<AuthContext>,
+    Extension(cookies): Extension<Cookies>,
+    Json(request): Json<FlowRequest>,
+) -> Result<Json<RequestChallengeResponse>, ApiErrorCodes> {
+    if auth.is_authenticated() {
+        return Err(ApiErrorCodes::AlreadyAuthenticated);
+    }
+
+    let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
+        return Err(ApiErrorCodes::AccountNotFound);
+    };
+
+    if !user.has_webauthn {
+        return Err(ApiErrorCodes::WebauthnNotEnabled);
+    }
+
+    let Ok(passkeys) = UserWebauthn::find_many_by_user_id(user.id, &global.database).await else {
+        return Err(ApiErrorCodes::Meow);
+    };
+    let passkeys: Vec<_> = passkeys
+        .into_iter()
+        .map(|v| serde_json::from_value(v.big_data).unwrap())
+        .collect();
+
+    let (client_challenge, data) = global
+        .webauthn
+        .start_passkey_authentication(&passkeys)
+        .unwrap();
+
+    let data = serde_json::to_value(data).unwrap();
+    let db_challenge = UserWebauthnChallenge::builder()
+        .user_id(user.id)
+        .big_data(data)
+        .kind(WebauthnChallengeKind::Authenticate)
+        .expires_at(
+            chrono::Utc::now()
+                + chrono::Duration::seconds(global.settings.webauthn.timeout_seconds),
+        )
+        .build();
+
+    let mut tx = global.database.begin().await.unwrap();
+    UserWebauthnChallenge::delete_all_by_user(
+        user.id,
+        WebauthnChallengeKind::Authenticate,
+        &mut tx,
+    )
+    .await
+    .unwrap();
+    db_challenge.insert(&mut tx).await.unwrap();
+    tx.commit().await.unwrap();
+
+    create_webauthn_cookie(db_challenge.id, &cookies, &global.settings);
+
+    Ok(Json(client_challenge))
 }
