@@ -124,7 +124,7 @@ pub async fn register_passkey_exchange(
         return Err(ApiErrorCodes::TotpRequiredEnabled);
     }
 
-    let Ok(Some(db_challenge)) = UserWebauthnChallenge::find_by_user_id(
+    let Ok(Some(db_challenge)) = UserWebauthnChallenge::take_by_user_id(
         user.id,
         WebauthnChallengeKind::Register,
         &global.database,
@@ -134,24 +134,19 @@ pub async fn register_passkey_exchange(
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
-    let mut tx = global.database.begin().await?;
-    db_challenge.delete(&mut tx).await?;
-    tx.commit().await?;
-
-    let client_challenge: PasskeyRegistration = serde_json::from_value(db_challenge.big_data)?;
+    let db_challenge: PasskeyRegistration = serde_json::from_value(db_challenge.big_data)?;
     let aaguid = get_aaguid(&request.response.attestation_object)
         .ok()
         .map(|v| v.1);
 
     let passkey = global
         .webauthn
-        .finish_passkey_registration(&request, &client_challenge)?;
+        .finish_passkey_registration(&request, &db_challenge)?;
     let cred_id = passkey.cred_id().clone();
 
     // assert that the cred id is not already used for another passkey.
     if UserWebauthn::find_by_credential_id(&cred_id, &global.database)
-        .await
-        .unwrap()
+        .await?
         .is_some()
     {
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);

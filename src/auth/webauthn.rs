@@ -1,14 +1,22 @@
 use std::sync::OnceLock;
 
 use nom::{bytes::complete::take, error::ParseError, number::complete};
+use sqlx::PgPool;
 use tower_cookies::{
     Cookies,
     cookie::{self, time},
 };
 use uuid::Uuid;
+use webauthn_rs::prelude::{AuthenticationResult, Passkey};
 
 use crate::{
-    database::{id::UlidId, models::user_webauthn_challenges::UserWebauthnChallengeId},
+    database::{
+        id::UlidId,
+        models::{
+            user::UserId, user_webauthn::UserWebauthn,
+            user_webauthn_challenges::UserWebauthnChallengeId,
+        },
+    },
     settings::Settings,
 };
 
@@ -94,4 +102,28 @@ pub fn get_challenge_id_from_cookies(cookies: &Cookies, settings: &Settings) -> 
             None
         }
     }
+}
+
+pub async fn get_user_passkeys(user_id: UserId, db: &PgPool) -> anyhow::Result<Vec<Passkey>> {
+    let Ok(passkeys) = UserWebauthn::find_many_by_user_id(user_id, db).await else {
+        tracing::error!("failed to get user passkeys");
+        anyhow::bail!("")
+    };
+
+    let passkeys: Vec<_> = passkeys
+        .into_iter()
+        .flat_map(|v| serde_json::from_value::<Passkey>(v.big_data))
+        .collect();
+
+    Ok(passkeys)
+}
+
+pub fn update_passkey_with_authentication_result(
+    passkey: &mut UserWebauthn,
+    auth_result: &AuthenticationResult,
+) -> anyhow::Result<()> {
+    let mut big_data: Passkey = serde_json::from_value(passkey.big_data.clone())?;
+    big_data.update_credential(auth_result);
+    passkey.big_data = serde_json::to_value(big_data)?;
+    Ok(())
 }

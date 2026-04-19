@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::{Extension, Json, extract::State};
 use tower_cookies::Cookies;
 use utoipa_axum::{router::OpenApiRouter, routes};
-use webauthn_rs::prelude::{Passkey, PasskeyAuthentication};
+use webauthn_rs::prelude::PasskeyAuthentication;
 use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
@@ -11,7 +11,7 @@ use crate::{
         otp::verify_otp_code,
         session::{create_session, create_session_cookie},
         totp::{decrypt_secrets, get_totp, is_recovery_code_used, set_recovery_code_used},
-        webauthn::get_challenge_id_from_cookies,
+        webauthn::{get_challenge_id_from_cookies, update_passkey_with_authentication_result},
     },
     database::{
         id::UlidId,
@@ -165,7 +165,7 @@ pub async fn webauthn_exchange(
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
-    let Ok(Some(db_challenge)) = UserWebauthnChallenge::find_by_id(
+    let Ok(Some(db_challenge)) = UserWebauthnChallenge::take_by_id(
         challenge_id,
         WebauthnChallengeKind::Authenticate,
         &global.database,
@@ -178,10 +178,6 @@ pub async fn webauthn_exchange(
     let Ok(Some(user)) = User::find_by_id(db_challenge.user_id, &global.database).await else {
         return Err(ApiErrorCodes::Unauthenticated);
     };
-
-    let mut tx = global.database.begin().await?;
-    db_challenge.delete(&mut tx).await?;
-    tx.commit().await?;
 
     let challenge: PasskeyAuthentication = serde_json::from_value(db_challenge.big_data)?;
 
@@ -204,11 +200,8 @@ pub async fn webauthn_exchange(
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     }
 
-    if auth_result.needs_update() {
-        let mut big_data: Passkey = serde_json::from_value(passkey.big_data)?;
-        big_data.update_credential(&auth_result);
-        passkey.big_data = serde_json::to_value(big_data)?;
-    }
+    update_passkey_with_authentication_result(&mut passkey, &auth_result)
+        .map_err(|_| ApiErrorCodes::InternalServerError)?;
 
     let mut tx = global.database.begin().await?;
     passkey.counter += 1;

@@ -3,7 +3,7 @@ use sqlx::PgPool;
 use crate::{
     database::models::{
         user::{User, UserId},
-        user_auth_challenges::AuthChallengeKind,
+        user_auth_challenges::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
         user_session::{UserSession, UserSessionId},
     },
     settings::Settings,
@@ -88,4 +88,21 @@ pub async fn enable_sudo_tx(
     tx.commit().await?;
 
     Ok(())
+}
+
+pub fn is_flow_correct(flow: &UserAuthChallenges, session_id: UserSessionId) -> bool {
+    if flow.purpose != AuthChallengePurpose::Sudo {
+        return false;
+    }
+
+    let now = chrono::Utc::now();
+    if flow.expires_at < now {
+        return false;
+    }
+
+    if flow.session_id != Some(session_id) {
+        return false;
+    }
+
+    true
 }

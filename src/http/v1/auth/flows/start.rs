@@ -3,15 +3,16 @@ use std::sync::Arc;
 use axum::{Extension, Json, extract::State};
 use tower_cookies::Cookies;
 use utoipa_axum::{router::OpenApiRouter, routes};
-use webauthn_rs::prelude::Passkey;
 use webauthn_rs_proto::RequestChallengeResponse;
 
 use crate::{
-    auth::{otp::get_otp_code, webauthn::create_webauthn_cookie},
+    auth::{
+        otp::get_otp_code,
+        webauthn::{create_webauthn_cookie, get_user_passkeys},
+    },
     database::models::{
         user::User,
         user_auth_challenges::{AuthChallengeKind, UserAuthChallenges},
-        user_webauthn::UserWebauthn,
         user_webauthn_challenges::{UserWebauthnChallenge, WebauthnChallengeKind},
     },
     global::GlobalState,
@@ -194,13 +195,9 @@ pub async fn webauthn_options(
         return Err(ApiErrorCodes::WebauthnNotEnabled);
     }
 
-    let Ok(passkeys) = UserWebauthn::find_many_by_user_id(user.id, &global.database).await else {
-        return Err(ApiErrorCodes::Meow);
-    };
-    let passkeys: Vec<_> = passkeys
-        .into_iter()
-        .flat_map(|v| serde_json::from_value::<Passkey>(v.big_data))
-        .collect();
+    let passkeys = get_user_passkeys(user.id, &global.database)
+        .await
+        .map_err(|_| ApiErrorCodes::InternalServerError)?;
 
     let (client_challenge, data) = global.webauthn.start_passkey_authentication(&passkeys)?;
 

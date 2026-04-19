@@ -2,20 +2,21 @@ use std::sync::Arc;
 
 use axum::{Extension, Json, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
-use webauthn_rs::prelude::{Passkey, PasskeyAuthentication};
+use webauthn_rs::prelude::PasskeyAuthentication;
 use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
     auth::{
         otp::verify_otp_code,
-        sudo::{enable_sudo_tx, has_sudo_option},
+        sudo::{enable_sudo_tx, has_sudo_option, is_flow_correct},
         totp::{decrypt_secrets, get_totp, is_recovery_code_used, set_recovery_code_used},
+        webauthn::update_passkey_with_authentication_result,
     },
     database::{
         id::UlidId,
         models::{
             user::User,
-            user_auth_challenges::{AuthChallengePurpose, AuthChallengeState, UserAuthChallenges},
+            user_auth_challenges::{AuthChallengeState, UserAuthChallenges},
             user_totp::UserTotp,
             user_webauthn::UserWebauthn,
             user_webauthn_challenges::{UserWebauthnChallenge, WebauthnChallengeKind},
@@ -71,16 +72,7 @@ pub async fn exchange(
         return Err(ApiErrorCodes::InvalidCode);
     };
 
-    if flow.purpose != AuthChallengePurpose::Sudo {
-        return Err(ApiErrorCodes::InvalidCode);
-    }
-
-    let now = chrono::Utc::now();
-    if flow.expires_at < now {
-        return Err(ApiErrorCodes::InvalidCode);
-    }
-
-    if flow.session_id != Some(auth.session_id()) {
+    if !is_flow_correct(&flow, auth.session_id()) {
         return Err(ApiErrorCodes::InvalidCode);
     }
 
@@ -139,7 +131,7 @@ pub async fn webauthn_exchange(
         .try_into()
         .map_err(|_| ApiErrorCodes::WebauthnChallengeNotFound)?;
 
-    let Ok(Some(db_challenge)) = UserWebauthnChallenge::find_by_user_id(
+    let Ok(Some(db_challenge)) = UserWebauthnChallenge::take_by_user_id(
         auth.user_id(),
         WebauthnChallengeKind::Authenticate,
         &global.database,
@@ -152,10 +144,6 @@ pub async fn webauthn_exchange(
     let Ok(Some(user)) = User::find_by_id(auth.user_id(), &global.database).await else {
         return Err(ApiErrorCodes::Unauthenticated);
     };
-
-    let mut tx = global.database.begin().await?;
-    db_challenge.delete(&mut tx).await?;
-    tx.commit().await?;
 
     let challenge: PasskeyAuthentication = serde_json::from_value(db_challenge.big_data)?;
 
@@ -177,12 +165,8 @@ pub async fn webauthn_exchange(
     if passkey.user_id != user.id {
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     }
-
-    if auth_result.needs_update() {
-        let mut big_data: Passkey = serde_json::from_value(passkey.big_data)?;
-        big_data.update_credential(&auth_result);
-        passkey.big_data = serde_json::to_value(big_data)?;
-    }
+    update_passkey_with_authentication_result(&mut passkey, &auth_result)
+        .map_err(|_| ApiErrorCodes::InternalServerError)?;
 
     // update passkey
     let mut tx = global.database.begin().await?;
@@ -227,8 +211,7 @@ pub async fn totp_exchange(
         return Err(ApiErrorCodes::InvalidCode);
     };
 
-    let now = chrono::Utc::now();
-    if flow.expires_at < now {
+    if !is_flow_correct(&flow, auth.session_id()) {
         return Err(ApiErrorCodes::InvalidCode);
     }
 

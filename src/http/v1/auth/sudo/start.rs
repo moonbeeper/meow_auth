@@ -2,18 +2,17 @@ use std::sync::Arc;
 
 use axum::{Extension, Json, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
-use webauthn_rs::prelude::Passkey;
 use webauthn_rs_proto::RequestChallengeResponse;
 
 use crate::{
     auth::{
         otp::get_otp_code,
         sudo::{SudoOption, get_available_options},
+        webauthn::get_user_passkeys,
     },
     database::models::{
         user::User,
         user_auth_challenges::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
-        user_webauthn::UserWebauthn,
         user_webauthn_challenges::{UserWebauthnChallenge, WebauthnChallengeKind},
     },
     global::GlobalState,
@@ -166,18 +165,13 @@ pub async fn webauthn_options(
         return Err(ApiErrorCodes::SudoOptionNotAvailable);
     }
 
-    let Ok(passkeys) = UserWebauthn::find_many_by_user_id(auth.user_id(), &global.database).await
-    else {
-        return Err(ApiErrorCodes::Meow);
-    };
-    let passkeys: Vec<_> = passkeys
-        .into_iter()
-        .flat_map(|v| serde_json::from_value::<Passkey>(v.big_data))
-        .collect();
+    let passkeys = get_user_passkeys(auth.user_id(), &global.database)
+        .await
+        .map_err(|_| ApiErrorCodes::InternalServerError)?;
 
     let (client_challenge, data) = global.webauthn.start_passkey_authentication(&passkeys)?;
-
     let data = serde_json::to_value(data)?;
+
     let db_challenge = UserWebauthnChallenge::builder()
         .user_id(auth.user_id())
         .big_data(data)
