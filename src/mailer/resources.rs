@@ -1,5 +1,6 @@
 use std::sync::LazyLock;
 
+use data_encoding::BASE64_NOPAD;
 use sqlx::PgPool;
 use tera::Tera;
 
@@ -49,13 +50,13 @@ impl RawEmailTemplate {
         let context = tera::Context::from_value(self.data.clone())?;
 
         let txt = if let Some(v) = self.text_filename.as_ref() {
-            Some(TERA.render(&v, &context)?)
+            Some(TERA.render(v, &context)?)
         } else {
             None
         };
 
         let html = if let Some(v) = self.html_filename.as_ref() {
-            Some(TERA.render(&v, &context)?)
+            Some(TERA.render(v, &context)?)
         } else {
             None
         };
@@ -81,6 +82,7 @@ impl<'a> TryFrom<EmailTemplate<'a>> for RawEmailTemplate {
         let has_html = Templates::get(&html_filename).is_some();
 
         if !has_text && !has_html {
+            tracing::error!("templates not found: {}", value.base);
             return Err(MailerErrors::TemplateNotFound(value.base.to_string()));
         }
 
@@ -101,8 +103,11 @@ pub trait MailerTemplate {
     ) -> impl Future<Output = MailerResult<()>> {
         async move {
             let raw = RawEmailTemplate::try_from(template)?;
+            let data = serde_json::to_vec(&raw)?;
+            let data = BASE64_NOPAD.encode(&data);
+
             let email = Email::builder()
-                .template(Some(raw))
+                .template(Some(data))
                 .subject(subject)
                 .to(to)
                 .build();

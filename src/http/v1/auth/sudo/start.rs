@@ -6,6 +6,7 @@ use webauthn_rs_proto::RequestChallengeResponse;
 
 use crate::{
     auth::{
+        emails::{AuthMailer, EmailVerificationCodeKind},
         otp::get_otp_code,
         sudo::{SudoOption, get_available_options},
         webauthn::get_user_passkeys,
@@ -21,8 +22,6 @@ use crate::{
         middleware::auth_manager::AuthContext,
         v1::{auth::flows::FlowResponse, types::AuthMethod},
     },
-    job_queue::QueuedJob as _,
-    mailer::{Email, MailerJob},
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
@@ -78,18 +77,14 @@ pub async fn otp_option(
     login_request.insert(&mut transaction).await?;
     transaction.commit().await?;
 
-    let email = Email::builder()
-        .text(format!("hi your code is this {}", otp.code))
-        .to(user.email)
-        .subject("login code".to_string())
-        .build();
-
-    MailerJob::dispatch(&global.database, email)
-        .await
-        .map_err(|e| {
-            tracing::error!("failed dispatching job: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    AuthMailer::verification_code(
+        otp.code,
+        EmailVerificationCodeKind::Verification,
+        user.login,
+        user.email,
+        &global.database,
+    )
+    .await?;
 
     Ok(Json(FlowResponse {
         flow_id: login_request.id,

@@ -7,6 +7,7 @@ use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
     auth::{
+        emails::AuthMailer,
         otp::verify_otp_code,
         sudo::{enable_sudo_tx, has_sudo_option, is_flow_correct},
         totp::{decrypt_secrets, get_totp, is_recovery_code_used, set_recovery_code_used},
@@ -28,8 +29,6 @@ use crate::{
         middleware::auth_manager::AuthContext,
         v1::types::{AlrightResponse, AuthenticationPasskeyRequest},
     },
-    job_queue::QueuedJob as _,
-    mailer::{Email, MailerJob},
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
@@ -265,18 +264,12 @@ pub async fn totp_exchange(
                 ApiErrorCodes::InternalServerError
             })?;
 
-        let email = Email::builder()
-            .text("hi you used a recovery code. have a great great night".to_string())
-            .to(user.email.clone())
-            .subject("totp recovery code used".to_string())
-            .build();
-
-        MailerJob::dispatch(&global.database, email)
-            .await
-            .map_err(|e| {
-                tracing::error!("failed dispatching job: {e}");
-                ApiErrorCodes::InternalServerError
-            })?;
+        AuthMailer::totp_recovery_code_used(
+            user.login.clone(),
+            user.email.clone(),
+            &global.database,
+        )
+        .await?;
     }
 
     let mut transaction = global.database.begin().await?;

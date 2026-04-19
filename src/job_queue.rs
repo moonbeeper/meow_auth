@@ -116,7 +116,7 @@ impl QueueRegistry {
                     .catch_unwind()
                     .await
                 {
-                    Ok(res) => res.map_err(|e| JobQueueErrors::WorkerError(e)),
+                    Ok(res) => res.map_err(JobQueueErrors::WorkerError),
                     Err(panic) => {
                         let panic_msg = panic
                             .downcast_ref::<String>()

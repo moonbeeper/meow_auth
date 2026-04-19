@@ -8,6 +8,7 @@ use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
     auth::{
+        emails::AuthMailer,
         otp::verify_otp_code,
         session::{create_session, create_session_cookie},
         totp::{decrypt_secrets, get_totp, is_recovery_code_used, set_recovery_code_used},
@@ -32,8 +33,6 @@ use crate::{
             types::{AlrightResponse, AuthMethod, AuthenticationPasskeyRequest, RouteEither},
         },
     },
-    job_queue::QueuedJob as _,
-    mailer::{Email, MailerJob},
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
@@ -123,18 +122,7 @@ pub async fn exchange(
         })?;
     create_session_cookie(session_id, &cookies, &global.settings);
 
-    let email = Email::builder()
-        .text("hi you opened a new session :)".to_string())
-        .to(user.email)
-        .subject("new session".to_string())
-        .build();
-
-    MailerJob::dispatch(&global.database, email)
-        .await
-        .map_err(|e| {
-            tracing::error!("failed dispatching job: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    AuthMailer::new_session(user.login, user.email, &global.database).await?;
 
     Ok(RouteEither::Right(Json(AlrightResponse::default())))
 }
@@ -216,18 +204,7 @@ pub async fn webauthn_exchange(
         })?;
     create_session_cookie(session_id, &cookies, &global.settings);
 
-    let email = Email::builder()
-        .text("hi you opened a new session via webauthn :)".to_string())
-        .to(user.email)
-        .subject("new session".to_string())
-        .build();
-
-    MailerJob::dispatch(&global.database, email)
-        .await
-        .map_err(|e| {
-            tracing::error!("failed dispatching job: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    AuthMailer::new_session(user.login, user.email, &global.database).await?;
 
     Ok(Json(AlrightResponse::default()))
 }
@@ -311,18 +288,12 @@ pub async fn totp_exchange(
                 ApiErrorCodes::InternalServerError
             })?;
 
-        let email = Email::builder()
-            .text("hi you used a recovery code. have a great great night".to_string())
-            .to(user.email.clone())
-            .subject("totp recovery code used".to_string())
-            .build();
-
-        MailerJob::dispatch(&global.database, email)
-            .await
-            .map_err(|e| {
-                tracing::error!("failed dispatching job: {e}");
-                ApiErrorCodes::InternalServerError
-            })?;
+        AuthMailer::totp_recovery_code_used(
+            user.login.clone(),
+            user.email.clone(),
+            &global.database,
+        )
+        .await?;
     }
 
     let mut transaction = global.database.begin().await?;
@@ -338,18 +309,7 @@ pub async fn totp_exchange(
         })?;
     create_session_cookie(session_id, &cookies, &global.settings);
 
-    let email = Email::builder()
-        .text("hi you opened a new session :)".to_string())
-        .to(user.email)
-        .subject("new session".to_string())
-        .build();
-
-    MailerJob::dispatch(&global.database, email)
-        .await
-        .map_err(|e| {
-            tracing::error!("failed dispatching job: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    AuthMailer::new_session(user.login, user.email, &global.database).await?;
 
     Ok(Json(AlrightResponse::default()))
 }

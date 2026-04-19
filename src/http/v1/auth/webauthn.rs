@@ -7,7 +7,7 @@ use webauthn_rs::prelude::{
 };
 
 use crate::{
-    auth::webauthn::get_aaguid,
+    auth::{emails::AuthMailer, webauthn::get_aaguid},
     database::models::{
         user::User,
         user_webauthn::UserWebauthn,
@@ -156,11 +156,13 @@ pub async fn register_passkey_exchange(
     let current_passkey_count =
         UserWebauthn::get_count_by_user_id(user.id, &global.database).await?;
 
+    let passkey_name = format!("My Passkey {}", current_passkey_count + 1);
+
     let passkey = UserWebauthn::builder()
         .user_id(user.id)
         .aaguid(aaguid)
         .credential_id(cred_id.to_vec())
-        .display_name(format!("My Passkey {}", current_passkey_count + 1))
+        .display_name(passkey_name.clone())
         .big_data(big_data)
         .build();
 
@@ -169,6 +171,8 @@ pub async fn register_passkey_exchange(
     user.update(&mut tx).await?;
     passkey.insert(&mut tx).await?;
     tx.commit().await?;
+
+    AuthMailer::webauthn_registered(user.login, passkey_name, user.email, &global.database).await?;
 
     Ok(Json(AlrightResponse::default()))
 }

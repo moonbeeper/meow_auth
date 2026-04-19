@@ -3,6 +3,7 @@ pub mod resources;
 
 use std::sync::Arc;
 
+use data_encoding::BASE64_NOPAD;
 use lettre::{
     AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor, message::MultiPart,
     transport::smtp::authentication::Credentials,
@@ -65,7 +66,7 @@ impl Mailer {
         let mut text = email.text.clone();
         let mut html = email.html.clone();
 
-        if let Some(templates) = email.template.as_ref() {
+        if let Some(templates) = email.get_template()? {
             let rendered = templates.render()?;
             if text.is_none() && rendered.text.is_none() {
                 text = Some("no provided message".to_string());
@@ -103,7 +104,20 @@ pub struct Email {
     #[builder(default = None)]
     pub html: Option<String>,
     #[builder(default = None)]
-    pub template: Option<RawEmailTemplate>,
+    pub template: Option<String>,
+}
+
+impl Email {
+    pub fn get_template(&self) -> MailerResult<Option<RawEmailTemplate>> {
+        let Some(template) = self.template.as_ref() else {
+            return Ok(None);
+        };
+
+        let data = BASE64_NOPAD.decode(template.as_bytes())?;
+        let raw: RawEmailTemplate = serde_json::from_slice(&data)?;
+
+        Ok(Some(raw))
+    }
 }
 
 pub struct MailerJob;

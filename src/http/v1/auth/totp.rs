@@ -4,23 +4,24 @@ use axum::{Extension, Json, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    auth::totp::{create_user_totp, decrypt_secrets, get_totp, usable_recovery_codes},
+    auth::{
+        emails::AuthMailer,
+        totp::{create_user_totp, decrypt_secrets, get_totp, usable_recovery_codes},
+    },
     database::models::{user::User, user_totp::UserTotp as DbUserTotp},
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         middleware::auth_manager::AuthContext,
     },
-    job_queue::QueuedJob as _,
-    mailer::{Email, MailerJob},
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(create_totp))
-        .routes(routes!(exchange_totp))
+        .routes(routes!(create_totp_options))
+        .routes(routes!(exchange_totp_creation))
         .routes(routes!(disable_totp))
-        .routes(routes!(recovery_codes_totp))
+        .routes(routes!(see_recovery_codes))
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
@@ -38,7 +39,7 @@ pub struct CreateTotpResponse {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn create_totp(
+pub async fn create_totp_options(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<CreateTotpResponse>, ApiErrorCodes> {
@@ -96,7 +97,7 @@ pub struct VerifyTotpRequest {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn exchange_totp(
+pub async fn exchange_totp_creation(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<VerifyTotpRequest>,
@@ -142,21 +143,7 @@ pub async fn exchange_totp(
     db_totp.update(&mut tx).await?;
     tx.commit().await?;
 
-    let email = Email::builder()
-        .text(format!(
-            "hi {}! your account now has totp enabled :)",
-            user.login
-        ))
-        .to(user.email)
-        .subject("totp enabled".to_string())
-        .build();
-
-    MailerJob::dispatch(&global.database, email)
-        .await
-        .map_err(|e| {
-            tracing::error!("failed dispatching job: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    AuthMailer::totp_enabled(user.login, user.email, &global.database).await?;
 
     Ok(())
 }
@@ -216,21 +203,7 @@ pub async fn disable_totp(
     db_totp.delete(&mut tx).await?;
     tx.commit().await?;
 
-    let email = Email::builder()
-        .text(format!(
-            "hi {}! your account now has totp disabled :)",
-            user.login
-        ))
-        .to(user.email)
-        .subject("totp disabled".to_string())
-        .build();
-
-    MailerJob::dispatch(&global.database, email)
-        .await
-        .map_err(|e| {
-            tracing::error!("failed dispatching job: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    AuthMailer::totp_disabled(user.login, user.email, &global.database).await?;
 
     Ok(())
 }
@@ -249,7 +222,7 @@ pub struct RecoveryCodesTotpResponse {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn recovery_codes_totp(
+pub async fn see_recovery_codes(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<VerifyTotpRequest>,
@@ -295,21 +268,7 @@ pub async fn recovery_codes_totp(
     db_totp.update(&mut tx).await?;
     tx.commit().await?;
 
-    let email = Email::builder()
-        .text(format!(
-            "hi {}! your totp recovery codes were just seen right now :)",
-            user.login
-        ))
-        .to(user.email)
-        .subject("totp recovery codes seen".to_string())
-        .build();
-
-    MailerJob::dispatch(&global.database, email)
-        .await
-        .map_err(|e| {
-            tracing::error!("failed dispatching job: {e}");
-            ApiErrorCodes::InternalServerError
-        })?;
+    AuthMailer::totp_recovery_codes_seen(user.login, user.email, &global.database).await?;
 
     Ok(Json(RecoveryCodesTotpResponse { recovery_codes }))
 }

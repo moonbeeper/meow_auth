@@ -16,4 +16,8 @@ pub enum MailerErrors {
     EmailSend(#[from] lettre::transport::smtp::Error),
     #[error("failed to dispatch job: {0}")]
     JobQueue(#[from] JobQueueErrors),
+    #[error("failed to decode/decode template data: {0}")]
+    TemplateData(#[from] serde_json::Error),
+    #[error("failed to decode base64 template data: {0}")]
+    Base64TemplateData(#[from] data_encoding::DecodeError),
 }
