@@ -64,6 +64,8 @@ pub enum ApiErrorCodes {
     Json(#[from] serde_json::Error),
     #[error("this account's passkey was likely compromised. New attempts will be blocked")]
     WebauthnCompromised,
+    #[error("an error occurred while sending an email")]
+    MailerError(#[from] crate::mailer::error::MailerErrors),
 }
 
 // wtf
@@ -110,6 +112,7 @@ impl ApiErrorCodes {
             ApiErrorCodes::WebauthnError(..) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiErrorCodes::Json(..) => StatusCode::BAD_REQUEST,
             ApiErrorCodes::WebauthnCompromised => StatusCode::FORBIDDEN,
+            ApiErrorCodes::MailerError(..) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

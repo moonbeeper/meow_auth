@@ -1,3 +1,6 @@
+pub mod error;
+pub mod resources;
+
 use std::sync::Arc;
 
 use lettre::{
@@ -8,6 +11,7 @@ use lettre::{
 use crate::{
     global::GlobalState,
     job_queue::QueuedJob,
+    mailer::{error::MailerResult, resources::RawEmailTemplate},
     settings::{MailerSettings, Settings},
 };
 
@@ -52,19 +56,36 @@ impl Mailer {
         })
     }
 
-    pub async fn mail(&self, email: &Email) -> anyhow::Result<()> {
+    pub async fn mail(&self, email: &Email) -> MailerResult<()> {
         let m = Message::builder()
             .from(format!("System <{}>", self.settings.from_email).parse()?)
             .to(email.to.parse()?)
             .subject(email.subject.clone());
 
-        let msg = if let Some(html) = email.html.as_ref() {
-            m.multipart(MultiPart::alternative_plain_html(
-                email.text.clone(),
-                html.clone(),
-            ))?
+        let mut text = email.text.clone();
+        let mut html = email.html.clone();
+
+        if let Some(templates) = email.template.as_ref() {
+            let rendered = templates.render()?;
+            if text.is_none() && rendered.text.is_none() {
+                text = Some("no provided message".to_string());
+            } else if text.is_none() {
+                text = rendered.text;
+            }
+
+            if html.is_none() && rendered.html.is_none() {
+                html = None;
+            } else if html.is_none() {
+                html = rendered.html;
+            }
+        }
+
+        let text = text.unwrap_or_else(|| "no provided message".to_string());
+
+        let msg = if let Some(html) = html.as_ref() {
+            m.multipart(MultiPart::alternative_plain_html(text, html.clone()))?
         } else {
-            m.body(email.text.clone())?
+            m.body(text)?
         };
 
         self.transport.send(msg).await?;
@@ -77,9 +98,12 @@ pub struct Email {
     pub to: String,
     #[builder(default = "no subject".to_string())]
     pub subject: String,
-    pub text: String,
-    #[builder(default)]
+    #[builder(default = Some("no provided message".to_string()))]
+    pub text: Option<String>,
+    #[builder(default = None)]
     pub html: Option<String>,
+    #[builder(default = None)]
+    pub template: Option<RawEmailTemplate>,
 }
 
 pub struct MailerJob;

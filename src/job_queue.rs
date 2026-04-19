@@ -13,6 +13,30 @@ use tokio_util::sync::CancellationToken;
 
 use crate::{database::id::UlidId, global::GlobalState, manager::WatcherChild};
 
+type JobQueueResult<T> = std::result::Result<T, JobQueueErrors>;
+
+#[derive(Debug, thiserror::Error)]
+pub enum JobQueueErrors {
+    #[error("database error: {0}")]
+    Database(#[from] sqlx::Error),
+    #[error("requested job handler not registered: {0}")]
+    HandlerNotRegistered(String),
+    #[error("worker panicked: {0}")]
+    WorkerPanic(String),
+    #[error("job input serialization failed: {0}")]
+    Serialize(#[from] postcard::Error),
+    #[error("job input deserialization failed for handler {handler}: {source}")]
+    Deserialize {
+        handler: String,
+        #[source]
+        source: postcard::Error,
+    },
+    #[error("worker error: {0}")]
+    WorkerError(#[from] anyhow::Error),
+    #[error("failed to dispatch job: {0}")]
+    Dispatch(Box<JobQueueErrors>),
+}
+
 pub trait QueuedJob: Send + Sync + 'static {
     type Input: serde::Serialize + serde::de::DeserializeOwned + Send + 'static;
 
@@ -27,9 +51,11 @@ pub trait QueuedJob: Send + Sync + 'static {
     fn expires_in() -> chrono::Duration {
         chrono::Duration::days(1)
     }
-    fn dispatch(pool: &PgPool, input: Self::Input) -> impl Future<Output = anyhow::Result<()>> {
+    fn dispatch(pool: &PgPool, input: Self::Input) -> impl Future<Output = JobQueueResult<()>> {
         async move {
-            let input = postcard::to_allocvec(&input)?;
+            let input = postcard::to_allocvec(&input)
+                .map_err(JobQueueErrors::from)
+                .map_err(|e| JobQueueErrors::Dispatch(Box::new(e)))?;
 
             sqlx::query!(
                 "insert into
@@ -43,14 +69,16 @@ pub trait QueuedJob: Send + Sync + 'static {
                 Utc::now() + Self::expires_in()
             )
             .execute(pool)
-            .await?;
+            .await
+            .map_err(JobQueueErrors::from)
+            .map_err(|e| JobQueueErrors::Dispatch(Box::new(e)))?;
 
             Ok(())
         }
     }
 }
 
-type JobHandler = Box<dyn Fn(Vec<u8>) -> BoxFuture<'static, anyhow::Result<()>> + Send + Sync>;
+type JobHandler = Box<dyn Fn(Vec<u8>) -> BoxFuture<'static, JobQueueResult<()>> + Send + Sync>;
 
 pub struct QueueRegistry {
     job_handlers: HashMap<&'static str, JobHandler>,
@@ -78,24 +106,30 @@ impl QueueRegistry {
             let job = job.clone();
             let global = global.clone();
             Box::pin(async move {
-                let input: J::Input = postcard::from_bytes(&value)
-                    .map_err(|e| anyhow::anyhow!("decode failed: {e}"))?;
+                let input: J::Input =
+                    postcard::from_bytes(&value).map_err(|e| JobQueueErrors::Deserialize {
+                        handler: J::name().to_string(),
+                        source: e,
+                    })?;
+
                 match AssertUnwindSafe(job.run(global, input))
                     .catch_unwind()
                     .await
                 {
-                    Ok(res) => res,
+                    Ok(res) => res.map_err(|e| JobQueueErrors::WorkerError(e)),
                     Err(panic) => {
                         let panic_msg = panic
                             .downcast_ref::<String>()
                             .map(String::as_str)
                             .or_else(|| panic.downcast_ref::<&str>().copied())
-                            .unwrap_or("Unknown panic occurred");
+                            .unwrap_or("Unknown panic occurred")
+                            .to_string();
+
                         tracing::error!(err = panic_msg, "worker panicked");
-                        Err(anyhow::anyhow!("worker panicked: {panic_msg}"))
+                        Err(JobQueueErrors::WorkerPanic(panic_msg))
                     }
                 }
-            }) as BoxFuture<'static, anyhow::Result<()>>
+            }) as BoxFuture<'static, JobQueueResult<()>>
         });
 
         self.job_handlers.insert(J::name(), handler);
@@ -112,11 +146,11 @@ impl QueueRegistry {
         self
     }
 
-    pub async fn run(self, shutdown: WatcherChild) -> anyhow::Result<()> {
+    pub async fn run(self, shutdown: WatcherChild) -> JobQueueResult<()> {
         Self::run_each(self, Duration::from_mins(2), shutdown).await
     }
 
-    pub async fn run_each(self, tick: Duration, shutdown: WatcherChild) -> anyhow::Result<()> {
+    pub async fn run_each(self, tick: Duration, shutdown: WatcherChild) -> JobQueueResult<()> {
         tracing::info!(
             "creating queue registry with a batch size of {} and a concurrency of {}",
             self.batch_size,
@@ -191,16 +225,6 @@ impl QueuedJobState {
             Self::Failed => "failed",
         }
     }
-
-    // pub fn from_str(s: &str) -> Self {
-    //     match s {
-    //         "pending" => Self::Pending,
-    //         "inprogress" => Self::InProgress,
-    //         "success" => Self::Success,
-    //         "failed" => Self::Failed,
-    //         _ => Self::default(),
-    //     }
-    // }
 }
 
 type QueuedJobId = UlidId;
@@ -208,14 +232,7 @@ type QueuedJobId = UlidId;
 struct QueuedJobData {
     id: UlidId,
     handler: String,
-    // state: QueuedJobState,
     input: Vec<u8>,
-    // retry_count: i32,
-    // retry_max_count: i32,
-    // success_at: Option<chrono::DateTime<Utc>>,
-    // expires_at: chrono::DateTime<Utc>,
-    // created_at: chrono::DateTime<Utc>,
-    // updated_at: chrono::DateTime<Utc>,
 }
 
 struct Worker {
@@ -248,7 +265,7 @@ impl Worker {
         }
     }
 
-    pub async fn claim_available(self: &Arc<Self>) -> anyhow::Result<()> {
+    pub async fn claim_available(self: &Arc<Self>) -> JobQueueResult<()> {
         loop {
             if self.token.is_cancelled() {
                 break;
@@ -276,7 +293,7 @@ impl Worker {
         Ok(())
     }
 
-    pub async fn claim_next_batch(&self) -> anyhow::Result<Vec<QueuedJobData>> {
+    pub async fn claim_next_batch(&self) -> JobQueueResult<Vec<QueuedJobData>> {
         let mut tx = self.global.database.begin().await?;
         let query = sqlx::query!(
             "with pending as (
@@ -339,7 +356,7 @@ impl Worker {
         &self,
         job: QueuedJobData,
         _ticket: OwnedSemaphorePermit,
-    ) -> anyhow::Result<()> {
+    ) -> JobQueueResult<()> {
         let _guard = _ticket;
         let Some(handler) = self.job_handlers.get(job.handler.as_str()) else {
             self.release_fail(
@@ -384,7 +401,7 @@ impl Worker {
         Ok(())
     }
 
-    pub async fn release_success(&self, job_id: QueuedJobId) -> anyhow::Result<()> {
+    pub async fn release_success(&self, job_id: QueuedJobId) -> JobQueueResult<()> {
         sqlx::query!(
             "update queued_jobs set state = $2, success_at = now(), updated_at = now() where id = $1",
             job_id as QueuedJobId,
@@ -400,7 +417,7 @@ impl Worker {
         job_id: QueuedJobId,
         no_retry: bool,
         message: Option<String>,
-    ) -> anyhow::Result<()> {
+    ) -> JobQueueResult<()> {
         sqlx::query!(
             "update queued_jobs
                 set retry_count = retry_count+1,
@@ -422,7 +439,7 @@ impl Worker {
         Ok(())
     }
 
-    pub async fn heartbeat(job_id: QueuedJobId, pool: &PgPool) -> anyhow::Result<()> {
+    pub async fn heartbeat(job_id: QueuedJobId, pool: &PgPool) -> JobQueueResult<()> {
         sqlx::query!(
             "update queued_jobs set updated_at = now() where id = $1",
             job_id as QueuedJobId,
