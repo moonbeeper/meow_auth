@@ -34,8 +34,8 @@ pub struct FlowRequest {
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct FlowResponse {
-    flow_id: UlidId,
-    next_method: Vec<AuthMethod>,
+    pub flow_id: UlidId,
+    pub next_method: Vec<AuthMethod>,
 }
 
 #[utoipa::path(

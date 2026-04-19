@@ -2,10 +2,9 @@ use sqlx::PgPool;
 
 use crate::{
     database::models::{
-        user::UserId,
+        user::{User, UserId},
         user_auth_challenges::AuthChallengeKind,
         user_session::{UserSession, UserSessionId},
-        user_totp::UserTotp,
     },
     settings::Settings,
 };
@@ -49,15 +48,27 @@ impl From<AuthChallengeKind> for SudoOption {
     }
 }
 
+// TODO: hey i am double fetching the user :(
 pub async fn get_available_options(user_id: UserId, db: &PgPool) -> Vec<SudoOption> {
     let mut options = Vec::new();
-    if let Ok(Some(_)) = UserTotp::find_one_by_user(user_id, db).await {
-        options.push(SudoOption::Totp);
-    } else {
-        options.push(SudoOption::Otp);
+    if let Ok(Some(user)) = User::find_by_id(user_id, db).await {
+        if user.totp_enabled {
+            options.push(SudoOption::Totp);
+        } else {
+            options.push(SudoOption::Otp);
+        }
+
+        if user.has_webauthn {
+            options.push(SudoOption::Passkey);
+        }
     }
 
     options
+}
+
+pub async fn has_sudo_option(kind: SudoOption, user_id: UserId, db: &PgPool) -> bool {
+    let sudo_options = get_available_options(user_id, db).await;
+    sudo_options.contains(&kind)
 }
 
 pub async fn enable_sudo_tx(
