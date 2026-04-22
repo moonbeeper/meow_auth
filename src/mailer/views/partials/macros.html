@@ -1,0 +1,126 @@
+{% macro spacer(px=16) %}
+<tr>
+    <td>
+        <div
+            class="t18"
+            style="
+                mso-line-height-rule: exactly;
+                mso-line-height-alt: {{ px }}px;
+                line-height: {{ px }}px;
+                font-size: 1px;
+                display: block;
+            "
+        >
+            &nbsp;&nbsp;
+        </div>
+    </td>
+</tr>
+{% endmacro spacer %}
+
+{% macro section_start() %}
+<tr>
+    <td class="t24" align="center">
+        <table
+            class="t23"
+            role="presentation"
+            cellpadding="0"
+            cellspacing="0"
+            style="margin-left: auto; margin-right: auto"
+        >
+            <tr>
+                <td width="514" class="t22" style="width: 600px">
+                    <table
+                        class="t21"
+                        role="presentation"
+                        cellpadding="0"
+                        cellspacing="0"
+                        width="100%"
+                        style="width: 100%"
+                    >
+{% endmacro section_start %}
+
+{% macro section_end() %}
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>
+{% endmacro section_end %}
+
+{% macro heading(text="meow") %}
+{{ self::section_start() }}
+<tr>
+    <td
+        class="t13"
+        style="border-bottom: 1px solid #eff1f4; padding: 0 0 18px 0"
+    >
+        <h1
+            class="t12"
+            style="
+                margin: 0;
+                margin: 0;
+                font-family:
+                    Arial,
+                    BlinkMacSystemFont,
+                    Segoe UI,
+                    Helvetica Neue,
+                    Arial,
+                    sans-serif;
+                line-height: 28px;
+                font-weight: 700;
+                font-style: normal;
+                font-size: 24px;
+                text-decoration: none;
+                text-transform: none;
+                letter-spacing: -1px;
+                direction: ltr;
+                color: #141414;
+                text-align: left;
+                mso-line-height-rule: exactly;
+                mso-text-raise: 1px;
+            "
+        >
+            {{ text }}
+        </h1>
+    </td>
+</tr>
+{{ self::section_end() }}
+{% endmacro heading %}
+
+{% macro text(text="awawawaaa wawa") %}
+{{ self::section_start() }}
+<tr>
+    <td class="t20">
+        <p
+            class="t19"
+            style="
+                margin: 0;
+                margin: 0;
+                font-family:
+                    Arial,
+                    BlinkMacSystemFont,
+                    Segoe UI,
+                    Helvetica Neue,
+                    Arial,
+                    sans-serif;
+                line-height: 25px;
+                font-weight: 400;
+                font-style: normal;
+                font-size: 15px;
+                text-decoration: none;
+                text-transform: none;
+                letter-spacing: -0.1px;
+                direction: ltr;
+                color: #141414;
+                text-align: left;
+                mso-line-height-rule: exactly;
+                mso-text-raise: 3px;
+            "
+        >
+            {{ text }}
+        </p>
+    </td>
+</tr>
+{{ self::section_end() }}
+{% endmacro text %}

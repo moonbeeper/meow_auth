@@ -1,1 +1,8 @@
-works? {{ user.login }}
+{% extends "partials/base.html" %}
+{% import "partials/macros.html" as m %}
+
+{% block content %}
+    {{ m::heading(text = "test") }}
+    {{ m::spacer(px = 16) }}
+    {{ m::text() }}
+{% endblock content %}

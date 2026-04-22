@@ -14,21 +14,28 @@ use crate::{
 
 #[derive(Debug, rust_embed::Embed)]
 #[folder = "src/mailer/views/"]
-#[include = "*.html"]
-#[include = "*.txt"]
+#[include = "**/*.html"]
+#[include = "**/*.txt"]
 struct Templates;
 
 pub static TERA: LazyLock<Tera> = LazyLock::new(|| {
     let mut tera = Tera::default();
-    for filename in Templates::iter() {
-        if let Some(file) = Templates::get(&filename) {
-            let data =
-                std::str::from_utf8(file.data.as_ref()).expect("valid utf-8 on html templates");
+    let mut templates = Vec::new();
 
-            tera.add_raw_template(&filename, data)
-                .expect("failed adding templates")
+    for filename in Templates::iter() {
+        println!("file :{}", filename.clone());
+        if let Some(file) = Templates::get(&filename) {
+            let data = std::str::from_utf8(file.data.as_ref())
+                .expect("valid utf-8 on html templates")
+                .to_owned();
+
+            templates.push((filename.into_owned(), data));
         }
     }
+
+    tera.add_raw_templates(templates)
+        .expect("failed adding templates");
+    tera.autoescape_on(vec![".html", ".txt"]);
 
     tera
 });
