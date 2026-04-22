@@ -20,4 +20,6 @@ pub enum MailerErrors {
     TemplateData(#[from] serde_json::Error),
     #[error("failed to decode base64 template data: {0}")]
     Base64TemplateData(#[from] data_encoding::DecodeError),
+    #[error("failed to convert data to UTF-8: {0}")]
+    Utf8Error(#[from] std::str::Utf8Error),
 }

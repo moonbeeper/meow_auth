@@ -1,6 +1,7 @@
 use std::sync::LazyLock;
 
 use data_encoding::BASE64_NOPAD;
+use minify_html::minify;
 use sqlx::PgPool;
 use tera::Tera;
 
@@ -40,6 +41,24 @@ pub static TERA: LazyLock<Tera> = LazyLock::new(|| {
     tera
 });
 
+const HTML_MINIFY_CFG: minify_html::Cfg = minify_html::Cfg {
+    minify_css: true,
+    keep_html_and_head_opening_tags: true,
+    allow_noncompliant_unquoted_attribute_values: false,
+    allow_optimal_entities: false,
+    allow_removing_spaces_between_attributes: false,
+    keep_closing_tags: false,
+    keep_comments: true, // mso stuff? goddamn i hate the stupid email making stuff ive chosen
+    keep_input_type_text_attr: false,
+    keep_ssi_comments: false,
+    minify_doctype: false,
+    minify_js: false,
+    preserve_brace_template_syntax: false,
+    preserve_chevron_percent_template_syntax: false,
+    remove_bangs: false,
+    remove_processing_instructions: false,
+};
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct RawEmailTemplate {
     pub text_filename: Option<String>,
@@ -57,13 +76,22 @@ impl RawEmailTemplate {
         let context = tera::Context::from_value(self.data.clone())?;
 
         let txt = if let Some(v) = self.text_filename.as_ref() {
-            Some(TERA.render(v, &context)?)
+            let rendered = TERA.render(v, &context)?;
+            Some(rendered)
         } else {
             None
         };
 
         let html = if let Some(v) = self.html_filename.as_ref() {
-            Some(TERA.render(v, &context)?)
+            let rendered = TERA.render(v, &context)?;
+            let minified = minify(rendered.as_bytes(), &HTML_MINIFY_CFG);
+            match std::str::from_utf8(&minified) {
+                Ok(v) => Some(v.to_owned()),
+                Err(e) => {
+                    tracing::error!("failed to convert minified text template to UTF-8: {e}");
+                    return Err(MailerErrors::Utf8Error(e));
+                }
+            }
         } else {
             None
         };
