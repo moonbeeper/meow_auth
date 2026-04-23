@@ -319,7 +319,7 @@ impl Worker {
                 and expires_at > now()
               order by updated_at
               for update skip locked
-              limit GREATEST(0, 1000 - (select count(*) from pending))
+              limit GREATEST(0, $4 - (select count(*) from pending))
             ),
             picked as (
               select id FROM pending
