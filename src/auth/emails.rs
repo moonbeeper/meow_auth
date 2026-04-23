@@ -29,7 +29,7 @@ impl MailerTemplate for AuthMailer {}
 impl AuthMailer {
     pub async fn new_session(login: String, to: String, db: &PgPool) -> MailerResult<()> {
         Self::mail_template(
-            "New session".to_string(),
+            "A new session has been created".to_string(),
             to,
             EmailTemplate {
                 base: "new_session",
@@ -58,8 +58,14 @@ impl AuthMailer {
             }
         };
 
+        let subject = match kind {
+            EmailVerificationCodeKind::Login => "sign in",
+            EmailVerificationCodeKind::Register => "registration",
+            EmailVerificationCodeKind::Verification => "verification",
+        };
+
         Self::mail_template(
-            format!("{code} is your verification code"),
+            format!("{code} is your {} code", subject),
             to,
             EmailTemplate {
                 base: template,
@@ -78,7 +84,7 @@ impl AuthMailer {
 
     pub async fn totp_enabled(login: String, to: String, db: &PgPool) -> MailerResult<()> {
         Self::mail_template(
-            "2FA has been enabled".to_string(),
+            "Two factor authentication enabled".to_string(),
             to,
             EmailTemplate {
                 base: "totp_enabled",
@@ -95,7 +101,7 @@ impl AuthMailer {
 
     pub async fn totp_disabled(login: String, to: String, db: &PgPool) -> MailerResult<()> {
         Self::mail_template(
-            "2FA has been disabled".to_string(),
+            "Two factor authentication disabled".to_string(),
             to,
             EmailTemplate {
                 base: "totp_disabled",
@@ -116,7 +122,7 @@ impl AuthMailer {
         db: &PgPool,
     ) -> MailerResult<()> {
         Self::mail_template(
-            "2FA recovery codes have been seen".to_string(),
+            "Your Two factor authentication recovery codes were viewed".to_string(),
             to,
             EmailTemplate {
                 base: "totp_recovery_codes_seen",
@@ -137,7 +143,7 @@ impl AuthMailer {
         db: &PgPool,
     ) -> MailerResult<()> {
         Self::mail_template(
-            "2FA recovery code used".to_string(),
+            "One of your Two factor authentication recovery codes was used".to_string(),
             to,
             EmailTemplate {
                 base: "totp_recovery_code_used",
@@ -159,7 +165,7 @@ impl AuthMailer {
         db: &PgPool,
     ) -> MailerResult<()> {
         Self::mail_template(
-            "A Passkey has been added to your account".to_string(),
+            "A Passkey was added to your account".to_string(),
             to,
             EmailTemplate {
                 base: "webauthn_registered",
@@ -184,7 +190,7 @@ impl AuthMailer {
         db: &PgPool,
     ) -> MailerResult<()> {
         Self::mail_template(
-            "A Passkey has been removed from your account".to_string(),
+            "A Passkey was removed from your account".to_string(),
             to,
             EmailTemplate {
                 base: "webauthn_removed",
@@ -209,7 +215,7 @@ impl AuthMailer {
         db: &PgPool,
     ) -> MailerResult<()> {
         Self::mail_template(
-            "One of your Passkeys have been compromised".to_string(),
+            "One of your Passkeys may be compromised".to_string(),
             to,
             EmailTemplate {
                 base: "webauthn_compromised",

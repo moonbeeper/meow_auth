@@ -1,3 +1,4 @@
+<!--i hate html generators-->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html
     xmlns="http://www.w3.org/1999/xhtml"
@@ -262,7 +263,14 @@
                                                                     width: 100% !important;
                                                                 "
                                                             >
-                                                                {% block content %}{% endblock content %}
+                                                                {% include
+                                                                "partials/logo.html"
+                                                                %} {% block
+                                                                content %}{%
+                                                                endblock content
+                                                                %} {% include
+                                                                "partials/footer.html"
+                                                                %}
                                                             </table>
                                                         </td>
                                                     </tr>

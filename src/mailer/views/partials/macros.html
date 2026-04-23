@@ -88,7 +88,7 @@
 {{ self::section_end() }}
 {% endmacro heading %}
 
-{% macro text(text="awawawaaa wawa") %}
+{% macro text(text="awawawaaa wawa", color="#141414") %}
 {{ self::section_start() }}
 <tr>
     <td class="t20">
@@ -112,7 +112,7 @@
                 text-transform: none;
                 letter-spacing: -0.1px;
                 direction: ltr;
-                color: #141414;
+                color: {{ color }};
                 text-align: left;
                 mso-line-height-rule: exactly;
                 mso-text-raise: 3px;
@@ -124,3 +124,78 @@
 </tr>
 {{ self::section_end() }}
 {% endmacro text %}
+
+{% macro otp_code(code="123456") %}
+{{ self::section_start() }}
+<tr>
+    <td
+        style="
+            overflow: hidden;
+            background-color: #ebebeb;
+            padding: 10px 10px 10px 10px;
+            border-radius: 6px 6px 6px 6px;
+        "
+    >
+        <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            style="width: 100% !important"
+        >
+            <tr>
+                <td align="center">
+                    <table
+                        role="presentation"
+                        cellpadding="0"
+                        cellspacing="0"
+                        style="margin-left: auto; margin-right: auto"
+                    >
+                        <tr>
+                            <td width="498" style="width: 600px">
+                                <table
+                                    role="presentation"
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    width="100%"
+                                    style="width: 100%"
+                                >
+                                    <tr>
+                                        <td>
+                                            <p
+                                                style="
+                                                    margin: 0;
+                                                    margin: 0;
+                                                    font-family:
+                                                        Arial,
+                                                        BlinkMacSystemFont,
+                                                        Segoe UI,
+                                                        Helvetica Neue,
+                                                        Arial,
+                                                        sans-serif;
+                                                    line-height: 22px;
+                                                    font-weight: 400;
+                                                    font-style: normal;
+                                                    font-size: 24px;
+                                                    text-decoration: none;
+                                                    text-transform: none;
+                                                    direction: ltr;
+                                                    color: #333333;
+                                                    text-align: center;
+                                                "
+                                            >
+                                                {{ code }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>
+{{ self::section_end() }}
+{% endmacro otp_code %}

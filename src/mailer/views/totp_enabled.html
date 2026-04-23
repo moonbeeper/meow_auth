@@ -1,0 +1,10 @@
+{% extends "partials/base.html" %}
+{% import "partials/macros.html" as m %}
+
+{% block content %}
+    {{ m::heading(text = globals.greeting ~ " " ~ user.login ~ "!") }}
+    {{ m::spacer(px = 16) }}
+    {{ m::text(text="Two factor authentication is now enabled on your account.") }}
+    {{ m::text(text="If you made this change, you're all set.") }}
+    {{ m::text(text="If this wasn't you... oh that's bad") }}
+{% endblock content %}

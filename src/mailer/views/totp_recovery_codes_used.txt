@@ -1,0 +1,7 @@
+{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+A recovery code was used to verify into your account.
+
+If you made this change, you're all set.
+If this wasn't you, rotate your recovery codes and close all open sessions in your account.
+--
+:3 - MeowAuth

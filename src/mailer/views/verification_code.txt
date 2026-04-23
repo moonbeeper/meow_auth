@@ -1,0 +1,12 @@
+{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{% if kind == "register" %}
+Use this code to finish creating your account
+{% elif kind == "verification" %}
+Use this code to confirm it's you and continue:
+{% endif %}
+{{ code }}
+
+This code expires in 5 minutes.
+If you didn't request to sign in, you can safely ignore this email. Probably someone typed your email by mistake.. yeah probably.
+--
+:3 - MeowAuth

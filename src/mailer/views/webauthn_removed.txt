@@ -1,0 +1,7 @@
+{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{{ "A passkey (" ~ passkey.name ~ ") was removed from your account." }}
+
+If this was you, no action is needed.
+If this wasn't you, that's too bad.
+--
+:3 - MeowAuth

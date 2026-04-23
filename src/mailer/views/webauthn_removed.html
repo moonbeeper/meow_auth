@@ -1,0 +1,10 @@
+{% extends "partials/base.html" %}
+{% import "partials/macros.html" as m %}
+
+{% block content %}
+    {{ m::heading(text = globals.greeting ~ " " ~ user.login ~ "!") }}
+    {{ m::spacer(px = 16) }}
+    {{ m::text(text="A passkey (" ~ passkey.name ~ ") was removed from your account.") }}
+    {{ m::text(text="If this was you, no action is needed.") }}
+    {{ m::text(text="If this wasn't you, that's too bad.") }}
+{% endblock content %}

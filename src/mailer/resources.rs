@@ -2,13 +2,15 @@ use std::sync::LazyLock;
 
 use data_encoding::BASE64_NOPAD;
 use minify_html::minify;
+use rand::seq::IndexedRandom;
+use serde_json::json;
 use sqlx::PgPool;
 use tera::Tera;
 
 use crate::{
     job_queue::QueuedJob,
     mailer::{
-        Email, MailerJob,
+        Email, MailSettings, MailerJob,
         error::{MailerErrors, MailerResult},
     },
 };
@@ -24,7 +26,6 @@ pub static TERA: LazyLock<Tera> = LazyLock::new(|| {
     let mut templates = Vec::new();
 
     for filename in Templates::iter() {
-        println!("file :{}", filename.clone());
         if let Some(file) = Templates::get(&filename) {
             let data = std::str::from_utf8(file.data.as_ref())
                 .expect("valid utf-8 on html templates")
@@ -37,6 +38,7 @@ pub static TERA: LazyLock<Tera> = LazyLock::new(|| {
     tera.add_raw_templates(templates)
         .expect("failed adding templates");
     tera.autoescape_on(vec![".html", ".txt"]);
+    // tera.register_function("get_greeting", get_greeting);
 
     tera
 });
@@ -66,14 +68,22 @@ pub struct RawEmailTemplate {
     pub data: serde_json::Value,
 }
 
+#[derive(Debug, Clone)]
 pub struct RenderedTemplates {
     pub text: Option<String>,
     pub html: Option<String>,
 }
 
 impl RawEmailTemplate {
-    pub fn render(&self) -> MailerResult<RenderedTemplates> {
-        let context = tera::Context::from_value(self.data.clone())?;
+    pub fn render(&self, mail_settings: &MailSettings) -> MailerResult<RenderedTemplates> {
+        let mut context = tera::Context::from_value(self.data.clone())?;
+        context.insert(
+            "globals",
+            &json!({
+                "origin": mail_settings.http.origin.to_string(),
+                "greeting": get_greeting(),
+            }),
+        );
 
         let txt = if let Some(v) = self.text_filename.as_ref() {
             let rendered = TERA.render(v, &context)?;
@@ -155,4 +165,27 @@ pub trait MailerTemplate {
             Ok(())
         }
     }
+}
+
+const EMAIL_GREETINGS: [&str; 8] = [
+    "Hey",
+    "Hi",
+    "Hello",
+    "Howdy",
+    "Ahoy",
+    "Good to see you",
+    "Meow",
+    "Hola",
+];
+
+// pub fn get_greeting(_: &HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
+//     let mut rng = rand::rng();
+//     let greeting = EMAIL_GREETINGS.choose(&mut rng).copied().unwrap();
+//     Ok(tera::to_value(greeting.to_string()).unwrap())
+// }
+//
+pub fn get_greeting() -> String {
+    let mut rng = rand::rng();
+    let greeting = EMAIL_GREETINGS.choose(&mut rng).copied().unwrap();
+    greeting.to_string()
 }

@@ -8,6 +8,7 @@ use anyhow::Context;
 use axum::routing::get;
 use tokio::net::TcpSocket;
 use tower_cookies::CookieManagerLayer;
+use tower_http::services::ServeDir;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable};
@@ -30,6 +31,7 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
             }),
         )
         .nest("/v1", v1::routes())
+        .nest_service("/assets", ServeDir::new("assets"))
         .layer(AuthManagerLayer::new(global.clone()))
         .layer(CookieManagerLayer::new())
         .with_state(global)

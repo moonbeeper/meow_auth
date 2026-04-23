@@ -1,0 +1,7 @@
+{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+Two factor authentication has been disabled on your account.
+
+If you made this change, you're all set.
+If this wasn't you... oh that's bad
+--
+:3 - MeowAuth

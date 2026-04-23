@@ -1,7 +1,7 @@
 pub mod error;
 pub mod resources;
 
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use data_encoding::BASE64_NOPAD;
 use lettre::{
@@ -13,13 +13,28 @@ use crate::{
     global::GlobalState,
     job_queue::QueuedJob,
     mailer::{error::MailerResult, resources::RawEmailTemplate},
-    settings::{MailerSettings, Settings},
+    settings::{HttpSettings, MailerSettings, Settings},
 };
+
+#[derive(Debug)]
+pub struct MailSettings {
+    mailer: MailerSettings,
+    http: HttpSettings,
+}
+
+impl From<&Settings> for MailSettings {
+    fn from(value: &Settings) -> Self {
+        Self {
+            mailer: value.mailer.clone(),
+            http: value.http.clone(),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct Mailer {
     transport: Arc<AsyncSmtpTransport<Tokio1Executor>>,
-    settings: MailerSettings,
+    settings: MailSettings,
 }
 
 impl Mailer {
@@ -42,6 +57,7 @@ impl Mailer {
 
         transport_builder = transport_builder.credentials(credentials);
         transport_builder = transport_builder.port(settings.mailer.smtp_port);
+        transport_builder = transport_builder.timeout(Some(Duration::from_secs(15)));
 
         let transport = transport_builder.build();
         if settings.mailer.test_connection {
@@ -53,13 +69,13 @@ impl Mailer {
 
         Ok(Self {
             transport: Arc::new(transport),
-            settings: settings.mailer.clone(),
+            settings: MailSettings::from(settings),
         })
     }
 
     pub async fn mail(&self, email: &Email) -> MailerResult<()> {
         let m = Message::builder()
-            .from(format!("System <{}>", self.settings.from_email).parse()?)
+            .from(format!("System <{}>", self.settings.mailer.from_email).parse()?)
             .to(email.to.parse()?)
             .subject(email.subject.clone());
 
@@ -67,7 +83,8 @@ impl Mailer {
         let mut html = email.html.clone();
 
         if let Some(templates) = email.get_template()? {
-            let rendered = templates.render()?;
+            let rendered = templates.render(&self.settings)?;
+
             if text.is_none() && rendered.text.is_none() {
                 text = Some("no provided message".to_string());
             } else if text.is_none() {
@@ -99,7 +116,7 @@ pub struct Email {
     pub to: String,
     #[builder(default = "no subject".to_string())]
     pub subject: String,
-    #[builder(default = Some("no provided message".to_string()))]
+    #[builder(default = None)]
     pub text: Option<String>,
     #[builder(default = None)]
     pub html: Option<String>,

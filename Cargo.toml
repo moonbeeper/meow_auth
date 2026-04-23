@@ -54,6 +54,7 @@ toml_edit = "0.25.11"
 totp-rs = { version = "5.7.1", features = ["otpauth"] }
 tower = "0.5.3"
 tower-cookies = { version = "0.11.0", features = ["private"] }
+tower-http = { version = "0.6.8", features = ["fs"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 typed-builder = "0.23.2"

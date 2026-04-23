@@ -1,0 +1,7 @@
+{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+We noticed a new sign in to your account.
+
+If this was you, no action is needed.
+If this wasn't you... you might need to checkout your open sessions
+--
+:3 - MeowAuth
