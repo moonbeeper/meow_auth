@@ -1,4 +1,5 @@
 mod exchange;
+mod info;
 mod start;
 
 use std::sync::Arc;
@@ -25,6 +26,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(options))
         .nest("/start", start::routes())
         .nest("/exchange", exchange::routes())
+        .nest("/info", info::routes())
 }
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
@@ -36,6 +38,11 @@ pub struct FlowRequest {
 pub struct FlowResponse {
     pub flow_id: UlidId,
     pub next_method: Vec<AuthMethod>,
+}
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct FlowOptionResponse {
+    pub methods: Vec<AuthMethod>,
 }
 
 #[utoipa::path(
@@ -50,19 +57,19 @@ pub async fn options(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<FlowRequest>,
-) -> Result<Json<Vec<AuthMethod>>, ApiErrorCodes> {
+) -> Result<Json<FlowOptionResponse>, ApiErrorCodes> {
     if auth.is_authenticated() {
         return Err(ApiErrorCodes::AlreadyAuthenticated);
     }
 
     let mut methods = vec![];
     let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
-        return Ok(Json(methods));
+        return Ok(Json(FlowOptionResponse { methods }));
     };
 
     methods.push(AuthMethod::Otp);
     if user.has_webauthn {
         methods.push(AuthMethod::Passkey)
     }
-    Ok(Json(methods))
+    Ok(Json(FlowOptionResponse { methods }))
 }

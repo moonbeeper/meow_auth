@@ -3,7 +3,7 @@ use sqlx::PgPool;
 use crate::{
     database::models::{
         user::{User, UserId},
-        user_auth_challenges::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
+        user_auth_challenge::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
         user_session::{UserSession, UserSessionId},
     },
     settings::Settings,
@@ -101,6 +101,10 @@ pub fn is_flow_correct(flow: &UserAuthChallenges, session_id: UserSessionId) -> 
     }
 
     if flow.session_id != Some(session_id) {
+        return false;
+    }
+
+    if flow.user_id.is_none() {
         return false;
     }
 

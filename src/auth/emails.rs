@@ -44,6 +44,23 @@ impl AuthMailer {
         .await
     }
 
+    pub async fn new_account(login: String, to: String, db: &PgPool) -> MailerResult<()> {
+        Self::mail_template(
+            "Your account has been created".to_string(),
+            to,
+            EmailTemplate {
+                base: "new_account",
+                data: json!({
+                  "user": {
+                      "login": login,
+                  }
+                }),
+            },
+            db,
+        )
+        .await
+    }
+
     pub async fn verification_code(
         code: String,
         kind: EmailVerificationCodeKind,

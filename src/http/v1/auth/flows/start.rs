@@ -13,8 +13,9 @@ use crate::{
     },
     database::models::{
         user::User,
-        user_auth_challenges::{AuthChallengeKind, UserAuthChallenges},
-        user_webauthn_challenges::{UserWebauthnChallenge, WebauthnChallengeKind},
+        user_auth_challenge::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
+        user_signup::UserSignup,
+        user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
     },
     global::GlobalState,
     http::{
@@ -61,7 +62,7 @@ pub async fn otp_login(
     })?;
 
     let login_request = UserAuthChallenges::builder()
-        .user_id(user.id)
+        .user_id(Some(user.id))
         .kind(AuthChallengeKind::Otp)
         .secret(Some(otp.hash))
         .build();
@@ -129,33 +130,34 @@ pub async fn otp_register(
         ApiErrorCodes::InternalServerError
     })?;
 
-    let user = User::builder()
+    let user_signup = UserSignup::builder()
         .email(request.email)
         .login(request.login)
         .build();
+    let mut transaction = global.database.begin().await.unwrap();
 
-    let login_request = UserAuthChallenges::builder()
-        .user_id(user.id)
+    let user_signup = user_signup.upsert(&mut transaction).await.unwrap();
+    let challenge = UserAuthChallenges::builder()
+        .user_signup_id(Some(user_signup.id))
         .kind(AuthChallengeKind::Otp)
+        .purpose(AuthChallengePurpose::Signup)
         .secret(Some(otp.hash))
         .build();
 
-    let mut transaction = global.database.begin().await?;
-    user.insert(&mut transaction).await?;
-    login_request.insert(&mut transaction).await?;
-    transaction.commit().await?;
+    challenge.insert(&mut transaction).await.unwrap();
+    transaction.commit().await.unwrap();
 
     AuthMailer::verification_code(
         otp.code,
         EmailVerificationCodeKind::Register,
-        user.login,
-        user.email,
+        user_signup.login,
+        user_signup.email,
         &global.database,
     )
     .await?;
 
     Ok(Json(FlowResponse {
-        flow_id: login_request.id,
+        flow_id: challenge.id,
         next_method: vec![AuthMethod::Otp],
     }))
 }

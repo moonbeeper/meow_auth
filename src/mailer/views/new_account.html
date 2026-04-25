@@ -1,0 +1,9 @@
+{% extends "partials/base.html" %}
+{% import "partials/macros.html" as m %}
+
+{% block content %}
+    {{ m::heading(text = globals.greeting ~ " " ~ user.login ~ "!") }}
+    {{ m::spacer(px = 16) }}
+    {{ m::text(text="Your account has been created successfully.") }}
+    {{ m::text(text="You're now signed in the device you used to register.") }}
+{% endblock content %}

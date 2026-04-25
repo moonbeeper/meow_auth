@@ -1,0 +1,6 @@
+{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+Your account has been created successfully.
+
+You're now signed in the device you used to register.
+--
+:3 - MeowAuth

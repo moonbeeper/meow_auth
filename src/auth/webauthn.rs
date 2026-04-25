@@ -14,7 +14,7 @@ use crate::{
         id::UlidId,
         models::{
             user::UserId, user_webauthn::UserWebauthn,
-            user_webauthn_challenges::UserWebauthnChallengeId,
+            user_webauthn_challenge::UserWebauthnChallengeId,
         },
     },
     settings::Settings,

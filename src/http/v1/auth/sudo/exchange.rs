@@ -17,10 +17,10 @@ use crate::{
         id::UlidId,
         models::{
             user::User,
-            user_auth_challenges::{AuthChallengeState, UserAuthChallenges},
+            user_auth_challenge::{AuthChallengeState, UserAuthChallenges},
             user_totp::UserTotp,
             user_webauthn::UserWebauthn,
-            user_webauthn_challenges::{UserWebauthnChallenge, WebauthnChallengeKind},
+            user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
         },
     },
     global::GlobalState,
@@ -215,7 +215,7 @@ pub async fn totp_exchange(
     }
 
     // short circuit if the user doesn't exist
-    let Ok(Some(user)) = User::find_by_id(flow.user_id, &global.database).await else {
+    let Ok(Some(user)) = User::find_by_id(flow.user_id.unwrap(), &global.database).await else {
         return Err(ApiErrorCodes::InvalidCode);
     };
 

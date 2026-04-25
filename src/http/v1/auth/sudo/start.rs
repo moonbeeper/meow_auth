@@ -13,8 +13,8 @@ use crate::{
     },
     database::models::{
         user::User,
-        user_auth_challenges::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
-        user_webauthn_challenges::{UserWebauthnChallenge, WebauthnChallengeKind},
+        user_auth_challenge::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
+        user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
     },
     global::GlobalState,
     http::{
@@ -66,7 +66,7 @@ pub async fn otp_option(
     })?;
 
     let login_request = UserAuthChallenges::builder()
-        .user_id(user.id)
+        .user_id(Some(user.id))
         .kind(AuthChallengeKind::Otp)
         .purpose(AuthChallengePurpose::Sudo)
         .secret(Some(otp.hash))
@@ -118,7 +118,7 @@ pub async fn totp_option(
     }
 
     let login_request = UserAuthChallenges::builder()
-        .user_id(auth.user_id())
+        .user_id(Some(auth.user_id()))
         .kind(AuthChallengeKind::Totp)
         .purpose(AuthChallengePurpose::Sudo)
         .secret(None)

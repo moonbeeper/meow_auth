@@ -4,7 +4,7 @@ use typed_builder::TypedBuilder;
 use crate::database::{
     error::DatabaseError,
     id::UlidId,
-    models::{user::UserId, user_session::UserSessionId},
+    models::{user::UserId, user_session::UserSessionId, user_signup::UserSignupId},
 };
 
 #[derive(
@@ -71,6 +71,7 @@ pub enum AuthChallengeState {
 pub enum AuthChallengePurpose {
     #[default]
     Login,
+    Signup,
     Sudo,
 }
 
@@ -80,9 +81,12 @@ pub type UserAuthChallengesId = UlidId;
 pub struct UserAuthChallenges {
     #[builder(default = UserAuthChallengesId::new())]
     pub id: UserAuthChallengesId,
-    pub user_id: UserId,
+    #[builder(default = None)]
+    pub user_id: Option<UserId>,
     #[builder(default = None)]
     pub session_id: Option<UserSessionId>,
+    #[builder(default = None)]
+    pub user_signup_id: Option<UserSignupId>,
     pub kind: AuthChallengeKind,
     #[builder(default = None)]
     pub secret: Option<String>,
@@ -102,11 +106,24 @@ impl UserAuthChallenges {
     pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "insert into
-                user_auth_challenges (id, user_id, user_session_id, kind, secret, state, purpose, expires_at, created_at, updated_at)
+                user_auth_challenges (
+                    id,
+                    user_id,
+                    user_signup_id,
+                    user_session_id,
+                    kind,
+                    secret,
+                    state,
+                    purpose,
+                    expires_at,
+                    created_at,
+                    updated_at
+                )
              values
-                ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())",
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), now())",
             self.id as UserAuthChallengesId,
-            self.user_id as UserId,
+            self.user_id as Option<UserId>,
+            self.user_signup_id as Option<UserSignupId>,
             self.session_id as Option<UserSessionId>,
             self.kind as AuthChallengeKind,
             self.secret.as_ref(),
@@ -140,7 +157,8 @@ impl UserAuthChallenges {
             Self,
             r#"select
                 id,
-                user_id,
+                user_id as "user_id?: UserId",
+                user_signup_id as "user_signup_id?: UserSignupId",
                 user_session_id as "session_id?: UserSessionId",
                 kind as "kind: AuthChallengeKind",
                 state as "state: AuthChallengeState",
@@ -166,7 +184,8 @@ impl UserAuthChallenges {
             Self,
             r#"select
                 id,
-                user_id,
+                user_id as "user_id?: UserId",
+                user_signup_id as "user_signup_id?: UserSignupId",
                 user_session_id as "session_id?: UserSessionId",
                 kind as "kind: AuthChallengeKind",
                 state as "state: AuthChallengeState",
@@ -193,7 +212,8 @@ impl UserAuthChallenges {
             Self,
             r#"select
                 id,
-                user_id,
+                user_id as "user_id?: UserId",
+                user_signup_id as "user_signup_id?: UserSignupId",
                 user_session_id as "session_id?: UserSessionId",
                 kind as "kind: AuthChallengeKind",
                 state as "state: AuthChallengeState",

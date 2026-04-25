@@ -11,7 +11,7 @@ use crate::{
     database::models::{
         user::User,
         user_webauthn::UserWebauthn,
-        user_webauthn_challenges::{UserWebauthnChallenge, WebauthnChallengeKind},
+        user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
     },
     global::GlobalState,
     http::{
@@ -50,10 +50,6 @@ pub async fn register_passkey_options(
     let Ok(Some(user)) = User::find_by_id(auth.user_id(), &global.database).await else {
         return Err(ApiErrorCodes::InternalServerError);
     };
-
-    if !user.totp_enabled {
-        return Err(ApiErrorCodes::TotpRequiredEnabled);
-    }
 
     let Ok(passkeys) = UserWebauthn::find_many_by_user_id(user.id, &global.database).await else {
         return Err(ApiErrorCodes::InternalServerError);
@@ -119,10 +115,6 @@ pub async fn register_passkey_exchange(
     let Ok(Some(mut user)) = User::find_by_id(auth.user_id(), &global.database).await else {
         return Err(ApiErrorCodes::InternalServerError);
     };
-
-    if !user.totp_enabled {
-        return Err(ApiErrorCodes::TotpRequiredEnabled);
-    }
 
     let Ok(Some(db_challenge)) = UserWebauthnChallenge::take_by_user_id(
         user.id,

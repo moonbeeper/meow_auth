@@ -9,7 +9,7 @@ use webauthn_rs_proto::PublicKeyCredential;
 use crate::{
     auth::{
         emails::AuthMailer,
-        otp::verify_otp_code,
+        otp::{is_flow_correct, verify_otp_code},
         session::{create_session, create_session_cookie},
         totp::{decrypt_secrets, get_totp, is_recovery_code_used, set_recovery_code_used},
         webauthn::{get_challenge_id_from_cookies, update_passkey_with_authentication_result},
@@ -18,10 +18,13 @@ use crate::{
         id::UlidId,
         models::{
             user::User,
-            user_auth_challenges::{AuthChallengeKind, AuthChallengeState, UserAuthChallenges},
+            user_auth_challenge::{
+                AuthChallengeKind, AuthChallengePurpose, AuthChallengeState, UserAuthChallenges,
+            },
+            user_signup::UserSignup,
             user_totp::UserTotp,
             user_webauthn::UserWebauthn,
-            user_webauthn_challenges::{UserWebauthnChallenge, WebauthnChallengeKind},
+            user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
         },
     },
     global::GlobalState,
@@ -72,15 +75,20 @@ pub async fn exchange(
         return Err(ApiErrorCodes::InvalidCode);
     };
 
-    let now = chrono::Utc::now();
-    if flow.expires_at < now {
+    if !is_flow_correct(&flow) {
         return Err(ApiErrorCodes::InvalidCode);
     }
 
-    // short circuit if the user doesn't exist
-    let Ok(Some(user)) = User::find_by_id(flow.user_id, &global.database).await else {
-        return Err(ApiErrorCodes::InvalidCode);
-    };
+    let mut pre_user: Option<User> = None;
+
+    // dont short circuit if the purpose is signup. if it isn't, short circuit if the user doesn't exist
+    if flow.purpose != AuthChallengePurpose::Signup {
+        let Ok(Some(db_user)) = User::find_by_id(flow.user_id.unwrap(), &global.database).await
+        else {
+            return Err(ApiErrorCodes::InvalidCode);
+        };
+        pre_user = Some(db_user)
+    }
 
     let secret_hash = flow
         .secret
@@ -91,6 +99,28 @@ pub async fn exchange(
         return Err(ApiErrorCodes::InvalidCode);
     }
 
+    if flow.purpose == AuthChallengePurpose::Signup {
+        let mut tx = global.database.begin().await?;
+
+        let Ok(Some(db_user)) = UserSignup::take_by_id(flow.user_signup_id.unwrap(), &mut tx).await
+        else {
+            return Err(ApiErrorCodes::InvalidCode);
+        };
+
+        let user = User::builder()
+            .login(db_user.login.clone())
+            .email(db_user.email.clone())
+            .email_verified(true)
+            .build();
+
+        db_user.delete_all_by_email_and_login(&mut tx).await?;
+        user.insert(&mut tx).await?;
+        tx.commit().await?;
+        pre_user = Some(user);
+    }
+
+    let user = pre_user.unwrap();
+
     // mark flow as completed
     let mut transaction = global.database.begin().await?;
     flow.state = AuthChallengeState::Completed;
@@ -100,7 +130,7 @@ pub async fn exchange(
     // swap into next step if totp is enabled
     if user.totp_enabled {
         let login_request = UserAuthChallenges::builder()
-            .user_id(user.id)
+            .user_id(Some(user.id))
             .kind(AuthChallengeKind::Totp)
             .build();
 
@@ -121,6 +151,10 @@ pub async fn exchange(
             ApiErrorCodes::InternalServerError
         })?;
     create_session_cookie(session_id, &cookies, &global.settings);
+
+    if flow.purpose == AuthChallengePurpose::Signup {
+        AuthMailer::new_account(user.login.clone(), user.email.clone(), &global.database).await?;
+    }
 
     AuthMailer::new_session(user.login, user.email, &global.database).await?;
 
@@ -233,13 +267,12 @@ pub async fn totp_exchange(
         return Err(ApiErrorCodes::InvalidCode);
     };
 
-    let now = chrono::Utc::now();
-    if flow.expires_at < now {
+    if !is_flow_correct(&flow) {
         return Err(ApiErrorCodes::InvalidCode);
     }
 
     // short circuit if the user doesn't exist
-    let Ok(Some(user)) = User::find_by_id(flow.user_id, &global.database).await else {
+    let Ok(Some(user)) = User::find_by_id(flow.user_id.unwrap(), &global.database).await else {
         return Err(ApiErrorCodes::InvalidCode);
     };
 

@@ -30,7 +30,7 @@ impl User {
             "insert into
                 users (id, login, email, created_at, updated_at)
              values
-                ($1, lower($2), $3, now(), now())",
+                ($1, lower($2), lower($3), now(), now())",
             self.id as UserId,
             self.login,
             self.email,
@@ -124,7 +124,7 @@ impl User {
                 has_webauthn,
                 created_at,
                 updated_at
-             from users where email = $1",
+             from users where email = lower($1)",
             email
         )
         .fetch_optional(pool)
