@@ -13,6 +13,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         middleware::auth_manager::AuthContext,
+        v1::types::AlrightResponse,
     },
 };
 
@@ -101,7 +102,7 @@ pub async fn exchange_totp_creation(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<VerifyTotpRequest>,
-) -> Result<(), ApiErrorCodes> {
+) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
     }
@@ -145,7 +146,7 @@ pub async fn exchange_totp_creation(
 
     AuthMailer::totp_enabled(user.login, user.email, &global.database).await?;
 
-    Ok(())
+    Ok(Json(AlrightResponse::default()))
 }
 
 #[utoipa::path(
@@ -161,7 +162,7 @@ pub async fn disable_totp(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<VerifyTotpRequest>,
-) -> Result<(), ApiErrorCodes> {
+) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
     }
@@ -205,7 +206,7 @@ pub async fn disable_totp(
 
     AuthMailer::totp_disabled(user.login, user.email, &global.database).await?;
 
-    Ok(())
+    Ok(Json(AlrightResponse::default()))
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]

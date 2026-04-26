@@ -12,7 +12,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         middleware::auth_manager::AuthContext,
-        v1::types::Session,
+        v1::types::{AlrightResponse, Session},
     },
 };
 
@@ -92,7 +92,7 @@ pub async fn delete_session(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Path(query): Path<SessionQuery>,
-) -> Result<(), ApiErrorCodes> {
+) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
     }
@@ -112,7 +112,7 @@ pub async fn delete_session(
     session.delete(&mut tx).await?;
     tx.commit().await?;
 
-    Ok(())
+    Ok(Json(AlrightResponse::default()))
 }
 
 #[utoipa::path(
@@ -126,7 +126,7 @@ pub async fn delete_session(
 pub async fn delete_all_sessions(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
-) -> Result<(), ApiErrorCodes> {
+) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
     }
@@ -145,5 +145,5 @@ pub async fn delete_all_sessions(
     DbUserSession::delete_many_by_id(ids, &mut tx).await?;
     tx.commit().await?;
 
-    Ok(())
+    Ok(Json(AlrightResponse::default()))
 }
