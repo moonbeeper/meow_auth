@@ -129,6 +129,12 @@ pub struct WebauthnSettings {
     pub secret_key: String,
 }
 
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+pub struct OauthSettings {
+    #[default(generate_secret_key(32))]
+    pub secret_key: String,
+}
+
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     pub logging: Logging,
@@ -140,6 +146,7 @@ pub struct Settings {
     pub application: ApplicationSettings,
     pub totp: TotpSettings,
     pub webauthn: WebauthnSettings,
+    pub oauth: OauthSettings,
 }
 
 impl Settings {

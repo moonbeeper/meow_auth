@@ -43,6 +43,22 @@ impl OauthToken {
         Ok(())
     }
 
+    pub async fn delete_all_by_user_and_client_id(
+        user_id: UserId,
+        client_id: OauthApplicationId,
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<(), DatabaseError> {
+        sqlx::query!(
+            "delete from oauth_tokens where user_id = $1 and client_id = $2",
+            user_id as UserId,
+            client_id as OauthApplicationId
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn find_by_token(
         id: OauthTokenId,
         pool: &PgPool,

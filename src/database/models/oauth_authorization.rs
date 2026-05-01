@@ -44,6 +44,29 @@ impl OauthAuthorization {
         Ok(())
     }
 
+    // pub async fn upsert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
+    //     sqlx::query!(
+    //         "insert into
+    //             oauth_authorizations (id, user_id, client_id, scopes, last_used_at, created_at, updated_at)
+    //         values
+    //             ($1, $2, $3, $4, $5, now(), now())
+    //         on conflict (user_id, client_id) do update set
+    //             scopes = excluded.scopes,
+    //             last_used_at = excluded.last_used_at,
+    //             updated_at = now()
+    //         ",
+    //         self.id as OauthAuthorizationId,
+    //         self.user_id as UserId,
+    //         self.client_id as OauthApplicationId,
+    //         self.scopes,
+    //         self.last_used_at,
+    //     )
+    //     .execute(&mut **transaction)
+    //     .await?;
+
+    //     Ok(())
+    // }
+
     pub async fn update(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "update oauth_authorizations set

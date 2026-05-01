@@ -1,9 +1,8 @@
-use sqlx::{PgPool, PgTransaction};
+use sqlx::PgTransaction;
 use typed_builder::TypedBuilder;
 
 use crate::database::{
     error::DatabaseError,
-    id::UlidId,
     models::{oauth_application::OauthApplicationId, user::UserId},
 };
 
