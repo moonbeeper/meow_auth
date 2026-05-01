@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from oauth_pending_tokens where user_id = $1 and client_id = $2 and expires_at > now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "41f1441c05da683e04781cb66e7431d215c1b64c1154add19a3a6302f3fc2e19"
+}

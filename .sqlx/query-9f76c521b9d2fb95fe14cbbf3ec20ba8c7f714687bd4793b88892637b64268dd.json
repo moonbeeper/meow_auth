@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n                id,\n                user_id,\n                redirect_uri,\n                name,\n                secret,\n                public,\n                scopes,\n                created_at,\n                updated_at\n             from oauth_applications where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "redirect_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "secret",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "public",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "scopes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9f76c521b9d2fb95fe14cbbf3ec20ba8c7f714687bd4793b88892637b64268dd"
+}

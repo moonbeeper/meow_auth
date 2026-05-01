@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into\n                users (id, pid, login, email, created_at, updated_at)\n             values\n                ($1, $2, lower($3), lower($4), now(), now())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f712655d8aab9db685059520f95ee484e1b4878ceecda5d544f73ca2c78d35e4"
+}

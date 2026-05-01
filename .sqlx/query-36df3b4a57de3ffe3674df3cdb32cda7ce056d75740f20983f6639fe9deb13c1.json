@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into\n                user_auth_challenges (\n                    id,\n                    user_id,\n                    user_signup_id,\n                    user_session_id,\n                    kind,\n                    secret,\n                    state,\n                    purpose,\n                    expires_at,\n                    created_at,\n                    updated_at\n                )\n             values\n                ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), now())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        {
+          "Custom": {
+            "name": "user_auth_challenges_kind",
+            "kind": {
+              "Enum": [
+                "otp",
+                "totp",
+                "webauthn"
+              ]
+            }
+          }
+        },
+        "Text",
+        {
+          "Custom": {
+            "name": "user_auth_challenges_state",
+            "kind": {
+              "Enum": [
+                "pending",
+                "completed"
+              ]
+            }
+          }
+        },
+        {
+          "Custom": {
+            "name": "user_auth_challenges_purpose",
+            "kind": {
+              "Enum": [
+                "login",
+                "sudo",
+                "signup"
+              ]
+            }
+          }
+        },
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "36df3b4a57de3ffe3674df3cdb32cda7ce056d75740f20983f6639fe9deb13c1"
+}

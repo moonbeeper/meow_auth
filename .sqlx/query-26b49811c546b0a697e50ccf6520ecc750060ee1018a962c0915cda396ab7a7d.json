@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update queued_jobs\n                set retry_count = retry_count+1,\n                    state = case\n                        when $4 then $2\n                        when retry_count+1 >= retry_max_count then $2 else $3 end,\n                    updated_at = now(),\n                    error_message = $5\n            where id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "26b49811c546b0a697e50ccf6520ecc750060ee1018a962c0915cda396ab7a7d"
+}

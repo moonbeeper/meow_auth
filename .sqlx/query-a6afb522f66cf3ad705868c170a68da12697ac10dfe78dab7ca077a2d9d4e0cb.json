@@ -1,0 +1,114 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n                id,\n                user_id as \"user_id?: UserId\",\n                user_signup_id as \"user_signup_id?: UserSignupId\",\n                user_session_id as \"session_id?: UserSessionId\",\n                kind as \"kind: AuthChallengeKind\",\n                state as \"state: AuthChallengeState\",\n                purpose as \"purpose: AuthChallengePurpose\",\n                secret,\n                expires_at,\n                created_at,\n                updated_at\n            from user_auth_challenges where id = $1 and expires_at > now() and state = 'pending'::user_auth_challenges_state",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id?: UserId",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_signup_id?: UserSignupId",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "session_id?: UserSessionId",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "kind: AuthChallengeKind",
+        "type_info": {
+          "Custom": {
+            "name": "user_auth_challenges_kind",
+            "kind": {
+              "Enum": [
+                "otp",
+                "totp",
+                "webauthn"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "state: AuthChallengeState",
+        "type_info": {
+          "Custom": {
+            "name": "user_auth_challenges_state",
+            "kind": {
+              "Enum": [
+                "pending",
+                "completed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "purpose: AuthChallengePurpose",
+        "type_info": {
+          "Custom": {
+            "name": "user_auth_challenges_purpose",
+            "kind": {
+              "Enum": [
+                "login",
+                "sudo",
+                "signup"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "secret",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a6afb522f66cf3ad705868c170a68da12697ac10dfe78dab7ca077a2d9d4e0cb"
+}

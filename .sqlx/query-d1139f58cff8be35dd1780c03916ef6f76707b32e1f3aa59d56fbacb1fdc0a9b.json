@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update queued_jobs set state = $2, success_at = now(), updated_at = now() where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d1139f58cff8be35dd1780c03916ef6f76707b32e1f3aa59d56fbacb1fdc0a9b"
+}

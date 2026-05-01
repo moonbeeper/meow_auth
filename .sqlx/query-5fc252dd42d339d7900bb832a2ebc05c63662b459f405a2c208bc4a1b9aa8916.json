@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into\n                oauth_authorizations (id, user_id, client_id, scopes, last_used_at, created_at, updated_at)\n             values\n                ($1, $2, $3, $4, $5, now(), now())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Int8",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5fc252dd42d339d7900bb832a2ebc05c63662b459f405a2c208bc4a1b9aa8916"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update user_sessions set\n                active_expires_at = $2,\n                sudo_expires_at = $3,\n                updated_at = now()\n             where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "be03a327a664478821adbfd881652a7b2a1fc17de4356af1b48847400c25bb2b"
+}

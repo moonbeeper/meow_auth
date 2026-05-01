@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into\n                user_webauthn_challenges (id, user_id, kind, big_data, expires_at, created_at, updated_at)\n             values\n                ($1, $2, $3, $4, $5, now(), now())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        {
+          "Custom": {
+            "name": "webauthn_challenge_kind",
+            "kind": {
+              "Enum": [
+                "register",
+                "authenticate"
+              ]
+            }
+          }
+        },
+        "Jsonb",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "56e67093d069d2d3ad26980b250d21896444ce6d18f4e0d78220c36c70c136dc"
+}
