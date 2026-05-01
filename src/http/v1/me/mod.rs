@@ -19,6 +19,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(logout))
 }
 
+/// Get your current user information
 #[utoipa::path(
     get,
     path = "/",
@@ -42,6 +43,7 @@ pub async fn current_user_info(
     Ok(Json(user))
 }
 
+/// Log out of this session
 #[utoipa::path(
     post,
     path = "/logout",

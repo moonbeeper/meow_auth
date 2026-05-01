@@ -28,11 +28,12 @@ pub struct InfoAvailableRequest {
     who: String,
 }
 
+/// Fetch if a login is available for registration
 #[utoipa::path(
     post,
     path = "/login",
     responses(
-        (status = 200, description = "login flow created", body = InfoAvailableResponse),
+        (status = 200, description = "result of availability", body = InfoAvailableResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -52,11 +53,12 @@ pub async fn login_available(
     Ok(Json(InfoAvailableResponse { available: true }))
 }
 
+/// Fetch if an email is available for registration
 #[utoipa::path(
     post,
     path = "/email",
     responses(
-        (status = 200, description = "login flow created", body = InfoAvailableResponse),
+        (status = 200, description = "result of availability", body = InfoAvailableResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

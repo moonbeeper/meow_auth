@@ -32,6 +32,7 @@ pub struct CreateTotpResponse {
     recovery_codes: Vec<String>,
 }
 
+/// Get the TOTP creation options
 #[utoipa::path(
     post,
     path = "/",
@@ -89,6 +90,9 @@ pub struct VerifyTotpRequest {
     code: String,
 }
 
+/// Exchange the TOTP creation options to enable TOTP
+///
+/// This will make use of the Six Digit code generated on your authenticator
 #[utoipa::path(
     post,
     path = "/exchange",
@@ -149,6 +153,9 @@ pub async fn exchange_totp_creation(
     Ok(Json(AlrightResponse::default()))
 }
 
+/// Disable TOTP
+///
+/// This will make use of the Six Digit code generated on your authenticator
 #[utoipa::path(
     delete,
     path = "/",
@@ -214,6 +221,7 @@ pub struct RecoveryCodesTotpResponse {
     recovery_codes: Vec<String>,
 }
 
+/// Get your TOTP recovery codes
 #[utoipa::path(
     post,
     path = "/recovery",

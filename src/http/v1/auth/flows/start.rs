@@ -35,6 +35,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(webauthn_options))
 }
 
+/// Start the flow to login via an otp code
 #[utoipa::path(
     post,
     path = "/",
@@ -92,6 +93,7 @@ pub struct RegisterRequest {
     email: String,
 }
 
+/// Start the flow to register an account
 #[utoipa::path(
     post,
     path = "/register",
@@ -162,6 +164,7 @@ pub async fn otp_register(
     }))
 }
 
+/// Start the flow to login via a Passkey
 #[utoipa::path(
     post,
     path = "/webauthn",

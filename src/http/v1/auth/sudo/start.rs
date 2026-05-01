@@ -31,11 +31,12 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(webauthn_options))
 }
 
+/// Start the flow to enable sudo via an otp code
 #[utoipa::path(
     post,
     path = "/",
     responses(
-        (status = 200, description = "login flow created", body = FlowResponse),
+        (status = 200, description = "sudo enable flow created", body = FlowResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -92,11 +93,12 @@ pub async fn otp_option(
     }))
 }
 
+/// Start the flow to enable sudo via a TOTP code
 #[utoipa::path(
     post,
     path = "/totp",
     responses(
-        (status = 200, description = "login flow created", body = FlowResponse),
+        (status = 200, description = "sudo enable flow created", body = FlowResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -135,11 +137,12 @@ pub async fn totp_option(
     }))
 }
 
+/// Start the flow to enable sudo via a Passkey
 #[utoipa::path(
     post,
     path = "/webauthn",
     responses(
-        (status = 200, description = "login flow created"),
+        (status = 200, description = "sudo enable flow created"),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

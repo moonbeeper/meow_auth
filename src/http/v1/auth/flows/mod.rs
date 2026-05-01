@@ -45,11 +45,14 @@ pub struct FlowOptionResponse {
     pub methods: Vec<AuthMethod>,
 }
 
+/// Get the login options
+///
+/// This returns what authentication method you can use to login. It will be used as the login/start
 #[utoipa::path(
     post,
     path = "/",
     responses(
-        (status = 200, description = "login flow created", body = FlowResponse),
+        (status = 200, description = "login options", body = FlowResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

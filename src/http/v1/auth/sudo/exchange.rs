@@ -44,11 +44,14 @@ pub struct ExchangeRequest {
     code: String,
 }
 
+/// Exchange the flow to enable sudo via an OTP code
+///
+/// This uses the flow id provided by the start method
 #[utoipa::path(
     post,
     path = "/",
     responses(
-        (status = 200, description = "login exchanged successfully"),
+        (status = 200, description = "sudo enable exchanged successfully"),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -105,11 +108,12 @@ pub async fn exchange(
     Ok(Json(AlrightResponse::default()))
 }
 
+/// Exchange the flow to enable sudo via a Passkey
 #[utoipa::path(
     post,
     path = "/webauthn",
     responses(
-        (status = 200, description = "login exchanged successfully"),
+        (status = 200, description = "sudo enable exchanged successfully"),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -183,11 +187,14 @@ pub async fn webauthn_exchange(
     Ok(Json(AlrightResponse::default()))
 }
 
+/// Exchange the flow to enable sudo via a TOTP code
+///
+/// This uses the flow id provided by the start method
 #[utoipa::path(
     post,
     path = "/totp",
     responses(
-        (status = 200, description = "login exchanged successfully"),
+        (status = 200, description = "sudo enable exchanged successfully"),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

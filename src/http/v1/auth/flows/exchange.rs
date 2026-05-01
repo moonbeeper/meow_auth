@@ -51,6 +51,10 @@ pub struct ExchangeRequest {
     code: String,
 }
 
+/// Exchange the flow to login via an OTP code
+///
+/// This uses the flow id provided by the start method.
+/// This might return a next_method of TOTP if the user has TOTP enabled
 #[utoipa::path(
     post,
     path = "/",
@@ -161,6 +165,7 @@ pub async fn exchange(
     Ok(RouteEither::Right(Json(AlrightResponse::default())))
 }
 
+/// Exchange the flow to enable sudo via a Passkey
 #[utoipa::path(
     post,
     path = "/webauthn",
@@ -243,6 +248,9 @@ pub async fn webauthn_exchange(
     Ok(Json(AlrightResponse::default()))
 }
 
+/// Re-Exchange the flow to login via a TOTP code
+///
+/// This uses the flow id provided by the past exchange method
 #[utoipa::path(
     post,
     path = "/totp",

@@ -27,6 +27,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(register_passkey_exchange))
 }
 
+/// Get the passkey creation options
 #[utoipa::path(
     post,
     path = "/",
@@ -87,6 +88,7 @@ pub async fn register_passkey_options(
     Ok(Json(client_challenge))
 }
 
+/// Exchange the passkey register result created on the browser
 #[utoipa::path(
     post,
     path = "/exchange",

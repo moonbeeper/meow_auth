@@ -27,6 +27,9 @@ pub struct SudoOptionsResponse {
     options: Vec<SudoOption>,
 }
 
+/// Get the sudo enable options
+///
+/// This returns what authentication method you can use to enable sudo. It will be used as the sudo/start
 #[utoipa::path(
     get,
     path = "/",
