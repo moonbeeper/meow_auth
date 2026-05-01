@@ -2051,7 +2051,7 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "url",
- "webpki-roots",
+ "webpki-roots 1.0.7",
 ]
 
 [[package]]
@@ -2234,6 +2234,7 @@ dependencies = [
  "minify-html",
  "nanoid",
  "nom 8.0.0",
+ "openssl",
  "pin-project",
  "postcard",
  "rand 0.10.1",
@@ -2513,6 +2514,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "openssl-src"
+version = "300.6.0+3.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8e8cbfd3a4a8c8f089147fd7aaa33cf8c7450c4d09f8f80698a0cf093abeff4"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "openssl-sys"
 version = "0.9.114"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2520,6 +2530,7 @@ checksum = "13ce1245cd07fcc4cfdb438f7507b0c7e4f3849a69fd84d52374c66d83741bb6"
 dependencies = [
  "cc",
  "libc",
+ "openssl-src",
  "pkg-config",
  "vcpkg",
 ]
@@ -4075,6 +4086,7 @@ dependencies = [
  "memchr",
  "once_cell",
  "percent-encoding",
+ "rustls",
  "serde",
  "serde_json",
  "sha2 0.10.9",
@@ -4085,6 +4097,7 @@ dependencies = [
  "tracing",
  "url",
  "uuid",
+ "webpki-roots 0.26.11",
 ]
 
 [[package]]
@@ -5190,6 +5203,15 @@ dependencies = [
  "serde",
  "serde_json",
  "url",
+]
+
+[[package]]
+name = "webpki-roots"
+version = "0.26.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "521bc38abb08001b01866da9f51eb7c5d647a19260e00054a8c7fd5f9e57f7a9"
+dependencies = [
+ "webpki-roots 1.0.7",
 ]
 
 [[package]]
