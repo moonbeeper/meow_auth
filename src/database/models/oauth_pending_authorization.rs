@@ -4,7 +4,7 @@ use typed_builder::TypedBuilder;
 use crate::database::{
     error::DatabaseError,
     id::UlidId,
-    models::{oauth_application::OauthApplicationId, user::UserId},
+    models::{oauth_application::OauthApplicationId, user::UserId, user_session::UserSessionId},
 };
 
 pub type OauthPendingAuthorizationId = UlidId;
@@ -15,6 +15,7 @@ pub struct OauthPendingAuthorization {
     pub id: OauthPendingAuthorizationId,
     pub user_id: UserId,
     pub client_id: OauthApplicationId,
+    pub user_session: UserSessionId,
     #[builder(default = None)]
     pub old_scopes: Option<i64>,
     #[builder(default = 0)]
@@ -35,6 +36,7 @@ impl OauthPendingAuthorization {
                 id,
                 user_id,
                 client_id,
+                user_session,
                 old_scopes,
                 requested_scopes,
                 code_challenge,
@@ -42,11 +44,12 @@ impl OauthPendingAuthorization {
                 nonce,
                 expires_at
             )
-            values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             ",
             self.id as OauthPendingAuthorizationId,
             self.user_id as UserId,
             self.client_id as OauthApplicationId,
+            self.user_session as UserSessionId,
             self.old_scopes,
             self.requested_scopes,
             self.code_challenge,
@@ -60,15 +63,15 @@ impl OauthPendingAuthorization {
         Ok(())
     }
 
-    pub async fn delete_all_by_user_and_client_id(
-        user_id: UserId,
-        client_id: OauthApplicationId,
+    pub async fn delete_all(
+        &self,
         transaction: &mut PgTransaction<'_>,
     ) -> Result<(), DatabaseError> {
         sqlx::query!(
-            "delete from oauth_pending_authorizations where user_id = $1 and client_id = $2 and expires_at > now()",
-            user_id as UserId,
-            client_id as OauthApplicationId
+            "delete from oauth_pending_authorizations where user_id = $1 and client_id = $2 and user_session = $3 and expires_at > now()",
+            self.user_id as UserId,
+            self.client_id as OauthApplicationId,
+            self.user_session as UserSessionId
         )
         .execute(&mut **transaction)
         .await?;
@@ -86,6 +89,7 @@ impl OauthPendingAuthorization {
                 id,
                 user_id,
                 client_id,
+                user_session,
                 old_scopes,
                 requested_scopes,
                 code_challenge,
@@ -114,6 +118,7 @@ impl OauthPendingAuthorization {
                     id,
                     user_id,
                     client_id,
+                    user_session,
                     old_scopes,
                     requested_scopes,
                     code_challenge,

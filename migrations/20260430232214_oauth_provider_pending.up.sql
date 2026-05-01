@@ -2,6 +2,7 @@
 create table oauth_pending_authorizations (
     id uuid primary key,
     user_id uuid unique not null references users(id) on delete cascade,
+    user_session uuid unique not null references user_sessions(id) on delete cascade,
     client_id uuid unique not null references oauth_applications(id) on delete cascade,
     old_scopes bigint default 0, -- bitfield of scopes as always :)
     requested_scopes bigint not null default 0, -- bitfield of scopes as always :)
