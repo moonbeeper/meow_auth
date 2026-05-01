@@ -1,0 +1,132 @@
+use sqlx::{PgPool, PgTransaction};
+use typed_builder::TypedBuilder;
+
+use crate::database::{
+    error::DatabaseError,
+    id::UlidId,
+    models::{oauth_application::OauthApplicationId, user::UserId},
+};
+
+pub type OauthPendingAuthorizationId = UlidId;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, TypedBuilder)]
+pub struct OauthPendingAuthorization {
+    #[builder(default = OauthPendingAuthorizationId::new())]
+    pub id: OauthPendingAuthorizationId,
+    pub user_id: UserId,
+    pub client_id: OauthApplicationId,
+    #[builder(default = None)]
+    pub old_scopes: Option<i64>,
+    #[builder(default = 0)]
+    pub requested_scopes: i64,
+    pub code_challenge: String,
+    pub state: Option<String>,
+    pub nonce: Option<String>,
+    #[builder(default = chrono::Utc::now() + chrono::Duration::minutes(15))]
+    pub expires_at: chrono::DateTime<chrono::Utc>,
+    #[builder(default = chrono::Utc::now())]
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl OauthPendingAuthorization {
+    pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
+        sqlx::query!(
+            "insert into oauth_pending_authorizations (
+                id,
+                user_id,
+                client_id,
+                old_scopes,
+                requested_scopes,
+                code_challenge,
+                state,
+                nonce,
+                expires_at
+            )
+            values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ",
+            self.id as OauthPendingAuthorizationId,
+            self.user_id as UserId,
+            self.client_id as OauthApplicationId,
+            self.old_scopes,
+            self.requested_scopes,
+            self.code_challenge,
+            self.state,
+            self.nonce,
+            self.expires_at
+        )
+        .fetch_one(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn delete_all_by_user_and_client_id(
+        user_id: UserId,
+        client_id: OauthApplicationId,
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<(), DatabaseError> {
+        sqlx::query!(
+            "delete from oauth_pending_authorizations where user_id = $1 and client_id = $2 and expires_at > now()",
+            user_id as UserId,
+            client_id as OauthApplicationId
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
+    pub async fn find_by_id(
+        id: OauthPendingAuthorizationId,
+        pool: &PgPool,
+    ) -> Result<Option<Self>, DatabaseError> {
+        let data = sqlx::query_as!(
+            Self,
+            "select
+                id,
+                user_id,
+                client_id,
+                old_scopes,
+                requested_scopes,
+                code_challenge,
+                state,
+                nonce,
+                expires_at,
+                created_at
+            from oauth_pending_authorizations where id = $1 and expires_at > now()",
+            id as OauthPendingAuthorizationId
+        )
+        .fetch_optional(pool)
+        .await?;
+
+        Ok(data)
+    }
+
+    pub async fn take_by_id(
+        id: OauthPendingAuthorizationId,
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<Option<Self>, DatabaseError> {
+        let data = sqlx::query_as!(
+            Self,
+            "delete from oauth_pending_authorizations
+                where id = $1 and expires_at > now()
+                returning
+                    id,
+                    user_id,
+                    client_id,
+                    old_scopes,
+                    requested_scopes,
+                    code_challenge,
+                    state,
+                    nonce,
+                    expires_at,
+                    created_at
+            ",
+            id as OauthPendingAuthorizationId
+        )
+        .fetch_optional(&mut **transaction)
+        .await?;
+
+        Ok(data)
+    }
+}
