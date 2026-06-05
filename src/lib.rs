@@ -6,5 +6,5 @@ pub mod job_queue;
 pub mod logger;
 pub mod mailer;
 pub mod manager;
-pub mod oauth;
+// pub mod oauth;
 pub mod settings;
