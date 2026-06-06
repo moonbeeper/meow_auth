@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{Extension, Json, extract::State};
+use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 use webauthn_rs::prelude::PasskeyAuthentication;
 use webauthn_rs_proto::PublicKeyCredential;
@@ -26,6 +26,7 @@ use crate::{
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
+        extractor::Json,
         middleware::auth_manager::AuthContext,
         v1::types::{AlrightResponse, AuthenticationPasskeyRequest},
     },

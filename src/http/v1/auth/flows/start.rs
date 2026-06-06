@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{Extension, Json, extract::State};
+use axum::{Extension, extract::State};
 use tower_cookies::Cookies;
 use utoipa_axum::{router::OpenApiRouter, routes};
 use webauthn_rs_proto::RequestChallengeResponse;
@@ -20,6 +20,7 @@ use crate::{
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
+        extractor::Json,
         middleware::auth_manager::AuthContext,
         v1::{
             auth::flows::{FlowRequest, FlowResponse},

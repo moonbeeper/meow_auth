@@ -66,6 +66,18 @@ pub enum ApiErrorCodes {
     WebauthnCompromised,
     #[error("an error occurred while sending an email")]
     MailerError(#[from] crate::mailer::error::MailerErrors),
+    /// ->
+    #[error("Failed to deserialize the body into the target type: {0}")]
+    DataError(String),
+    #[error("Failed to parse the request body as JSON: {0}")]
+    JsonSyntaxError(String),
+    #[error("Expected request with `Content-Type: application/json`")]
+    MissingJsonContentType,
+    #[error("Failed to buffer the request body")]
+    FailedToBufferContent,
+    /// ->
+    #[error("Something went really wrong back there")]
+    NotGood,
 }
 
 // wtf
@@ -113,6 +125,11 @@ impl ApiErrorCodes {
             ApiErrorCodes::Json(..) => StatusCode::BAD_REQUEST,
             ApiErrorCodes::WebauthnCompromised => StatusCode::FORBIDDEN,
             ApiErrorCodes::MailerError(..) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiErrorCodes::DataError(..) => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiErrorCodes::JsonSyntaxError(..) => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::MissingJsonContentType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            ApiErrorCodes::FailedToBufferContent => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiErrorCodes::NotGood => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

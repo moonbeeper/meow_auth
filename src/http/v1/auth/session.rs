@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{
-    Extension, Json,
+    Extension,
     extract::{Path, State},
 };
 use utoipa_axum::{router::OpenApiRouter, routes};
@@ -11,6 +11,7 @@ use crate::{
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
+        extractor::Json,
         middleware::auth_manager::AuthContext,
         v1::types::{AlrightResponse, Session},
     },

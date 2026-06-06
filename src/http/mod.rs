@@ -1,4 +1,5 @@
 pub mod error;
+pub mod extractor;
 pub mod middleware;
 mod v1;
 
