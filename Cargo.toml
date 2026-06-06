@@ -15,7 +15,7 @@ anyhow = "1.0.102"
 argon2 = { version = "0.6.0-rc.7", features = ["rand_core"] }
 axum = { version = "0.8.9", features = ["macros"] }
 axum-valid = { version = "0.24.0", default-features = false, features = [
-    "garde",
+    "validator",
     "basic",
 ] }
 base64urlsafedata = "0.5.5"
@@ -28,7 +28,6 @@ data-encoding = "2.11.0"
 dotenvy = "0.15.7"
 flagset = "0.4.7"
 futures-util = "0.3.32"
-garde = { version = "0.23.0", features = ["derive"] }
 hex = "0.4.3"
 lettre = { version = "0.11.22", default-features = false, features = [
     "tokio1-rustls-tls",
@@ -73,7 +72,12 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 typed-builder = "0.23.2"
 ulid = { version = "1.2.1", features = ["serde", "uuid"] }
 url = { version = "2.5.8", features = ["serde"] }
-utoipa = { version = "5.5.0", features = ["axum_extras", "chrono", "ulid"] }
+utoipa = { version = "5.5.0", features = [
+    "axum_extras",
+    "chrono",
+    "ulid",
+    "uuid",
+] }
 utoipa-axum = "0.2.0"
 utoipa-scalar = { version = "0.3.0", features = ["axum"] }
 uuid = { version = "1.23.2", features = ["v4"] }
@@ -82,3 +86,6 @@ webauthn-rs = { version = "0.5.5", features = [
     "danger-credential-internals",
 ] }
 webauthn-rs-proto = "0.5.5"
+regex = "1.12.3"
+hmac = "0.13.0"
+validator = { version = "0.20.0", features = ["derive"] }

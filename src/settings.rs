@@ -120,7 +120,7 @@ pub struct WebauthnSettings {
     #[default("localhost".to_string())]
     pub rp_id: String,
     #[default("MeowAuth".to_string())]
-    pub rp_name: String,
+    pub rp_display_name: String,
     #[default(60*5)]
     pub timeout_seconds: i64,
 }

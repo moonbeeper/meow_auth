@@ -9,6 +9,8 @@ pub struct ApiError<'a> {
     message: String,
 }
 
+// TODO: Should merge all common errors. To not have a thousand "not found" errors.
+
 #[derive(Debug, thiserror::Error, strum::IntoStaticStr)]
 pub enum ApiErrorCodes {
     #[error("meow meow")]
@@ -78,6 +80,12 @@ pub enum ApiErrorCodes {
     /// ->
     #[error("Something went really wrong back there")]
     NotGood,
+    /// ->
+    #[error("the requested passkey was not found")]
+    WebauthnNotFound,
+    /// ->
+    #[error("{0}")]
+    ValidationError(String),
 }
 
 // wtf
@@ -130,6 +138,8 @@ impl ApiErrorCodes {
             ApiErrorCodes::MissingJsonContentType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
             ApiErrorCodes::FailedToBufferContent => StatusCode::INTERNAL_SERVER_ERROR,
             ApiErrorCodes::NotGood => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiErrorCodes::WebauthnNotFound => StatusCode::NOT_FOUND,
+            ApiErrorCodes::ValidationError(..) => StatusCode::UNPROCESSABLE_ENTITY,
         }
     }
 }

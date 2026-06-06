@@ -13,6 +13,8 @@ pub struct UserWebauthn {
     pub user_id: UserId,
     #[builder(default = PIDUserWebauthnId::new())]
     pub pid: PIDUserWebauthnId,
+    #[builder(default = true)]
+    pub enabled: bool,
     #[builder(default = "My Passkey".to_string())]
     pub display_name: String,
     pub credential_id: Vec<u8>,
@@ -23,6 +25,8 @@ pub struct UserWebauthn {
     pub big_data: serde_json::Value,
     #[builder(default = None)]
     pub last_used_at: Option<chrono::DateTime<chrono::Utc>>,
+    #[builder(default = None)]
+    pub disabled_at: Option<chrono::DateTime<chrono::Utc>>,
     #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
@@ -56,12 +60,15 @@ impl UserWebauthn {
             "update user_webauthn set
                 big_data = $2,
                 counter = $3,
+                enabled = $4,
                 last_used_at = now(),
-                updated_at = now()
+                updated_at = now(),
+                disabled_at = case when enabled then null else now() end
              where id = $1",
             self.id as UserWebauthnId,
             self.big_data,
-            self.counter
+            self.counter,
+            self.enabled
         )
         .execute(&mut **transaction)
         .await?;
@@ -118,16 +125,47 @@ impl UserWebauthn {
                 id,
                 user_id,
                 pid,
+                enabled,
                 display_name,
                 credential_id,
                 aaguid,
                 counter,
                 big_data,
                 last_used_at,
+                disabled_at,
                 created_at,
                 updated_at
              from user_webauthn where id = $1",
             id as UserWebauthnId
+        )
+        .fetch_optional(pool)
+        .await?;
+
+        Ok(data)
+    }
+
+    pub async fn find_by_pid(
+        id: PIDUserWebauthnId,
+        pool: &PgPool,
+    ) -> Result<Option<Self>, DatabaseError> {
+        let data = sqlx::query_as!(
+            Self,
+            "select
+                id,
+                user_id,
+                pid,
+                enabled,
+                display_name,
+                credential_id,
+                aaguid,
+                counter,
+                big_data,
+                last_used_at,
+                disabled_at,
+                created_at,
+                updated_at
+             from user_webauthn where pid = $1",
+            id as PIDUserWebauthnId
         )
         .fetch_optional(pool)
         .await?;
@@ -145,12 +183,14 @@ impl UserWebauthn {
                 id,
                 user_id,
                 pid,
+                enabled,
                 display_name,
                 credential_id,
                 aaguid,
                 counter,
                 big_data,
                 last_used_at,
+                disabled_at,
                 created_at,
                 updated_at
              from user_webauthn where id = any($1)",
@@ -172,12 +212,14 @@ impl UserWebauthn {
                 id,
                 user_id,
                 pid,
+                enabled,
                 display_name,
                 credential_id,
                 aaguid,
                 counter,
                 big_data,
                 last_used_at,
+                disabled_at,
                 created_at,
                 updated_at
              from user_webauthn where user_id = $1",
@@ -196,12 +238,14 @@ impl UserWebauthn {
                 id,
                 user_id,
                 pid,
+                enabled,
                 display_name,
                 credential_id,
                 aaguid,
                 counter,
                 big_data,
                 last_used_at,
+                disabled_at,
                 created_at,
                 updated_at
              from user_webauthn where user_id = $1",
@@ -223,12 +267,14 @@ impl UserWebauthn {
                 id,
                 user_id,
                 pid,
+                enabled,
                 display_name,
                 credential_id,
                 aaguid,
                 counter,
                 big_data,
                 last_used_at,
+                disabled_at,
                 created_at,
                 updated_at
              from user_webauthn where credential_id = $1",

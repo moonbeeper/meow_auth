@@ -10,7 +10,7 @@ use crate::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
         middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
-        v1::types::User,
+        v1::types::{AlrightResponse, User},
     },
 };
 
@@ -53,7 +53,7 @@ pub async fn current_user_info(
 pub async fn logout(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
-) -> Result<(), ApiErrorCodes> {
+) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(session)) = UserSession::find_by_id(auth.session_id(), &global.database).await
     else {
         return Err(ApiErrorCodes::InternalServerError);
@@ -62,5 +62,5 @@ pub async fn logout(
     let mut tx = global.database.begin().await?;
     session.delete(&mut tx).await?;
     tx.commit().await?;
-    Ok(())
+    Ok(Json(AlrightResponse::default()))
 }

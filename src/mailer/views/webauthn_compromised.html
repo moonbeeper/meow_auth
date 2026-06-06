@@ -5,5 +5,5 @@
     {{ m::heading(text = globals.greeting ~ " " ~ user.login ~ "!") }}
     {{ m::spacer(px = 16) }}
     {{ m::text(text="We think that your passkey " ~ passkey.name ~ " may be compromised.") }}
-    {{ m::text(text="Please remove this passkey and close all open sessions.") }}
+    {{ m::text(text="It has been deactivated, you may delete it and recreate it any time you like.") }}
 {% endblock content %}

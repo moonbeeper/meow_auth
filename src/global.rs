@@ -21,7 +21,7 @@ impl GlobalState {
         let webauth = WebauthnBuilder::new(&settings.webauthn.rp_id, &settings.http.origin)
             .context("bad webauthn configuration")?;
         let webauth = webauth
-            .rp_name(&settings.webauthn.rp_name)
+            .rp_name(&settings.webauthn.rp_display_name)
             .timeout(Duration::from_secs(
                 settings.webauthn.timeout_seconds as u64,
             ))

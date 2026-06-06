@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use axum::{Extension, extract::State};
+use axum::{
+    Extension,
+    extract::{Path, State},
+};
 use utoipa_axum::{router::OpenApiRouter, routes};
 use webauthn_rs::prelude::{
     CreationChallengeResponse, PasskeyRegistration, RegisterPublicKeyCredential,
@@ -8,17 +11,20 @@ use webauthn_rs::prelude::{
 
 use crate::{
     auth::{emails::AuthMailer, webauthn::get_aaguid},
-    database::models::{
-        user::User,
-        user_webauthn::UserWebauthn,
-        user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
+    database::{
+        id::UlidId,
+        models::{
+            user::User,
+            user_webauthn::UserWebauthn,
+            user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
+        },
     },
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
         middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
-        v1::types::{AlrightResponse, RegisterPasskeyRequest},
+        v1::types::{AlrightResponse, Passkey, RegisterPasskeyRequest},
     },
 };
 
@@ -26,6 +32,8 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(register_passkey_options))
         .routes(routes!(register_passkey_exchange))
+        .routes(routes!(list_passkeys))
+        .routes(routes!(delete_passkey))
         .layer(RequireAuthenticationLayer::new())
 }
 
@@ -161,6 +169,69 @@ pub async fn register_passkey_exchange(
     tx.commit().await?;
 
     AuthMailer::webauthn_registered(user.login, passkey_name, user.email, &global.database).await?;
+
+    Ok(Json(AlrightResponse::default()))
+}
+
+/// List all your created passkeys
+#[utoipa::path(
+    get,
+    path = "/list",
+    responses(
+        (status = 200, description = "a list of passkeys", body = Vec<Passkey>),
+        (status = 500, description = "internal server error", body = ApiError)
+    )
+)]
+pub async fn list_passkeys(
+    State(global): State<Arc<GlobalState>>,
+    Extension(auth): Extension<AuthContext>,
+) -> Result<Json<Vec<Passkey>>, ApiErrorCodes> {
+    let Ok(passkeys) = UserWebauthn::find_many_by_user_id(auth.user_id(), &global.database).await
+    else {
+        return Err(ApiErrorCodes::InternalServerError);
+    };
+    let passkeys: Vec<_> = passkeys.into_iter().map(Passkey::from).collect();
+    Ok(Json(passkeys))
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct PasskeyQuery {
+    id: UlidId,
+}
+
+/// Delete one of your passkeys
+///
+/// You use the ID of one of your passkeys.
+#[utoipa::path(
+    delete,
+    path = "/{id}",
+    params(
+        ("id" = UlidId, description = "the id of the passkey to delete")
+    ),
+    responses(
+        (status = 200, description = "successfully deleted the passkey"),
+        (status = 500, description = "internal server error", body = ApiError)
+    )
+)]
+pub async fn delete_passkey(
+    State(global): State<Arc<GlobalState>>,
+    Extension(auth): Extension<AuthContext>,
+    Path(query): Path<PasskeyQuery>,
+) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
+    }
+
+    let Ok(Some(session)) = UserWebauthn::find_by_pid(query.id, &global.database).await else {
+        return Err(ApiErrorCodes::InternalServerError);
+    };
+    if session.user_id != auth.user_id() {
+        return Err(ApiErrorCodes::WebauthnNotFound);
+    }
+
+    let mut tx = global.database.begin().await?;
+    session.delete(&mut tx).await?;
+    tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
 }

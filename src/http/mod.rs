@@ -2,6 +2,7 @@ pub mod error;
 pub mod extractor;
 pub mod middleware;
 mod v1;
+pub mod validator;
 
 use std::{net::SocketAddr, sync::Arc};
 

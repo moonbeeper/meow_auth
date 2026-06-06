@@ -29,6 +29,7 @@ use crate::{
         extractor::Json,
         middleware::auth_manager::AuthContext,
         v1::types::{AlrightResponse, AuthenticationPasskeyRequest},
+        validator::Valid,
     },
 };
 
@@ -39,9 +40,10 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(totp_exchange))
 }
 
-#[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
 pub struct ExchangeRequest {
     flow_id: UlidId,
+    #[validate(length(min = 6, max = 11))]
     code: String,
 }
 
@@ -59,7 +61,7 @@ pub struct ExchangeRequest {
 pub async fn exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
-    Json(request): Json<ExchangeRequest>,
+    Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoAlreadyEnabled);
@@ -85,7 +87,7 @@ pub async fn exchange(
         .as_ref()
         .ok_or_else(|| ApiErrorCodes::OtpExpired)?;
 
-    if !verify_otp_code(&request.code, secret_hash) {
+    if !verify_otp_code(&request.code, secret_hash, &global.settings) {
         return Err(ApiErrorCodes::InvalidCode);
     }
 
@@ -155,9 +157,20 @@ pub async fn webauthn_exchange(
 
     // check counter to account for cloning attackssss
     if auth_result.counter() <= passkey.counter as u32 {
-        // TODO: cloning attack. deactivate passkey and notify via email
+        let mut tx = global.database.begin().await?;
+        passkey.enabled = false;
+        passkey.update(&mut tx).await?;
+        tx.commit().await?;
+        AuthMailer::webauthn_compromised(
+            user.login,
+            passkey.display_name,
+            user.email,
+            &global.database,
+        )
+        .await?;
         return Err(ApiErrorCodes::WebauthnCompromised);
     }
+
     if passkey.user_id != user.id {
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     }
@@ -194,7 +207,7 @@ pub async fn webauthn_exchange(
 pub async fn totp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
-    Json(request): Json<ExchangeRequest>,
+    Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoAlreadyEnabled);

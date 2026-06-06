@@ -25,6 +25,7 @@ use crate::{
             auth::flows::{FlowRequest, FlowResponse},
             types::AuthMethod,
         },
+        validator::Valid,
     },
 };
 
@@ -52,10 +53,7 @@ pub async fn otp_login(
         return Err(ApiErrorCodes::AccountNotFound);
     };
 
-    let otp = get_otp_code().map_err(|e| {
-        tracing::error!("failed generating otp code: {e}");
-        ApiErrorCodes::InternalServerError
-    })?;
+    let otp = get_otp_code(&global.settings);
 
     let login_request = UserAuthChallenges::builder()
         .user_id(Some(user.id))
@@ -82,9 +80,11 @@ pub async fn otp_login(
     }))
 }
 
-#[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
 pub struct RegisterRequest {
+    #[validate(length(min = 4, max = 16))]
     login: String,
+    #[validate(email)]
     email: String,
 }
 
@@ -100,7 +100,7 @@ pub struct RegisterRequest {
 )]
 pub async fn otp_register(
     State(global): State<Arc<GlobalState>>,
-    Json(request): Json<RegisterRequest>,
+    Valid(Json(request)): Valid<Json<RegisterRequest>>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
     // awful
     if User::find_by_email(request.email.clone(), &global.database)
@@ -117,10 +117,7 @@ pub async fn otp_register(
         return Err(ApiErrorCodes::LoginAlreadyAssociated);
     }
 
-    let otp = get_otp_code().map_err(|e| {
-        tracing::error!("failed generating otp code: {e}");
-        ApiErrorCodes::InternalServerError
-    })?;
+    let otp = get_otp_code(&global.settings);
 
     let user_signup = UserSignup::builder()
         .email(request.email)

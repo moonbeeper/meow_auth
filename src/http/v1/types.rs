@@ -4,7 +4,11 @@ use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::database::{
     self,
-    models::{user::UserId, user_session::PIDUserSessionId},
+    models::{
+        user::UserId,
+        user_session::PIDUserSessionId,
+        user_webauthn::{PIDUserWebauthnId, UserWebauthn},
+    },
 };
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
@@ -29,7 +33,6 @@ impl From<database::models::user::User> for User {
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
-
 pub struct Session {
     pub id: PIDUserSessionId,
     pub active_expires_at: chrono::DateTime<chrono::Utc>,
@@ -118,6 +121,33 @@ pub struct AlrightResponse {
     ok: bool,
 }
 
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct Passkey {
+    pub id: PIDUserWebauthnId,
+    pub display_name: String,
+    pub enabled: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aaguid: Option<uuid::Uuid>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disabled_at: Option<chrono::DateTime<chrono::Utc>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_used_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl From<UserWebauthn> for Passkey {
+    fn from(value: UserWebauthn) -> Self {
+        Self {
+            id: value.pid,
+            display_name: value.display_name,
+            enabled: value.enabled,
+            aaguid: value.aaguid,
+            disabled_at: value.disabled_at,
+            last_used_at: value.last_used_at,
+            created_at: value.created_at,
+        }
+    }
+}
 pub enum RouteEither<L, R> {
     Left(L),
     Right(R),

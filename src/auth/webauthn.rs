@@ -4,12 +4,13 @@ use nom::{bytes::complete::take, error::ParseError, number::complete};
 use sqlx::PgPool;
 use tower_cookies::{
     Cookies,
-    cookie::{self, time},
+    cookie::{self},
 };
 use uuid::Uuid;
 use webauthn_rs::prelude::{AuthenticationResult, Passkey};
 
 use crate::{
+    auth::{create_cookie, get_cookie},
     database::{
         id::UlidId,
         models::{
@@ -73,33 +74,25 @@ fn get_cookie_key(settings: &Settings) -> &cookie::Key {
     })
 }
 
-// TODO: should really mix this and make generic method for both the session and this
 pub fn create_webauthn_cookie(challenge_id: UlidId, cookies: &Cookies, settings: &Settings) {
-    let encrypted_key = get_cookie_key(settings);
-    let cookie_jar = cookies.private(encrypted_key);
-    let cookie = cookie::Cookie::build((
-        format!("{}_webauthn", settings.session.cookie_name),
+    create_cookie(
         challenge_id.to_string(),
-    ))
-    .http_only(true)
-    .path("/")
-    .max_age(time::Duration::seconds(settings.webauthn.timeout_seconds)); // future muaahahah
-    cookie_jar.add(cookie.into());
+        &format!("{}_webauthn", settings.session.cookie_name),
+        get_cookie_key(settings),
+        Some(settings.webauthn.timeout_seconds),
+        cookies,
+        settings,
+    );
 }
 
 fn get_webauthn_cookie(cookies: &Cookies, settings: &Settings) -> Option<cookie::Cookie<'static>> {
-    let encrypted_key = get_cookie_key(settings);
-    let cookie_jar = cookies.private(encrypted_key);
-    let value = cookie_jar.get(&format!("{}_webauthn", settings.session.cookie_name));
-    delete_webauthn_cookie(cookies, settings);
-    value
-}
-
-fn delete_webauthn_cookie(cookies: &Cookies, settings: &Settings) {
-    let cookie = cookie::Cookie::build(format!("{}_webauthn", settings.session.cookie_name))
-        .http_only(true)
-        .path("/");
-    cookies.remove(cookie.into());
+    get_cookie(
+        true,
+        &format!("{}_webauthn", settings.session.cookie_name),
+        get_cookie_key(settings),
+        cookies,
+        settings,
+    )
 }
 
 pub fn get_challenge_id_from_cookies(cookies: &Cookies, settings: &Settings) -> Option<UlidId> {
@@ -116,7 +109,7 @@ pub fn get_challenge_id_from_cookies(cookies: &Cookies, settings: &Settings) -> 
 pub async fn get_user_passkeys(user_id: UserId, db: &PgPool) -> anyhow::Result<Vec<Passkey>> {
     let Ok(passkeys) = UserWebauthn::find_many_by_user_id(user_id, db).await else {
         tracing::error!("failed to get user passkeys");
-        anyhow::bail!("")
+        anyhow::bail!("failed to get user passkeys")
     };
 
     let passkeys: Vec<_> = passkeys

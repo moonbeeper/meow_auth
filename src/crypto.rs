@@ -4,10 +4,11 @@ use chacha20poly1305::{
     AeadCore as _, ChaCha20Poly1305, Key, KeyInit as _, Nonce,
     aead::{Aead as _, OsRng},
 };
+use data_encoding::BASE32_NOPAD;
 use rand::Rng as _;
 
 #[derive(Debug, Clone)]
-pub struct SecretKey(Vec<u8>); // sadly the length can vary (apparently, see hecking totp)
+pub struct SecretKey(pub Vec<u8>); // sadly the length can vary (apparently, see hecking totp)
 
 impl Display for SecretKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -37,6 +38,10 @@ impl SecretKey {
         hasher.finalize_xof().fill(&mut result);
         SecretKey(result)
     }
+
+    pub fn as_base32(&self) -> String {
+        BASE32_NOPAD.encode(self)
+    }
 }
 
 impl Deref for SecretKey {
@@ -44,6 +49,16 @@ impl Deref for SecretKey {
 
     fn deref(&self) -> &Self::Target {
         self.0.as_slice()
+    }
+}
+
+impl<T> AsRef<T> for SecretKey
+where
+    T: ?Sized,
+    <SecretKey as Deref>::Target: AsRef<T>,
+{
+    fn as_ref(&self) -> &T {
+        self.deref().as_ref()
     }
 }
 

@@ -1,19 +1,24 @@
-use argon2::{Argon2, PasswordHasher as _, PasswordVerifier as _};
-use rand::{RngExt as _, distr::Alphanumeric};
+use std::sync::OnceLock;
 
-use crate::database::models::user_auth_challenge::{
-    AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges,
+use hmac::{Hmac, KeyInit as _, Mac as _};
+use sha2::Sha256;
+
+use crate::{
+    crypto::SecretKey,
+    database::models::user_auth_challenge::{
+        AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges,
+    },
+    settings::Settings,
 };
 
-pub fn generate_otp_code() -> String {
-    let code: String = rand::rng()
-        .sample_iter(&Alphanumeric)
-        .take(6)
-        .map(char::from)
-        .collect();
+static OTP_KEY: OnceLock<SecretKey> = OnceLock::new();
 
-    code.to_uppercase()
-}
+const OTP_ALPHABET: [char; 32] = [
+    '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L',
+    'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+];
+
+type HmacSha256 = Hmac<Sha256>;
 
 #[derive(Debug)]
 pub struct OtpCodePair {
@@ -21,39 +26,43 @@ pub struct OtpCodePair {
     pub hash: String,
 }
 
-pub fn get_otp_code() -> anyhow::Result<OtpCodePair> {
-    let code = generate_otp_code();
-    let argon2 = Argon2::default();
-    let hash = argon2.hash_password(code.as_bytes())?.to_string();
-
-    Ok(OtpCodePair { code, hash })
+fn get_otp_key(settings: &Settings) -> &SecretKey {
+    OTP_KEY.get_or_init(|| {
+        settings
+            .application
+            .master_key
+            .derivate("06/06/2026 23:03:06 otp hmac key", 64)
+    })
 }
 
-pub fn verify_otp_code(code: &str, hash: &str) -> bool {
-    let argon2 = Argon2::default();
+pub fn get_otp_code(settings: &Settings) -> OtpCodePair {
+    let code = nanoid::nanoid!(6, &OTP_ALPHABET);
+
+    let mut mac = HmacSha256::new_from_slice(get_otp_key(settings))
+        .expect("HMAC key must have an exact length");
+    mac.update(code.as_bytes());
+    let result = mac.finalize().into_bytes();
+    let hash = hex::encode(result);
+
+    OtpCodePair { code, hash }
+}
+
+pub fn verify_otp_code(code: &str, hash: &str, settings: &Settings) -> bool {
     let code = code.to_uppercase();
 
-    let Ok(parsed_hash) = argon2::PasswordHash::new(hash) else {
+    let mut mac = HmacSha256::new_from_slice(get_otp_key(settings))
+        .expect("HMAC key must have an exact length");
+    mac.update(code.as_bytes());
+
+    let Ok(hash) = hex::decode(hash) else {
         return false;
     };
 
-    if argon2
-        .verify_password(code.as_bytes(), &parsed_hash)
-        .is_err()
-    {
-        return false;
-    }
-
-    true
+    mac.verify_slice(&hash).is_ok()
 }
 
 pub fn is_flow_correct(flow: &UserAuthChallenges) -> bool {
-    if flow.kind != AuthChallengeKind::Otp {
-        return false;
-    }
-
-    let now = chrono::Utc::now();
-    if flow.expires_at < now {
+    if !super::is_flow_correct(flow, Some(AuthChallengeKind::Otp), None) {
         return false;
     }
 

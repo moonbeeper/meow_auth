@@ -4,9 +4,11 @@ use axum::{
     extract::{FromRequest, OptionalFromRequest, Request, rejection::JsonRejection},
     response::{IntoResponse, Response},
 };
+use axum_valid::HasValidate;
 use serde::{Serialize, de::DeserializeOwned};
+use validator::ValidateArgs;
 
-use crate::http::error::ApiErrorCodes;
+use crate::http::{error::ApiErrorCodes, validator::HasValidateArgs};
 
 /// !!! A wrapper around [axum::Json] to provide our own error messages
 ///
@@ -185,6 +187,21 @@ where
 {
     fn into_response(self) -> Response {
         axum::Json(self.0).into_response()
+    }
+}
+
+impl<T> HasValidate for Json<T> {
+    type Validate = T;
+
+    fn get_validate(&self) -> &Self::Validate {
+        &self.0
+    }
+}
+
+impl<'v, T: ValidateArgs<'v>> HasValidateArgs<'v> for Json<T> {
+    type ValidateArgs = T;
+    fn get_validate_args(&self) -> &Self::ValidateArgs {
+        &self.0
     }
 }
 

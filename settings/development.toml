@@ -42,5 +42,5 @@ digits = 6
 
 [webauthn]
 rp_id = "localhost"
-rp_name = "MeowAuth"
+rp_display_name = "MeowAuth"
 timeout_seconds = 300

@@ -5,6 +5,7 @@ use sqlx::PgPool;
 use tower_cookies::{Cookies, cookie};
 
 use crate::{
+    auth::{create_cookie, delete_cookie, get_cookie},
     database::{
         id::UlidId,
         models::{
@@ -49,32 +50,32 @@ fn get_cookie_key(settings: &Settings) -> &cookie::Key {
     })
 }
 
-// TODO: should really use the session model to create the cookie to be able to set the expire time on the cookie
 pub fn create_session_cookie(session_id: UlidId, cookies: &Cookies, settings: &Settings) {
-    let encrypted_key = get_cookie_key(settings);
-    let cookie_jar = cookies.private(encrypted_key);
-    let cookie =
-        cookie::Cookie::build((settings.session.cookie_name.clone(), session_id.to_string()))
-            .http_only(true)
-            .path("/")
-            .permanent(); // future muaahahah
-    cookie_jar.add(cookie.into());
+    create_cookie(
+        session_id.to_string(),
+        &settings.session.cookie_name,
+        get_cookie_key(settings),
+        None, // expire can be pushed forward by the renew.
+        cookies,
+        settings,
+    );
 }
 
 pub fn get_session_cookie(
     cookies: &Cookies,
     settings: &Settings,
 ) -> Option<cookie::Cookie<'static>> {
-    let encrypted_key = get_cookie_key(settings);
-    let cookie_jar = cookies.private(encrypted_key);
-    cookie_jar.get(&settings.session.cookie_name)
+    get_cookie(
+        false,
+        &settings.session.cookie_name,
+        get_cookie_key(settings),
+        cookies,
+        settings,
+    )
 }
 
 pub fn delete_session_cookie(cookies: &Cookies, settings: &Settings) {
-    let cookie = cookie::Cookie::build(settings.session.cookie_name.clone())
-        .http_only(true)
-        .path("/");
-    cookies.remove(cookie.into());
+    delete_cookie(&settings.session.cookie_name, cookies, settings);
 }
 
 pub async fn renew_session(

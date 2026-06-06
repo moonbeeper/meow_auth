@@ -35,6 +35,7 @@ use crate::{
             auth::flows::FlowResponse,
             types::{AlrightResponse, AuthMethod, AuthenticationPasskeyRequest, RouteEither},
         },
+        validator::Valid,
     },
 };
 
@@ -45,9 +46,10 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(totp_exchange))
 }
 
-#[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
 pub struct ExchangeRequest {
     flow_id: UlidId,
+    #[validate(length(min = 6, max = 11))]
     code: String,
 }
 
@@ -66,7 +68,7 @@ pub struct ExchangeRequest {
 pub async fn exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
-    Json(request): Json<ExchangeRequest>,
+    Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<RouteEither<Json<FlowResponse>, Json<AlrightResponse>>, ApiErrorCodes> {
     let Ok(Some(mut flow)) =
         UserAuthChallenges::find_by_id(request.flow_id, &global.database).await
@@ -94,7 +96,7 @@ pub async fn exchange(
         .as_ref()
         .ok_or_else(|| ApiErrorCodes::OtpExpired)?;
 
-    if !verify_otp_code(&request.code, secret_hash) {
+    if !verify_otp_code(&request.code, secret_hash, &global.settings) {
         return Err(ApiErrorCodes::InvalidCode);
     }
 
@@ -210,9 +212,20 @@ pub async fn webauthn_exchange(
 
     // check counter to account for cloning attackssss
     if auth_result.counter() <= passkey.counter as u32 {
-        // TODO: cloning attack. deactivate passkey and notify via email
+        let mut tx = global.database.begin().await?;
+        passkey.enabled = false;
+        passkey.update(&mut tx).await?;
+        tx.commit().await?;
+        AuthMailer::webauthn_compromised(
+            user.login,
+            passkey.display_name,
+            user.email,
+            &global.database,
+        )
+        .await?;
         return Err(ApiErrorCodes::WebauthnCompromised);
     }
+
     if passkey.user_id != user.id {
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     }
@@ -252,7 +265,7 @@ pub async fn webauthn_exchange(
 pub async fn totp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
-    Json(request): Json<ExchangeRequest>,
+    Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(mut flow)) =
         UserAuthChallenges::find_by_id(request.flow_id, &global.database).await
@@ -260,7 +273,7 @@ pub async fn totp_exchange(
         return Err(ApiErrorCodes::InvalidCode);
     };
 
-    if !is_flow_correct(&flow) {
+    if !crate::auth::is_flow_correct(&flow, Some(AuthChallengeKind::Totp), None) {
         return Err(ApiErrorCodes::InvalidCode);
     }
 
@@ -269,8 +282,10 @@ pub async fn totp_exchange(
         return Err(ApiErrorCodes::InvalidCode);
     };
 
+    // short circuit if the user doesn't have totp enabled.
+    // this can get people confused (like mr right now) if it was a internal server error.
     if !user.totp_enabled {
-        return Err(ApiErrorCodes::InternalServerError);
+        return Err(ApiErrorCodes::InvalidCode);
     }
 
     let Ok(Some(mut db_totp)) = UserTotp::find_one_by_user(user.id, &global.database).await else {

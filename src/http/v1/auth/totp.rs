@@ -78,7 +78,7 @@ pub async fn create_totp_options(
 
     Ok(Json(CreateTotpResponse {
         uri,
-        secret: totp.secret,
+        secret: totp.secret.as_base32(),
         recovery_codes: totp.recovery_codes,
     }))
 }

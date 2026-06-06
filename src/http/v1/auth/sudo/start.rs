@@ -58,10 +58,7 @@ pub async fn otp_option(
         return Err(ApiErrorCodes::SudoOptionNotAvailable);
     }
 
-    let otp = get_otp_code().map_err(|e| {
-        tracing::error!("failed generating otp code: {e}");
-        ApiErrorCodes::InternalServerError
-    })?;
+    let otp = get_otp_code(&global.settings);
 
     let login_request = UserAuthChallenges::builder()
         .user_id(Some(user.id))

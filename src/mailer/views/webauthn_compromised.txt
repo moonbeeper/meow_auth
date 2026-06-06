@@ -1,6 +1,6 @@
 {{ globals.greeting ~ " " ~ user.login ~ "!" }}
 {{ "We think that your passkey " ~ passkey.name ~ " may be compromised." }}
 
-Please remove this passkey and close all open sessions.
+It has been deactivated, you may delete it and recreate it any time you like
 --
 :3 - MeowAuth
