@@ -9,7 +9,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
         v1::types::User,
     },
 };
@@ -18,6 +18,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(current_user_info))
         .routes(routes!(logout))
+        .layer(RequireAuthenticationLayer::new())
 }
 
 /// Get your current user information
@@ -33,10 +34,6 @@ pub async fn current_user_info(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<User>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     let Ok(Some(user)) = DbUser::find_by_id(auth.user_id(), &global.database).await else {
         return Err(ApiErrorCodes::InternalServerError);
     };
@@ -57,10 +54,6 @@ pub async fn logout(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<(), ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     let Ok(Some(session)) = UserSession::find_by_id(auth.session_id(), &global.database).await
     else {
         return Err(ApiErrorCodes::InternalServerError);

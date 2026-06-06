@@ -21,7 +21,6 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
         v1::{
             auth::flows::{FlowRequest, FlowResponse},
             types::AuthMethod,
@@ -47,13 +46,8 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 )]
 pub async fn otp_login(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
     Json(request): Json<FlowRequest>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
-    if auth.is_authenticated() {
-        return Err(ApiErrorCodes::AlreadyAuthenticated);
-    }
-
     let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
         return Err(ApiErrorCodes::AccountNotFound);
     };
@@ -106,13 +100,8 @@ pub struct RegisterRequest {
 )]
 pub async fn otp_register(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
     Json(request): Json<RegisterRequest>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
-    if auth.is_authenticated() {
-        return Err(ApiErrorCodes::AlreadyAuthenticated);
-    }
-
     // awful
     if User::find_by_email(request.email.clone(), &global.database)
         .await?
@@ -176,14 +165,9 @@ pub async fn otp_register(
 )]
 pub async fn webauthn_options(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<FlowRequest>,
 ) -> Result<Json<RequestChallengeResponse>, ApiErrorCodes> {
-    if auth.is_authenticated() {
-        return Err(ApiErrorCodes::AlreadyAuthenticated);
-    }
-
     let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
         return Err(ApiErrorCodes::AccountNotFound);
     };

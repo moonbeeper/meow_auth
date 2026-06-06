@@ -17,7 +17,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
         v1::types::{AlrightResponse, RegisterPasskeyRequest},
     },
 };
@@ -26,6 +26,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(register_passkey_options))
         .routes(routes!(register_passkey_exchange))
+        .layer(RequireAuthenticationLayer::new())
 }
 
 /// Get the passkey creation options
@@ -41,10 +42,6 @@ pub async fn register_passkey_options(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<CreationChallengeResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }
@@ -103,10 +100,6 @@ pub async fn register_passkey_exchange(
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<RegisterPasskeyRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }

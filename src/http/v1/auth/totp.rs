@@ -13,7 +13,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
         v1::types::AlrightResponse,
     },
 };
@@ -24,6 +24,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(exchange_totp_creation))
         .routes(routes!(disable_totp))
         .routes(routes!(see_recovery_codes))
+        .layer(RequireAuthenticationLayer::new())
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
@@ -46,10 +47,6 @@ pub async fn create_totp_options(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<CreateTotpResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }
@@ -108,10 +105,6 @@ pub async fn exchange_totp_creation(
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<VerifyTotpRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }
@@ -171,10 +164,6 @@ pub async fn disable_totp(
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<VerifyTotpRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }
@@ -237,10 +226,6 @@ pub async fn see_recovery_codes(
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<VerifyTotpRequest>,
 ) -> Result<Json<RecoveryCodesTotpResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }

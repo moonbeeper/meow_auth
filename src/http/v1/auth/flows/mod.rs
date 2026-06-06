@@ -4,7 +4,7 @@ mod start;
 
 use std::sync::Arc;
 
-use axum::{Extension, extract::State};
+use axum::extract::State;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
@@ -13,7 +13,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::require_auth::RequireAuthenticationLayer,
         v1::types::AuthMethod,
     },
 };
@@ -28,6 +28,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .nest("/start", start::routes())
         .nest("/exchange", exchange::routes())
         .nest("/info", info::routes())
+        .layer(RequireAuthenticationLayer::new().need_auth(false))
 }
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
@@ -59,13 +60,8 @@ pub struct FlowOptionResponse {
 )]
 pub async fn options(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
     Json(request): Json<FlowRequest>,
 ) -> Result<Json<FlowOptionResponse>, ApiErrorCodes> {
-    if auth.is_authenticated() {
-        return Err(ApiErrorCodes::AlreadyAuthenticated);
-    }
-
     let mut methods = vec![];
     let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
         return Ok(Json(FlowOptionResponse { methods }));

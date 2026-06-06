@@ -61,10 +61,6 @@ pub async fn exchange(
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<ExchangeRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoAlreadyEnabled);
     }
@@ -123,10 +119,6 @@ pub async fn webauthn_exchange(
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<AuthenticationPasskeyRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoAlreadyEnabled);
     }
@@ -204,10 +196,6 @@ pub async fn totp_exchange(
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<ExchangeRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoAlreadyEnabled);
     }

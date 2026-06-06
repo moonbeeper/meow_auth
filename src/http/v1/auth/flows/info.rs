@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{Extension, extract::State};
+use axum::extract::State;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
@@ -9,7 +9,6 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
     },
 };
 
@@ -40,13 +39,8 @@ pub struct InfoAvailableRequest {
 )]
 pub async fn login_available(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
     Json(request): Json<InfoAvailableRequest>,
 ) -> Result<Json<InfoAvailableResponse>, ApiErrorCodes> {
-    if auth.is_authenticated() {
-        return Err(ApiErrorCodes::AlreadyAuthenticated);
-    }
-
     let Ok(None) = User::find_by_login(request.who, &global.database).await else {
         return Ok(Json(InfoAvailableResponse::default()));
     };
@@ -65,13 +59,8 @@ pub async fn login_available(
 )]
 pub async fn email_available(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
     Json(request): Json<InfoAvailableRequest>,
 ) -> Result<Json<InfoAvailableResponse>, ApiErrorCodes> {
-    if auth.is_authenticated() {
-        return Err(ApiErrorCodes::AlreadyAuthenticated);
-    }
-
     let Ok(None) = User::find_by_email(request.who, &global.database).await else {
         return Ok(Json(InfoAvailableResponse::default()));
     };

@@ -12,7 +12,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
         v1::types::{AlrightResponse, Session},
     },
 };
@@ -23,6 +23,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(list_sessions))
         .routes(routes!(delete_session))
         .routes(routes!(delete_all_sessions))
+        .layer(RequireAuthenticationLayer::new())
 }
 
 /// Get your current session info
@@ -38,10 +39,6 @@ pub async fn current_session_info(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<Session>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     let Ok(Some(session)) = DbUserSession::find_by_id(auth.session_id(), &global.database).await
     else {
         return Err(ApiErrorCodes::InternalServerError);
@@ -63,10 +60,6 @@ pub async fn list_sessions(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<Vec<Session>>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     let Ok(sessions) = DbUserSession::find_many_by_user_id(auth.user_id(), &global.database).await
     else {
         return Err(ApiErrorCodes::InternalServerError);
@@ -99,10 +92,6 @@ pub async fn delete_session(
     Extension(auth): Extension<AuthContext>,
     Path(query): Path<SessionQuery>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }
@@ -136,10 +125,6 @@ pub async fn delete_all_sessions(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }

@@ -45,10 +45,6 @@ pub async fn otp_option(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoAlreadyEnabled);
     }
@@ -107,10 +103,6 @@ pub async fn totp_option(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoAlreadyEnabled);
     }
@@ -151,10 +143,6 @@ pub async fn webauthn_options(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<RequestChallengeResponse>, ApiErrorCodes> {
-    if !auth.is_authenticated() {
-        return Err(ApiErrorCodes::Unauthenticated);
-    }
-
     if auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoAlreadyEnabled);
     }

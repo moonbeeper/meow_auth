@@ -31,7 +31,6 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
         v1::{
             auth::flows::FlowResponse,
             types::{AlrightResponse, AuthMethod, AuthenticationPasskeyRequest, RouteEither},
@@ -66,14 +65,9 @@ pub struct ExchangeRequest {
 )]
 pub async fn exchange(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<ExchangeRequest>,
 ) -> Result<RouteEither<Json<FlowResponse>, Json<AlrightResponse>>, ApiErrorCodes> {
-    if auth.is_authenticated() {
-        return Err(ApiErrorCodes::AlreadyAuthenticated);
-    }
-
     let Ok(Some(mut flow)) =
         UserAuthChallenges::find_by_id(request.flow_id, &global.database).await
     else {
@@ -177,14 +171,9 @@ pub async fn exchange(
 )]
 pub async fn webauthn_exchange(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<AuthenticationPasskeyRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if auth.is_authenticated() {
-        return Err(ApiErrorCodes::AlreadyAuthenticated);
-    }
-
     let request: PublicKeyCredential = request
         .try_into()
         .map_err(|_| ApiErrorCodes::WebauthnChallengeNotFound)?;
@@ -262,14 +251,9 @@ pub async fn webauthn_exchange(
 )]
 pub async fn totp_exchange(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<ExchangeRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if auth.is_authenticated() {
-        return Err(ApiErrorCodes::AlreadyAuthenticated);
-    }
-
     let Ok(Some(mut flow)) =
         UserAuthChallenges::find_by_id(request.flow_id, &global.database).await
     else {
