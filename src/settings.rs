@@ -1,9 +1,9 @@
 use std::{net::SocketAddr, path::Path};
 
+use crate::crypto::{SecretKey, get_secret_key};
 use anyhow::Context;
 use clap::Parser;
 use config::Config;
-use rand::Rng;
 use smart_default::SmartDefault;
 use toml_edit::{Document, DocumentMut};
 use url::Url;
@@ -40,6 +40,16 @@ impl std::fmt::Display for LoggingLevel {
 }
 
 #[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+pub struct ApplicationSettings {
+    #[default(Some(60*2))]
+    pub shutdown_timeout_seconds: Option<u64>,
+    #[default(Some(true))]
+    pub shutdown_timeout_enabled: Option<bool>,
+    #[default(get_secret_key(32))]
+    pub master_key: SecretKey,
+}
+
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
 pub struct HttpSettings {
     #[default(SocketAddr::from(([127,0,0,1],8080)))]
     pub bind: SocketAddr,
@@ -71,8 +81,6 @@ pub struct DatabaseSettings {
 pub struct SessionSettings {
     #[default("meow_sess")]
     pub cookie_name: String,
-    #[default(generate_secret_key(32))]
-    pub secret_key: String,
     #[default(60 * 60 * 24 * 30)]
     pub expire_age_seconds: i64,
     #[default(60 * 60 * 24 * 7)]
@@ -100,19 +108,9 @@ pub struct MailerSettings {
 }
 
 #[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
-pub struct ApplicationSettings {
-    #[default(Some(60*2))]
-    pub shutdown_timeout_seconds: Option<u64>,
-    #[default(Some(true))]
-    pub shutdown_timeout_enabled: Option<bool>,
-}
-
-#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
 pub struct TotpSettings {
     #[default("meow_auth".to_string())]
     pub issuer: String,
-    #[default(generate_secret_key(32))]
-    pub encryption_secret: String,
     #[default(6)]
     pub digits: usize,
 }
@@ -125,28 +123,19 @@ pub struct WebauthnSettings {
     pub rp_name: String,
     #[default(60*5)]
     pub timeout_seconds: i64,
-    #[default(generate_secret_key(32))]
-    pub secret_key: String,
-}
-
-#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
-pub struct OauthSettings {
-    #[default(generate_secret_key(32))]
-    pub secret_key: String,
 }
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
-    pub logging: Logging,
-    pub http: HttpSettings,
-    pub database: DatabaseSettings,
-    pub session: SessionSettings,
-    pub mailer: MailerSettings,
     #[serde(default)]
     pub application: ApplicationSettings,
+    pub http: HttpSettings,
+    pub database: DatabaseSettings,
+    pub logging: Logging,
+    pub mailer: MailerSettings,
+    pub session: SessionSettings,
     pub totp: TotpSettings,
     pub webauthn: WebauthnSettings,
-    pub oauth: OauthSettings,
 }
 
 impl Settings {
@@ -293,11 +282,4 @@ fn update_toml_table(
             new_table.insert(key, value.clone());
         }
     }
-}
-
-fn generate_secret_key(len: usize) -> String {
-    let mut rng = rand::rng();
-    let mut bytes = vec![0u8; len];
-    rng.fill_bytes(&mut bytes);
-    hex::encode(bytes)
 }

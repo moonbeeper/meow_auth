@@ -38,10 +38,20 @@ pub async fn create_session(
     Ok(session.pid)
 }
 
+fn get_cookie_key(settings: &Settings) -> &cookie::Key {
+    COOKIE_SESSION_KEY.get_or_init(|| {
+        cookie::Key::from(
+            &settings
+                .application
+                .master_key
+                .derivate("06/06/2026 03:13:39 session cookies v1", 64),
+        )
+    })
+}
+
 // TODO: should really use the session model to create the cookie to be able to set the expire time on the cookie
 pub fn create_session_cookie(session_id: UlidId, cookies: &Cookies, settings: &Settings) {
-    let encrypted_key = COOKIE_SESSION_KEY
-        .get_or_init(|| cookie::Key::from(settings.session.secret_key.as_bytes()));
+    let encrypted_key = get_cookie_key(settings);
     let cookie_jar = cookies.private(encrypted_key);
     let cookie =
         cookie::Cookie::build((settings.session.cookie_name.clone(), session_id.to_string()))
@@ -55,8 +65,7 @@ pub fn get_session_cookie(
     cookies: &Cookies,
     settings: &Settings,
 ) -> Option<cookie::Cookie<'static>> {
-    let encrypted_key = COOKIE_SESSION_KEY
-        .get_or_init(|| cookie::Key::from(settings.session.secret_key.as_bytes()));
+    let encrypted_key = get_cookie_key(settings);
     let cookie_jar = cookies.private(encrypted_key);
     cookie_jar.get(&settings.session.cookie_name)
 }

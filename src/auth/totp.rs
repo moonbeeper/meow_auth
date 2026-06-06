@@ -1,13 +1,11 @@
-use chacha20poly1305::{
-    AeadCore as _, ChaCha20Poly1305, Key, KeyInit as _, Nonce,
-    aead::{Aead as _, OsRng},
-};
+use anyhow::Context;
 use data_encoding::BASE32_NOPAD;
 use rand::Rng as _;
 use sqlx::PgPool;
 use totp_rs::Secret;
 
 use crate::{
+    crypto::{EncryptedSecret, decrypt_secret, encrypt_secret},
     database::models::{user::UserId, user_totp::UserTotp},
     settings::Settings,
 };
@@ -79,30 +77,26 @@ impl From<UserTotp> for EncryptedSecrets {
     }
 }
 
+// TODO: maybe could have both of these secret keys cached already with a zeroize?
 fn encrypt_secrets(
     secret: Vec<u8>,
     recovery_secret: Vec<u8>,
     settings: &Settings,
 ) -> anyhow::Result<EncryptedSecrets> {
-    let key = hex::decode(settings.totp.encryption_secret.clone())?;
-    let key = Key::from_slice(&key);
-    let cipher = ChaCha20Poly1305::new(key);
+    let secret_key = settings
+        .application
+        .master_key
+        .derivate("06/06/2026 03:10:22 totp encryption v1", 32);
 
-    let secret_nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng); // 96-bits; unique per message
-    let recovery_nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng); // 96-bits; unique per message
-
-    let secret = cipher
-        .encrypt(&secret_nonce, secret.as_ref())
-        .map_err(|_| anyhow::anyhow!("failed encrypting the secret"))?;
-    let recovery_secret = cipher
-        .encrypt(&recovery_nonce, recovery_secret.as_ref())
-        .map_err(|_| anyhow::anyhow!("failed encrypting the recovery secret"))?;
+    let secrets = encrypt_secret(secret.as_slice(), &secret_key).context("totp secret")?;
+    let recovery_secrets =
+        encrypt_secret(recovery_secret.as_slice(), &secret_key).context("totp recovery secret")?;
 
     Ok(EncryptedSecrets {
-        secret,
-        secret_nonce: secret_nonce.to_vec(),
-        recovery_secret,
-        recovery_nonce: recovery_nonce.to_vec(),
+        secret: secrets.secret,
+        secret_nonce: secrets.nonce,
+        recovery_secret: recovery_secrets.secret,
+        recovery_nonce: recovery_secrets.nonce,
     })
 }
 
@@ -116,20 +110,27 @@ pub fn decrypt_secrets(
     encrypted: &EncryptedSecrets,
     settings: &Settings,
 ) -> anyhow::Result<DecryptedSecrets> {
-    let key = hex::decode(settings.totp.encryption_secret.clone())?;
-    let key = Key::from_slice(&key);
-    let cipher = ChaCha20Poly1305::new(key);
+    let secret_key = settings
+        .application
+        .master_key
+        .derivate("06/06/2026 03:10:22 totp encryption v1", 32);
 
-    let secret_nonce = Nonce::from_slice(&encrypted.secret_nonce); // 96-bits; unique per message
-    let recovery_nonce = Nonce::from_slice(&encrypted.recovery_nonce); // 96-bits; unique per message
-
-    let secret = cipher
-        .decrypt(secret_nonce, encrypted.secret.as_ref())
-        .map_err(|_| anyhow::anyhow!("failed decrypting the secret"))?;
-
-    let recovery_secret = cipher
-        .decrypt(recovery_nonce, encrypted.recovery_secret.as_ref())
-        .map_err(|_| anyhow::anyhow!("failed decrypting the recovery secret"))?;
+    let secret = decrypt_secret(
+        EncryptedSecret {
+            secret: encrypted.secret.clone(),
+            nonce: encrypted.secret_nonce.clone(),
+        },
+        &secret_key,
+    )
+    .context("totp secret")?;
+    let recovery_secret = decrypt_secret(
+        EncryptedSecret {
+            secret: encrypted.recovery_secret.clone(),
+            nonce: encrypted.recovery_nonce.clone(),
+        },
+        &secret_key,
+    )
+    .context("totp recovery secret")?;
 
     Ok(DecryptedSecrets {
         secret: BASE32_NOPAD.encode(&secret),

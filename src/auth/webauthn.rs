@@ -62,10 +62,20 @@ pub fn get_aaguid(raw_attestation_object: &[u8]) -> nom::IResult<&[u8], Uuid> {
     Ok((i, uuid))
 }
 
+fn get_cookie_key(settings: &Settings) -> &cookie::Key {
+    COOKIE_WEBAUTHN_KEY.get_or_init(|| {
+        cookie::Key::from(
+            &settings
+                .application
+                .master_key
+                .derivate("06/06/2026 03:04:33 webauthn cookies v1", 64),
+        )
+    })
+}
+
 // TODO: should really mix this and make generic method for both the session and this
 pub fn create_webauthn_cookie(challenge_id: UlidId, cookies: &Cookies, settings: &Settings) {
-    let encrypted_key = COOKIE_WEBAUTHN_KEY
-        .get_or_init(|| cookie::Key::from(settings.webauthn.secret_key.as_bytes()));
+    let encrypted_key = get_cookie_key(settings);
     let cookie_jar = cookies.private(encrypted_key);
     let cookie = cookie::Cookie::build((
         format!("{}_webauthn", settings.session.cookie_name),
@@ -78,8 +88,7 @@ pub fn create_webauthn_cookie(challenge_id: UlidId, cookies: &Cookies, settings:
 }
 
 fn get_webauthn_cookie(cookies: &Cookies, settings: &Settings) -> Option<cookie::Cookie<'static>> {
-    let encrypted_key = COOKIE_WEBAUTHN_KEY
-        .get_or_init(|| cookie::Key::from(settings.webauthn.secret_key.as_bytes()));
+    let encrypted_key = get_cookie_key(settings);
     let cookie_jar = cookies.private(encrypted_key);
     let value = cookie_jar.get(&format!("{}_webauthn", settings.session.cookie_name));
     delete_webauthn_cookie(cookies, settings);

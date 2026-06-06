@@ -1,6 +1,7 @@
-[logging]
-enabled = true
-level = "info"
+[application]
+shutdown_timeout_seconds = 120
+shutdown_timeout_enabled = true
+master_key = "df2f3ba178ecaa9968c042e230661d668e96f73881da2968a525af802d72692c"
 
 [http]
 bind = "127.0.0.1:8080"
@@ -15,13 +16,9 @@ url = "postgres://meow:meow_pwd@localhost:5432/meow2_development"
 min_connections = 1
 max_connections = 10
 
-[session]
-cookie_name = "meow_sess"
-secret_key = "12009604c248308c35a8609807c2d139f5fa585d252ea8de33752d2216e55508"
-expire_age_seconds = 2592000
-active_expire_age_seconds = 604800
-update_threshold_seconds = 600
-sudo_expire_age_seconds = 900
+[logging]
+enabled = true
+level = "info"
 
 [mailer]
 smtp_host = "localhost"
@@ -32,20 +29,18 @@ smtp_secure = false
 from_email = "meow@meow.com"
 test_connection = false
 
-[application]
-shutdown_timeout_seconds = 120
-shutdown_timeout_enabled = true
+[session]
+cookie_name = "meow_sess"
+expire_age_seconds = 2592000
+active_expire_age_seconds = 604800
+update_threshold_seconds = 600
+sudo_expire_age_seconds = 900
 
 [totp]
 issuer = "meow_auth"
-encryption_secret = "852f529daf9b8b19413ef070a3252ed5aa281ef1b38c59debfebeb8aec6bb0d9"
 digits = 6
 
 [webauthn]
 rp_id = "localhost"
 rp_name = "MeowAuth"
 timeout_seconds = 300
-secret_key = "566856341c6078c3345fa15738ea96df3e5920585fed0446a0a95b1e7337e64a"
-
-[oauth]
-secret_key = "1eecbc2b6bbef700b1a48a8e1713d7c9f740aeafba2aff706aaa90ceb7524c20"

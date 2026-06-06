@@ -7,4 +7,5 @@ pub mod logger;
 pub mod mailer;
 pub mod manager;
 // pub mod oauth;
+pub mod crypto;
 pub mod settings;
