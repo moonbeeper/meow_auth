@@ -29,14 +29,15 @@ pub struct SudoOptionsResponse {
     options: Vec<SudoOption>,
 }
 
-/// Get the sudo enable options
+/// Get the Sudo Re-Authentication options
 ///
-/// This returns what authentication method you can use to enable sudo. It will be used as the sudo/start
+/// Requests what authentications methods you can use to re-authenticate with the current user.
 #[utoipa::path(
     get,
     path = "/",
+    tags = ["sudo"],
     responses(
-        (status = 200, description = "sudo enable options", body = SudoOptionsResponse),
+        (status = 200, description = "sudo re-authentication options", body = SudoOptionsResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

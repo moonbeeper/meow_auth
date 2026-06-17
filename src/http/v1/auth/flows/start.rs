@@ -37,12 +37,16 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(webauthn_options))
 }
 
-/// Start the flow to login via an otp code
+/// Authenticate via an OTP code
+///
+/// Starts the flow to authenticate via an OTP sent to the user's email
 #[utoipa::path(
     post,
     path = "/",
+    tags = ["auth"],
     responses(
-        (status = 200, description = "login flow created", body = FlowResponse),
+        (status = 200, description = "authentication flow created", body = FlowResponse),
+        (status = 404, description = "account not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -92,13 +96,18 @@ pub struct RegisterRequest {
     email: String,
 }
 
-/// Start the flow to register an account
+/// Register a new account via an OTP code
+///
+/// Starts the flow to register a new account via an OTP sent to the user's email.
+/// Used on the same exchange endpoint as the authentication OTP code flow.
 #[utoipa::path(
     post,
     path = "/register",
+    tags = ["auth"],
     request_body = RegisterRequest,
     responses(
         (status = 200, description = "registration flow created", body = FlowResponse),
+        (status = 400, description = "email or login already associated", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -155,12 +164,17 @@ pub async fn otp_register(
     }))
 }
 
-/// Start the flow to login via a Passkey
+/// Authenticate via a Passkey
+///
+/// Returns the challenge for the user's browser to use to authenticate.
 #[utoipa::path(
     post,
     path = "/webauthn",
+    tags = ["auth"],
     responses(
-        (status = 200, description = "login flow created"),
+        (status = 200, description = "authentication flow created"),
+        (status = 404, description = "account not found", body = ApiError),
+        (status = 400, description = "webauthn not enabled", body = ApiError), // should i be even returning 400 here?
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

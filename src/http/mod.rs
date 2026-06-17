@@ -19,7 +19,17 @@ use crate::{
     global::GlobalState, http::middleware::auth_manager::AuthManagerLayer, manager::WatcherChild,
 };
 
-#[derive(OpenApi)]
+#[derive(OpenApi)] // my dumb heck thought that IT was inside the derive macro where you set the attribute tags smh.
+#[openapi(
+    tags(
+        (name = "auth", description = "authentication (login, register)"),
+        (name = "sudo", description = "sensitive operations re-authentication"),
+        (name = "user", description = "current user operations"),
+        (name = "totp", description = "two-factor authentication management"),
+        (name = "passkeys", description = "passkey authentication management"),
+        (name = "sessions", description = "session management")
+    )
+)]
 struct ApiDocs;
 
 fn router(global: Arc<GlobalState>) -> OpenApiRouter {

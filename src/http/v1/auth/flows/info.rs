@@ -28,12 +28,13 @@ pub struct InfoAvailableRequest {
     who: String,
 }
 
-/// Fetch if a login is available for registration
+/// Fetch if a user login is available for registration
 #[utoipa::path(
     post,
     path = "/login",
+    tags = ["auth"],
     responses(
-        (status = 200, description = "result of availability", body = InfoAvailableResponse),
+        (status = 200, description = "availability", body = InfoAvailableResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -52,8 +53,9 @@ pub async fn login_available(
 #[utoipa::path(
     post,
     path = "/email",
+    tags = ["auth"],
     responses(
-        (status = 200, description = "result of availability", body = InfoAvailableResponse),
+        (status = 200, description = "availability", body = InfoAvailableResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

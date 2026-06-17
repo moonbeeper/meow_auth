@@ -34,12 +34,15 @@ pub struct CreateTotpResponse {
     recovery_codes: Vec<String>,
 }
 
-/// Get the TOTP creation options
+/// Get the TOTP enrollment necessary data
 #[utoipa::path(
     post,
     path = "/",
+    tags = ["totp"],
     responses(
         (status = 200, description = "totp relevant info", body = CreateTotpResponse),
+        (status = 401, description = "sudo not enabled", body = ApiError),
+        (status = 400, description = "totp already enrolled", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -88,15 +91,19 @@ pub struct VerifyTotpRequest {
     code: String,
 }
 
-/// Exchange the TOTP creation options to enable TOTP
+/// Exchange the TOTP enrollment code
 ///
-/// This will make use of the Six Digit code generated on your authenticator
+/// This will enable TOTP for your account
 #[utoipa::path(
     post,
     path = "/exchange",
+    tags = ["totp"],
     request_body = VerifyTotpRequest,
     responses(
         (status = 200, description = "totp successfully enabled"),
+        (status = 401, description = "invalid code or sudo not enabled", body = ApiError),
+        (status = 400, description = "totp already enrolled", body = ApiError),
+        (status = 404, description = "totp enrollment flow not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -153,9 +160,12 @@ pub async fn exchange_totp_creation(
 #[utoipa::path(
     delete,
     path = "/",
+    tags = ["totp"],
     request_body = VerifyTotpRequest,
     responses(
         (status = 200, description = "totp successfully disabled"),
+        (status = 401, description = "invalid code or sudo not enabled", body = ApiError),
+        (status = 400, description = "totp not enabled", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -215,9 +225,12 @@ pub struct RecoveryCodesTotpResponse {
 #[utoipa::path(
     post,
     path = "/recovery",
+    tags = ["totp"],
     request_body = VerifyTotpRequest,
     responses(
         (status = 200, description = "usable totp recovery codes"),
+        (status = 401, description = "invalid code or sudo not enabled", body = ApiError),
+        (status = 400, description = "totp not enabled", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

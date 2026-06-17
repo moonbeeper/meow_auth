@@ -72,6 +72,20 @@ impl UserSession {
         Ok(())
     }
 
+    pub async fn delete_by_id(
+        id: UserSessionId,
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<(), DatabaseError> {
+        sqlx::query!(
+            "delete from user_sessions where id = $1",
+            id as UserSessionId,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn delete_many_by_id(
         ids: Vec<UserSessionId>,
         transaction: &mut PgTransaction<'_>,

@@ -35,9 +35,9 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(exchange))
-        .routes(routes!(webauthn_exchange))
-        .routes(routes!(totp_exchange))
+        .routes(routes!(sudo_otp_exchange))
+        .routes(routes!(sudo_webauthn_exchange))
+        .routes(routes!(sudo_totp_exchange))
 }
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
@@ -47,18 +47,19 @@ pub struct ExchangeRequest {
     code: String,
 }
 
-/// Exchange the flow to enable sudo via an OTP code
-///
-/// This uses the flow id provided by the start method
+/// Exchange the Re-Authentication Flow ID made by an OTP code
 #[utoipa::path(
     post,
     path = "/",
+    tags = ["sudo"],
     responses(
-        (status = 200, description = "sudo enable exchanged successfully"),
+        (status = 200, description = "sudo enable exchanged successfully", body = AlrightResponse),
+        (status = 401, description = "invalid code", body = ApiError),
+        (status = 400, description = "already enabled or option not available", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn exchange(
+pub async fn sudo_otp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
@@ -85,7 +86,7 @@ pub async fn exchange(
     let secret_hash = flow
         .secret
         .as_ref()
-        .ok_or_else(|| ApiErrorCodes::OtpExpired)?;
+        .ok_or_else(|| ApiErrorCodes::InvalidCode)?;
 
     if !verify_otp_code(&request.code, secret_hash, &global.settings) {
         return Err(ApiErrorCodes::InvalidCode);
@@ -107,16 +108,20 @@ pub async fn exchange(
     Ok(Json(AlrightResponse::default()))
 }
 
-/// Exchange the flow to enable sudo via a Passkey
+/// Exchange the Re-Authentication Flow made by a Passkey browser challenge
 #[utoipa::path(
     post,
     path = "/webauthn",
+    tags = ["sudo"],
     responses(
-        (status = 200, description = "sudo enable exchanged successfully"),
+        (status = 200, description = "sudo enable exchanged successfully", body = AlrightResponse),
+        (status = 404, description = "webauthn challenge not found", body = ApiError),
+        (status = 403, description = "webauthn compromised", body = ApiError),
+        (status = 400, description = "already enabled", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn webauthn_exchange(
+pub async fn sudo_webauthn_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<AuthenticationPasskeyRequest>,
@@ -131,7 +136,7 @@ pub async fn webauthn_exchange(
 
     let Ok(Some(db_challenge)) = UserWebauthnChallenge::take_by_user_id(
         auth.user_id(),
-        WebauthnChallengeKind::Authenticate,
+        WebauthnChallengeKind::ReAuthenticate,
         &global.database,
     )
     .await
@@ -193,18 +198,19 @@ pub async fn webauthn_exchange(
     Ok(Json(AlrightResponse::default()))
 }
 
-/// Exchange the flow to enable sudo via a TOTP code
-///
-/// This uses the flow id provided by the start method
+/// Exchange the Re-Authentication Flow ID made by an enabled TOTP
 #[utoipa::path(
     post,
     path = "/totp",
+    tags = ["sudo"],
     responses(
-        (status = 200, description = "sudo enable exchanged successfully"),
+        (status = 200, description = "sudo enable exchanged successfully", body = AlrightResponse),
+        (status = 401, description = "invalid code", body = ApiError),
+        (status = 400, description = "already enabled or totp recovery code already used", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn totp_exchange(
+pub async fn sudo_totp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,

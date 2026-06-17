@@ -23,6 +23,7 @@ pub enum WebauthnChallengeKind {
     #[default]
     Register,
     Authenticate,
+    ReAuthenticate,
 }
 
 pub type UserWebauthnChallengeId = UlidId; // holy that's long

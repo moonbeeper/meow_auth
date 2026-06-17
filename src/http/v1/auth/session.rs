@@ -26,10 +26,11 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .layer(RequireAuthenticationLayer::new())
 }
 
-/// Get your current session info
+/// Current session info
 #[utoipa::path(
     get,
     path = "/",
+    tags = ["sessions"],
     responses(
         (status = 200, description = "current session info", body = Session),
         (status = 500, description = "internal server error", body = ApiError)
@@ -51,8 +52,9 @@ pub async fn current_session_info(
 #[utoipa::path(
     get,
     path = "/list",
+    tags = ["sessions"],
     responses(
-        (status = 200, description = "a list of open sessions", body = Vec<Session>),
+        (status = 200, description = "list of open sessions", body = Vec<Session>),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -74,16 +76,17 @@ pub struct SessionQuery {
 }
 
 /// Close one of your sessions
-///
-/// You use the ID of an open session you have
 #[utoipa::path(
     delete,
     path = "/{id}",
+    tags = ["sessions"],
     params(
         ("id" = UlidId, description = "the id of the session to delete")
     ),
     responses(
         (status = 200, description = "successfully deleted the session"),
+        (status = 401, description = "sudo not enabled", body = ApiError),
+        (status = 404, description = "session not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -112,10 +115,11 @@ pub async fn delete_session(
 
 /// Close all your open sessions
 ///
-/// Closes all your sessions, including your current one
+/// This includes your current one
 #[utoipa::path(
     delete,
     path = "/all",
+    tags = ["sessions"],
     responses(
         (status = 200, description = "successfully deleted all open sessions"),
         (status = 500, description = "internal server error", body = ApiError)

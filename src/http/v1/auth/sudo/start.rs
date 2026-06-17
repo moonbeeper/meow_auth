@@ -32,12 +32,14 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(webauthn_options))
 }
 
-/// Start the flow to enable sudo via an otp code
+/// Re-Authenticate via an OTP code
 #[utoipa::path(
     post,
     path = "/",
+    tags = ["sudo"],
     responses(
-        (status = 200, description = "sudo enable flow created", body = FlowResponse),
+        (status = 200, description = "sudo re-authentication flow created", body = FlowResponse),
+        (status = 400, description = "already enabled or option not available", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -50,7 +52,7 @@ pub async fn otp_option(
     }
 
     let Ok(Some(user)) = User::find_by_id(auth.user_id(), &global.database).await else {
-        return Err(ApiErrorCodes::InvalidCode);
+        return Err(ApiErrorCodes::InternalServerError);
     };
 
     let sudo_options = get_available_options(auth.user_id(), &global.database).await;
@@ -87,12 +89,14 @@ pub async fn otp_option(
     }))
 }
 
-/// Start the flow to enable sudo via a TOTP code
+/// Re-Authenticate via a TOTP code (if enabled)
 #[utoipa::path(
     post,
     path = "/totp",
+    tags = ["sudo"],
     responses(
-        (status = 200, description = "sudo enable flow created", body = FlowResponse),
+        (status = 200, description = "sudo re-authentication flow created", body = FlowResponse),
+        (status = 400, description = "already enabled or option not available", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -127,12 +131,16 @@ pub async fn totp_option(
     }))
 }
 
-/// Start the flow to enable sudo via a Passkey
+/// Re-Authenticate via a Passkey
+///
+/// Returns the challenge for the user's browser to use to re-authenticate.
 #[utoipa::path(
     post,
     path = "/webauthn",
+    tags = ["sudo"],
     responses(
-        (status = 200, description = "sudo enable flow created"),
+        (status = 200, description = "sudo re-authentication flow created"),
+        (status = 400, description = "already enabled or option not available", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -159,7 +167,7 @@ pub async fn webauthn_options(
     let db_challenge = UserWebauthnChallenge::builder()
         .user_id(auth.user_id())
         .big_data(data)
-        .kind(WebauthnChallengeKind::Authenticate)
+        .kind(WebauthnChallengeKind::ReAuthenticate)
         .expires_at(
             chrono::Utc::now()
                 + chrono::Duration::seconds(global.settings.webauthn.timeout_seconds),
@@ -169,7 +177,7 @@ pub async fn webauthn_options(
     let mut tx = global.database.begin().await?;
     UserWebauthnChallenge::delete_all_by_user(
         auth.user_id(),
-        WebauthnChallengeKind::Authenticate,
+        WebauthnChallengeKind::ReAuthenticate,
         &mut tx,
     )
     .await?;

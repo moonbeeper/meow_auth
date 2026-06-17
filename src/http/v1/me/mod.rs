@@ -25,6 +25,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 #[utoipa::path(
     get,
     path = "/",
+    tags = ["user"],
     responses(
         (status = 200, description = "current user info", body = User),
         (status = 500, description = "internal server error", body = ApiError)
@@ -45,6 +46,7 @@ pub async fn current_user_info(
 #[utoipa::path(
     post,
     path = "/logout",
+    tags = ["user"],
     responses(
         (status = 200, description = "successfully logged out"),
         (status = 500, description = "internal server error", body = ApiError)
@@ -54,13 +56,8 @@ pub async fn logout(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    let Ok(Some(session)) = UserSession::find_by_id(auth.session_id(), &global.database).await
-    else {
-        return Err(ApiErrorCodes::InternalServerError);
-    };
-
     let mut tx = global.database.begin().await?;
-    session.delete(&mut tx).await?;
+    UserSession::delete_by_id(auth.session_id(), &mut tx).await?;
     tx.commit().await?;
     Ok(Json(AlrightResponse::default()))
 }

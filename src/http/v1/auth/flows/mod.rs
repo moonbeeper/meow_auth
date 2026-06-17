@@ -24,7 +24,7 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(options))
+        .routes(routes!(flow_options))
         .nest("/start", start::routes())
         .nest("/exchange", exchange::routes())
         .nest("/info", info::routes())
@@ -47,18 +47,20 @@ pub struct FlowOptionResponse {
     pub methods: Vec<AuthMethod>,
 }
 
-/// Get the login options
+/// Get the Authentication options
 ///
-/// This returns what authentication method you can use to login. It will be used as the login/start
+/// Requests what authentications methods you can use to authenticate with the given login.
+/// This is useful for determining if a user has a passkey or not
 #[utoipa::path(
     post,
     path = "/",
+    tags = ["auth"],
     responses(
-        (status = 200, description = "login options", body = FlowResponse),
+        (status = 200, description = "authentication options", body = FlowResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn options(
+pub async fn flow_options(
     State(global): State<Arc<GlobalState>>,
     Json(request): Json<FlowRequest>,
 ) -> Result<Json<FlowOptionResponse>, ApiErrorCodes> {

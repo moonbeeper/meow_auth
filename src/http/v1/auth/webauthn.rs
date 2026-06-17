@@ -41,8 +41,10 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 #[utoipa::path(
     post,
     path = "/",
+    tags = ["passkeys"],
     responses(
         (status = 200, description = "passkey creation challenge options"),
+        (status = 401, description = "sudo not enabled", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -98,8 +100,11 @@ pub async fn register_passkey_options(
 #[utoipa::path(
     post,
     path = "/exchange",
+    tags = ["passkeys"],
     responses(
         (status = 200, description = "passkey creation successful"),
+        (status = 401, description = "sudo not enabled", body = ApiError),
+        (status = 404, description = "webauthn challenge not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -177,6 +182,7 @@ pub async fn register_passkey_exchange(
 #[utoipa::path(
     get,
     path = "/list",
+    tags = ["passkeys"],
     responses(
         (status = 200, description = "a list of passkeys", body = Vec<Passkey>),
         (status = 500, description = "internal server error", body = ApiError)
@@ -205,6 +211,7 @@ pub struct PasskeyQuery {
 #[utoipa::path(
     delete,
     path = "/{id}",
+    tags = ["passkeys"],
     params(
         ("id" = UlidId, description = "the id of the passkey to delete")
     ),

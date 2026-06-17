@@ -41,9 +41,9 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(exchange))
-        .routes(routes!(webauthn_exchange))
-        .routes(routes!(totp_exchange))
+        .routes(routes!(flow_otp_exchange))
+        .routes(routes!(flow_webauthn_exchange))
+        .routes(routes!(flow_totp_exchange))
 }
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
@@ -53,19 +53,21 @@ pub struct ExchangeRequest {
     code: String,
 }
 
-/// Exchange the flow to login via an OTP code
+/// Exchange the Authentication Flow ID made by an OTP code
 ///
-/// This uses the flow id provided by the start method.
-/// This might return a next_method of TOTP if the user has TOTP enabled
+/// This can be also requested by a user registering a new account.
+/// The response can return a `next_method: ["totp"]` if the user has TOTP enabled.
 #[utoipa::path(
     post,
     path = "/",
+    tags = ["auth"],
     responses(
-        (status = 200, description = "login exchanged successfully"),
+        (status = 200, description = "authentication exchanged successfully"),
+        (status = 401, description = "invalid code", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn exchange(
+pub async fn flow_otp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
@@ -94,7 +96,7 @@ pub async fn exchange(
     let secret_hash = flow
         .secret
         .as_ref()
-        .ok_or_else(|| ApiErrorCodes::OtpExpired)?;
+        .ok_or_else(|| ApiErrorCodes::InvalidCode)?;
 
     if !verify_otp_code(&request.code, secret_hash, &global.settings) {
         return Err(ApiErrorCodes::InvalidCode);
@@ -162,16 +164,19 @@ pub async fn exchange(
     Ok(RouteEither::Right(Json(AlrightResponse::default())))
 }
 
-/// Exchange the flow to enable sudo via a Passkey
+/// Exchange the Authentication Flow made by a Passkey browser challenge
 #[utoipa::path(
     post,
     path = "/webauthn",
+    tags = ["auth"],
     responses(
-        (status = 200, description = "login exchanged successfully"),
+        (status = 200, description = "authentication exchanged successfully", body = AlrightResponse),
+        (status = 404, description = "webauthn challenge not found", body = ApiError),
+        (status = 403, description = "webauthn compromised", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn webauthn_exchange(
+pub async fn flow_webauthn_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<AuthenticationPasskeyRequest>,
@@ -195,7 +200,7 @@ pub async fn webauthn_exchange(
     };
 
     let Ok(Some(user)) = User::find_by_id(db_challenge.user_id, &global.database).await else {
-        return Err(ApiErrorCodes::Unauthenticated);
+        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
     let challenge: PasskeyAuthentication = serde_json::from_value(db_challenge.big_data)?;
@@ -251,18 +256,19 @@ pub async fn webauthn_exchange(
     Ok(Json(AlrightResponse::default()))
 }
 
-/// Re-Exchange the flow to login via a TOTP code
-///
-/// This uses the flow id provided by the past exchange method
+/// Exchange the Authentication Flow ID made by an enabled TOTP
 #[utoipa::path(
     post,
     path = "/totp",
+    tags = ["auth"],
     responses(
-        (status = 200, description = "login exchanged successfully"),
+        (status = 200, description = "authentication exchanged successfully", body = AlrightResponse),
+        (status = 401, description = "invalid code", body = ApiError),
+        (status = 400, description = "totp recovery code already used", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn totp_exchange(
+pub async fn flow_totp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
