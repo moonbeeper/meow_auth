@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update user_webauthn set\n                big_data = $2,\n                counter = $3,\n                enabled = $4,\n                last_used_at = now(),\n                updated_at = now(),\n                disabled_at = case when enabled then null else now() end\n             where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Jsonb",
+        "Int4",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c2a4df4ba6b7ca9b02aec8419f71c1fe1599ddd390be2ab0a59788e5123b7999"
+}

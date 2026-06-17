@@ -13,7 +13,8 @@
             "kind": {
               "Enum": [
                 "register",
-                "authenticate"
+                "authenticate",
+                "reauthenticate"
               ]
             }
           }
