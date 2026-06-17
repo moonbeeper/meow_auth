@@ -89,3 +89,4 @@ webauthn-rs-proto = "0.5.5"
 regex = "1.12.3"
 hmac = "0.13.0"
 validator = { version = "0.20.0", features = ["derive"] }
+email_address = "0.2.9"

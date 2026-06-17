@@ -1,3 +1,6 @@
+use std::sync::LazyLock;
+
+use regex::Regex;
 use tower_cookies::{
     Cookies,
     cookie::{self, time},
@@ -16,6 +19,25 @@ pub mod session;
 pub mod sudo;
 pub mod totp;
 pub mod webauthn;
+
+pub static RE_AUTH_FLOW_LOGIN: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[a-zA-Z0-9_]+$").unwrap());
+
+pub fn valid_email(email: &str) -> Result<(), validator::ValidationError> {
+    let valid = email_address::EmailAddress::parse_with_options(
+        email,
+        email_address::Options::default()
+            .without_display_text()
+            .with_required_tld(),
+    );
+
+    if valid.is_err() {
+        return Err(validator::ValidationError::new("invalid_email")
+            .with_message("must have a valid tld".into()));
+    }
+
+    Ok(())
+}
 
 /// Basic checks to see if the flow isn't expired and is the correct kind/purpose.
 #[allow(

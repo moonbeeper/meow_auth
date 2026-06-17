@@ -33,7 +33,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
 pub struct FlowRequest {
-    email: String, // should also allow login via regex stuff
+    login: String,
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
@@ -62,12 +62,12 @@ pub async fn options(
     State(global): State<Arc<GlobalState>>,
     Json(request): Json<FlowRequest>,
 ) -> Result<Json<FlowOptionResponse>, ApiErrorCodes> {
-    let mut methods = vec![];
-    let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
+    let mut methods = vec![AuthMethod::Otp];
+
+    let Ok(Some(user)) = User::find_by_login(request.login, &global.database).await else {
         return Ok(Json(FlowOptionResponse { methods }));
     };
 
-    methods.push(AuthMethod::Otp);
     if user.has_webauthn {
         methods.push(AuthMethod::Passkey)
     }

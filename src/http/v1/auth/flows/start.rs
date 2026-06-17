@@ -7,6 +7,7 @@ use webauthn_rs_proto::RequestChallengeResponse;
 
 use crate::{
     auth::{
+        RE_AUTH_FLOW_LOGIN,
         emails::{AuthMailer, EmailVerificationCodeKind},
         otp::get_otp_code,
         webauthn::{create_webauthn_cookie, get_user_passkeys},
@@ -49,7 +50,7 @@ pub async fn otp_login(
     State(global): State<Arc<GlobalState>>,
     Json(request): Json<FlowRequest>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
-    let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
+    let Ok(Some(user)) = User::find_by_login(request.login, &global.database).await else {
         return Err(ApiErrorCodes::AccountNotFound);
     };
 
@@ -82,9 +83,12 @@ pub async fn otp_login(
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
 pub struct RegisterRequest {
-    #[validate(length(min = 4, max = 16))]
+    #[validate( // mr fmt doesnt format this aberration.
+        length(min = 3, max = 63, message = "must be between 4 letters and 64"), // counts from 0 duh
+        regex(path = *RE_AUTH_FLOW_LOGIN, message = "must be alphanumeric and can contain underscores")
+    )]
     login: String,
-    #[validate(email)]
+    #[validate(custom(function = "crate::auth::valid_email"))]
     email: String,
 }
 
@@ -165,7 +169,7 @@ pub async fn webauthn_options(
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<FlowRequest>,
 ) -> Result<Json<RequestChallengeResponse>, ApiErrorCodes> {
-    let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
+    let Ok(Some(user)) = User::find_by_login(request.login, &global.database).await else {
         return Err(ApiErrorCodes::AccountNotFound);
     };
 

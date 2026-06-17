@@ -45,7 +45,7 @@ pub enum ApiErrorCodes {
     SudoAlreadyEnabled,
     #[error("chosen sudo option is not available")]
     SudoOptionNotAvailable,
-    #[error("either the provided email or login is invalid")]
+    #[error("the provided login is invalid")]
     AccountNotFound, // man. this hurts a bit.
     #[error("the provided email is already associated with another account")]
     EmailAlreadyAssociated, // man. this hurts a bit.

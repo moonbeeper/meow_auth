@@ -60,6 +60,9 @@ fn prettify_errors(errors: ValidationErrors) -> String {
         match kind {
             ValidationErrorsKind::Field(e) => {
                 if let Some(e) = e.first() {
+                    if let Some(custom_msg) = e.message.as_ref() {
+                        return format!("The field '{field}' failed validation: {}", custom_msg);
+                    }
                     return format!("The field '{field}' failed {} validation", e.code);
                 }
             }
