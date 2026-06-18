@@ -31,13 +31,17 @@ pub struct ChangeEmailRequest {
     email: String,
 }
 
-/// Get your current user information
+/// Change your current email address
+///
+/// This will send a verification email to both your current and new email addresses. You must verify both emails to complete the change.
 #[utoipa::path(
     patch,
     path = "/email",
     tags = ["user"],
     responses(
         (status = 200, description = "successfully created the change request", body = AlrightResponse),
+        (status = 401, description = "sudo not enabled", body = ApiError),
+        (status = 400, description = "new email is already associated", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -46,6 +50,10 @@ pub async fn change_user_email(
     Extension(auth): Extension<AuthContext>,
     Valid(Json(request)): Valid<Json<ChangeEmailRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
+    }
+
     let Ok(Some(user)) = User::find_by_id(auth.user_id(), &global.database).await else {
         return Err(ApiErrorCodes::InternalServerError);
     };
@@ -99,13 +107,16 @@ pub struct ExchangeChangeEmailRequest {
     token: String,
 }
 
-/// Get your current user information
+// for whatever reason I was wondering if I had written "change" correctly because it really sounded bad in my head.
+/// Exchange the Email Change Token
 #[utoipa::path(
     post,
     path = "/email",
     tags = ["user"],
     responses(
-        (status = 200, description = "successfully created the change request", body = AlrightResponse),
+        (status = 200, description = "successfully verified email change request", body = AlrightResponse),
+        (status = 404, description = "email change flow not found", body = ApiError),
+        (status = 400, description = "email already verified", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
