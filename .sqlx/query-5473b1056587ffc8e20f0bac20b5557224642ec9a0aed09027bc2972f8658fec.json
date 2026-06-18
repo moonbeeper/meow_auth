@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update user_email_mod_requests set\n                current_email_verified = $2,\n                new_email_verified = $3,\n                updated_at = now()\n             where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5473b1056587ffc8e20f0bac20b5557224642ec9a0aed09027bc2972f8658fec"
+}

@@ -5,7 +5,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
     auth::{
-        emails::AuthMailer,
+        mailer::AuthMailer,
         totp::{create_user_totp, decrypt_secrets, get_totp, usable_recovery_codes},
     },
     database::models::{user::User, user_totp::UserTotp as DbUserTotp},

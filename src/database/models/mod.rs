@@ -6,6 +6,7 @@ pub mod oauth_pending_token;
 pub mod oauth_token;
 pub mod user;
 pub mod user_auth_challenge;
+pub mod user_email_mod_request;
 pub mod user_session;
 pub mod user_signup;
 pub mod user_totp;

@@ -86,6 +86,11 @@ pub enum ApiErrorCodes {
     /// ->
     #[error("{0}")]
     ValidationError(String),
+    /// ->
+    #[error("this action is already verified")]
+    AlreadyVerified,
+    #[error("this action's flow was not found")]
+    FlowNotFound,
 }
 
 // wtf
@@ -140,6 +145,8 @@ impl ApiErrorCodes {
             ApiErrorCodes::NotGood => StatusCode::INTERNAL_SERVER_ERROR,
             ApiErrorCodes::WebauthnNotFound => StatusCode::NOT_FOUND,
             ApiErrorCodes::ValidationError(..) => StatusCode::UNPROCESSABLE_ENTITY,
+            ApiErrorCodes::AlreadyVerified => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::FlowNotFound => StatusCode::NOT_FOUND,
         }
     }
 }

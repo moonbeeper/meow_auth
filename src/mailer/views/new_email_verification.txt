@@ -1,0 +1,13 @@
+{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{% if kind == "current" %}
+    You requested to change your account's email address. You can use the button below to verify the request:
+{% elif kind == "new" %}
+    You requested to change your account's email address to this new address. You can use the button below to verify the request:
+{% endif %}
+TODO: here goes the link
+REMOVE ME: token -> {{ user.token }}
+
+This verification attempt expires in 15 minutes. Your new email also has to accept this request.
+If you didn't request to change your email, oh that's bad lol. Logout from all your open sessions.
+--
+:3 - MeowAuth

@@ -22,6 +22,21 @@ impl EmailVerificationCodeKind {
     }
 }
 
+// TODO: awful, maybe merge those two?
+pub enum NewEmailVerificationCodeKind {
+    Current,
+    New,
+}
+
+impl NewEmailVerificationCodeKind {
+    fn to_str<'a>(&self) -> &'a str {
+        match self {
+            Self::Current => "current",
+            Self::New => "new",
+        }
+    }
+}
+
 pub struct AuthMailer;
 
 impl MailerTemplate for AuthMailer {}
@@ -243,6 +258,64 @@ impl AuthMailer {
                   "passkey": {
                       "name": passkey_name
                   }
+                }),
+            },
+            db,
+        )
+        .await
+    }
+
+    // TODO: should insert token in the frontend url to be able to use the button.
+    pub async fn email_verification(
+        kind: NewEmailVerificationCodeKind,
+        token: String,
+        new_address: String,
+        login: String,
+        to: String,
+        db: &PgPool,
+    ) -> MailerResult<()> {
+        let subject = match kind {
+            NewEmailVerificationCodeKind::Current => "Verify your current email address",
+            NewEmailVerificationCodeKind::New => "Verify your new email address",
+        };
+
+        Self::mail_template(
+            subject.to_string(),
+            to,
+            EmailTemplate {
+                base: "new_email_verification",
+                data: json!({
+                  "user": {
+                      "login": login,
+                      "new_address": new_address,
+                      "token": token,
+                  },
+                  "kind": kind.to_str(),
+                }),
+            },
+            db,
+        )
+        .await
+    }
+
+    pub async fn email_updated(
+        kind: NewEmailVerificationCodeKind,
+        new_address: String,
+        login: String,
+        to: String,
+        db: &PgPool,
+    ) -> MailerResult<()> {
+        Self::mail_template(
+            "Your account's email was updated".to_string(),
+            to,
+            EmailTemplate {
+                base: "email_updated",
+                data: json!({
+                  "user": {
+                      "login": login,
+                      "new_address": new_address,
+                  },
+                  "kind": kind.to_str(),
                 }),
             },
             db,

@@ -6,7 +6,7 @@ use webauthn_rs_proto::RequestChallengeResponse;
 
 use crate::{
     auth::{
-        emails::{AuthMailer, EmailVerificationCodeKind},
+        mailer::{AuthMailer, EmailVerificationCodeKind},
         otp::get_otp_code,
         sudo::{SudoOption, get_available_options},
         webauthn::get_user_passkeys,

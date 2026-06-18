@@ -1,0 +1,20 @@
+{% extends "partials/base.html" %}
+{% import "partials/macros.html" as m %}
+
+{% block content %}
+    {{ m::heading(text = globals.greeting ~ " " ~ user.login ~ "!") }}
+    {{ m::spacer(px = 16) }}
+    {% if kind == "current" %}
+        {{ m::text(text="You requested to change your account's email address to " ~ user.new_address ~". You can use the button below to verify the request:") }}
+    {% elif kind == "new" %}
+        {{ m::text(text="You requested to change your account's email address to this new address. You can use the button below to verify the request:") }}
+    {% endif %}
+    {{ m::spacer(px = 8) }}
+    {{ m::button(text = "Verify email") }}
+    {{ m::text(text="REMOVE ME: token -> " ~ user.token ) }}
+
+    {{ m::spacer(px = 8) }}
+    {{ m::text(text="This verification attempt expires in 15 minutes. Your new email also has to accept this request.") }}
+    {{ m::spacer(px = 8) }}
+    {{ m::text(text="If you didn't request to change your email, oh that's bad lol. Logout from all your open sessions.", color = "#6e6e6e") }}
+{% endblock content %}

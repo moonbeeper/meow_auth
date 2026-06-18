@@ -7,7 +7,7 @@ use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
     auth::{
-        emails::AuthMailer,
+        mailer::AuthMailer,
         otp::verify_otp_code,
         sudo::{enable_sudo_tx, has_sudo_option, is_flow_correct},
         totp::{decrypt_secrets, get_totp, is_recovery_code_used, set_recovery_code_used},

@@ -8,7 +8,7 @@ use webauthn_rs_proto::RequestChallengeResponse;
 use crate::{
     auth::{
         RE_AUTH_FLOW_LOGIN,
-        emails::{AuthMailer, EmailVerificationCodeKind},
+        mailer::{AuthMailer, EmailVerificationCodeKind},
         otp::get_otp_code,
         webauthn::{create_webauthn_cookie, get_user_passkeys},
     },

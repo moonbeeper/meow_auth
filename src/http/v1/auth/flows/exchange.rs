@@ -8,7 +8,7 @@ use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
     auth::{
-        emails::AuthMailer,
+        mailer::AuthMailer,
         otp::{is_flow_correct, verify_otp_code},
         session::{create_session, create_session_cookie},
         totp::{decrypt_secrets, get_totp, is_recovery_code_used, set_recovery_code_used},

@@ -199,3 +199,53 @@
 </tr>
 {{ self::section_end() }}
 {% endmacro otp_code %}
+
+
+{% macro button(text="click to get feather (i lied)", url="https://www.youtube.com/watch?v=E4WlUXrJgy4", color="#fdb41a") %}
+{{ self::section_start() }}
+<tr>
+    <td
+        class="t32"
+        style="
+            overflow: hidden;
+            background-color: {{ color }};
+            text-align: center;
+            line-height: 24px;
+            mso-line-height-rule: exactly;
+            mso-text-raise: 2px;
+            padding: 10px 10px 10px 10px;
+            border-radius: 5px 5px 5px 5px;
+        "
+    >
+        <a
+            class="t31"
+            href={{ url }}
+            style="
+                display: block;
+                margin: 0;
+                margin: 0;
+                font-family:
+                    Arial,
+                    BlinkMacSystemFont,
+                    Segoe UI,
+                    Helvetica Neue,
+                    Arial,
+                    sans-serif;
+                line-height: 24px;
+                font-weight: 700;
+                font-style: normal;
+                font-size: 16px;
+                text-decoration: none;
+                direction: ltr;
+                color: #333333;
+                text-align: center;
+                mso-line-height-rule: exactly;
+                mso-text-raise: 2px;
+            "
+            target="_blank"
+            >{{ text }}</a
+        >
+    </td>
+</tr>
+{{ self::section_end() }}
+{% endmacro button %}

@@ -13,7 +13,8 @@ use crate::{
     settings::Settings,
 };
 
-pub mod emails;
+pub mod email;
+pub mod mailer;
 pub mod otp;
 pub mod session;
 pub mod sudo;

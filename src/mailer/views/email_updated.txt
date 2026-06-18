@@ -1,0 +1,11 @@
+{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{% if kind == "current" %}
+Your account's email address has been updated to {{ user.new_address }}.
+{% elif kind == "new" %}
+Your account's email address has been successfully updated!
+{% endif %}
+
+If this was you, no action is needed.
+If this wasn't you... contact uh... wait. you are hecked. there's no contact address.
+--
+:3 - MeowAuth

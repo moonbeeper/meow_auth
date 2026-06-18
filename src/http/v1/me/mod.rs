@@ -1,3 +1,5 @@
+mod account;
+
 use std::sync::Arc;
 
 use axum::{Extension, extract::State};
@@ -18,6 +20,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(current_user_info))
         .routes(routes!(logout))
+        .nest("/account", account::routes())
         .layer(RequireAuthenticationLayer::new())
 }
 

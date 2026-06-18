@@ -10,7 +10,7 @@ use webauthn_rs::prelude::{
 };
 
 use crate::{
-    auth::{emails::AuthMailer, webauthn::get_aaguid},
+    auth::{mailer::AuthMailer, webauthn::get_aaguid},
     database::{
         id::UlidId,
         models::{
