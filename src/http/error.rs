@@ -91,6 +91,8 @@ pub enum ApiErrorCodes {
     AlreadyVerified,
     #[error("this action's flow was not found")]
     FlowNotFound,
+    #[error("you cannot change your login so soon after the last change")]
+    LoginChangeTooSoon,
 }
 
 // wtf
@@ -147,6 +149,7 @@ impl ApiErrorCodes {
             ApiErrorCodes::ValidationError(..) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiErrorCodes::AlreadyVerified => StatusCode::BAD_REQUEST,
             ApiErrorCodes::FlowNotFound => StatusCode::NOT_FOUND,
+            ApiErrorCodes::LoginChangeTooSoon => StatusCode::FORBIDDEN,
         }
     }
 }

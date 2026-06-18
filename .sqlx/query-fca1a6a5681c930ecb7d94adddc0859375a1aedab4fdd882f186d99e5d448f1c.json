@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update users set\n                login = $2,\n                email = $3,\n                email_verified = $4,\n                totp_enabled = $5,\n                has_webauthn = $6,\n                login_updated_at = $7,\n                updated_at = now()\n             where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Text",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fca1a6a5681c930ecb7d94adddc0859375a1aedab4fdd882f186d99e5d448f1c"
+}

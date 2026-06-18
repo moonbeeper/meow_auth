@@ -322,4 +322,21 @@ impl AuthMailer {
         )
         .await
     }
+
+    pub async fn login_updated(login: String, to: String, db: &PgPool) -> MailerResult<()> {
+        Self::mail_template(
+            "Your account's login was updated".to_string(),
+            to,
+            EmailTemplate {
+                base: "login_updated",
+                data: json!({
+                  "user": {
+                      "login": login,
+                  },
+                }),
+            },
+            db,
+        )
+        .await
+    }
 }

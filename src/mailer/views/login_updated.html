@@ -1,0 +1,11 @@
+{% extends "partials/base.html" %}
+{% import "partials/macros.html" as m %}
+
+{% block content %}
+    {{ m::heading(text = globals.greeting ~ " " ~ user.login ~ "!") }}
+    {{ m::spacer(px = 16) }}
+    {{ m::text(text="Your account's login has been successfully updated!") }}
+    {{ m::text(text="You may now login with: " ~ user.login) }}
+    {{ m::spacer(px = 8) }}
+    {{ m::text(text="If this wasn't you... logout from all your session and swap it back ig.") }}
+{% endblock content %}

@@ -22,6 +22,8 @@ pub struct User {
     #[builder(default = false)]
     pub has_webauthn: bool,
     #[builder(default = chrono::Utc::now())]
+    pub login_updated_at: chrono::DateTime<chrono::Utc>,
+    #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
     pub updated_at: chrono::DateTime<chrono::Utc>,
@@ -31,9 +33,9 @@ impl User {
     pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "insert into
-                users (id, pid, login, email, created_at, updated_at)
+                users (id, pid, login, email, login_updated_at ,created_at, updated_at)
              values
-                ($1, $2, lower($3), lower($4), now(), now())",
+                ($1, $2, lower($3), lower($4), now(), now(), now())",
             self.id as UserId,
             self.pid as PIDUserId,
             self.login,
@@ -53,6 +55,7 @@ impl User {
                 email_verified = $4,
                 totp_enabled = $5,
                 has_webauthn = $6,
+                login_updated_at = $7,
                 updated_at = now()
              where id = $1",
             self.id as UserId,
@@ -60,7 +63,8 @@ impl User {
             self.email,
             self.email_verified,
             self.totp_enabled,
-            self.has_webauthn
+            self.has_webauthn,
+            self.login_updated_at
         )
         .execute(&mut **transaction)
         .await?;
@@ -79,6 +83,7 @@ impl User {
                 email_verified,
                 totp_enabled,
                 has_webauthn,
+                login_updated_at,
                 created_at,
                 updated_at
              from users where id = $1",
@@ -101,6 +106,7 @@ impl User {
                 email_verified,
                 totp_enabled,
                 has_webauthn,
+                login_updated_at,
                 created_at,
                 updated_at
              from users where pid = $1",
@@ -126,6 +132,7 @@ impl User {
                 email_verified,
                 totp_enabled,
                 has_webauthn,
+                login_updated_at,
                 created_at,
                 updated_at
              from users where email = lower($1)",
@@ -151,6 +158,7 @@ impl User {
                 email_verified,
                 totp_enabled,
                 has_webauthn,
+                login_updated_at,
                 created_at,
                 updated_at
              from users where login = lower($1)",
@@ -176,6 +184,7 @@ impl User {
                 email_verified,
                 totp_enabled,
                 has_webauthn,
+                login_updated_at,
                 created_at,
                 updated_at
              from users where id = any($1)",
