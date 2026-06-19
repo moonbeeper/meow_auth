@@ -8,9 +8,8 @@ use crate::global::GlobalState;
 mod auth;
 mod me;
 // pub mod oauth2;
-mod types;
+pub mod types;
 
-// TODO: should have a middleware that check if the user is authenticated. (maybe?)
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .nest("/auth", auth::routes())

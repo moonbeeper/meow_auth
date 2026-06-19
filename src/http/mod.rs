@@ -1,13 +1,13 @@
 pub mod error;
 pub mod extractor;
 pub mod middleware;
+mod root;
 mod v1;
 pub mod validator;
 
 use std::{net::SocketAddr, sync::Arc};
 
 use anyhow::Context;
-use axum::routing::get;
 use tokio::net::TcpSocket;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
@@ -27,7 +27,8 @@ use crate::{
         (name = "user", description = "current user operations"),
         (name = "totp", description = "two-factor authentication management"),
         (name = "passkeys", description = "passkey authentication management"),
-        (name = "sessions", description = "session management")
+        (name = "sessions", description = "session management"),
+        (name = "application", description = "application health and status")
     )
 )]
 struct ApiDocs;
@@ -35,18 +36,13 @@ struct ApiDocs;
 fn router(global: Arc<GlobalState>) -> OpenApiRouter {
     let openapi = ApiDocs::openapi();
     OpenApiRouter::with_openapi(openapi)
-        .route(
-            "/",
-            get(|| async {
-                println!("HEY");
-                "Hello, World!"
-            }),
-        )
         .nest("/v1", v1::routes())
         // .routes(routes!(v1::oauth2::well_known::wellknown_oauth))
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(AuthManagerLayer::new(global.clone()))
         .layer(CookieManagerLayer::new())
+        // below the auth manager layer so we don't gotta check for auth (useless) on these static handlers
+        .merge(root::routes())
         .with_state(global)
     // middlewares go from bottom to top for requests, and top to bottom for responses.
 }

@@ -1,3 +1,5 @@
+use shadow_rs::shadow;
+
 pub mod auth;
 pub mod database;
 pub mod global;
@@ -9,3 +11,5 @@ pub mod manager;
 // pub mod oauth;
 pub mod crypto;
 pub mod settings;
+
+shadow!(build);
