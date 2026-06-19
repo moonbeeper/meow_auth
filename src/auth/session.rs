@@ -5,6 +5,7 @@ use sqlx::PgPool;
 use tower_cookies::{Cookies, cookie};
 
 use crate::{
+    audit::{self, AuditAction},
     auth::{create_cookie, delete_cookie, get_cookie},
     database::{
         id::UlidId,
@@ -28,14 +29,16 @@ pub async fn create_session(
     let active_expires_at =
         chrono::Utc::now() + chrono::Duration::seconds(settings.session.active_expire_age_seconds);
 
-    let mut transaction = db.begin().await?;
     let session = UserSession::builder()
         .user_id(user_id)
         .active_expires_at(active_expires_at)
         .expires_at(expires_at)
         .build();
-    session.insert(&mut transaction).await?;
-    transaction.commit().await?;
+
+    let mut tx = db.begin().await?;
+    session.insert(&mut tx).await?;
+    audit::log(user_id, AuditAction::SessionCreated, None, &mut tx).await?;
+    tx.commit().await?;
     Ok(session.pid)
 }
 

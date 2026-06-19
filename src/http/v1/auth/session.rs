@@ -7,6 +7,7 @@ use axum::{
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
+    audit::{self, AuditAction},
     database::{id::UlidId, models::user_session::UserSession as DbUserSession},
     global::GlobalState,
     http::{
@@ -108,6 +109,7 @@ pub async fn delete_session(
 
     let mut tx = global.database.begin().await?;
     session.delete(&mut tx).await?;
+    audit::log(auth.user_id(), AuditAction::SessionDeleted, None, &mut tx).await?;
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
@@ -141,6 +143,7 @@ pub async fn delete_all_sessions(
 
     let mut tx = global.database.begin().await?;
     DbUserSession::delete_many_by_id(ids, &mut tx).await?;
+    audit::log(auth.user_id(), AuditAction::SessionsDeleted, None, &mut tx).await?;
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

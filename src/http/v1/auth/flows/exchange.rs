@@ -7,6 +7,7 @@ use webauthn_rs::prelude::PasskeyAuthentication;
 use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
+    audit::{self, AuditAction},
     auth::{
         mailer::AuthMailer,
         otp::{is_flow_correct, verify_otp_code},
@@ -118,6 +119,7 @@ pub async fn flow_otp_exchange(
 
         db_user.delete_all_by_email_and_login(&mut tx).await?;
         user.insert(&mut tx).await?;
+        audit::log(user.id, AuditAction::AccountCreated, None, &mut tx).await?;
         tx.commit().await?;
         pre_user = Some(user);
     }

@@ -1,11 +1,13 @@
 use sqlx::PgPool;
 
 use crate::{
+    audit::{self, AuditAction},
     database::models::{
         user::{User, UserId},
         user_auth_challenge::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
         user_session::{UserSession, UserSessionId},
     },
+    http::middleware::auth_manager::AuthContext,
     settings::Settings,
 };
 
@@ -72,11 +74,11 @@ pub async fn has_sudo_option(kind: SudoOption, user_id: UserId, db: &PgPool) -> 
 }
 
 pub async fn enable_sudo_tx(
-    session_id: UserSessionId,
+    auth: &AuthContext,
     db: &PgPool,
     settings: &Settings,
 ) -> anyhow::Result<()> {
-    let Some(mut session) = UserSession::find_by_id(session_id, db).await? else {
+    let Some(mut session) = UserSession::find_by_id(auth.session_id(), db).await? else {
         anyhow::bail!("session wasnt found wtf")
     };
 
@@ -85,6 +87,7 @@ pub async fn enable_sudo_tx(
         chrono::Utc::now() + chrono::Duration::seconds(settings.session.sudo_expire_age_seconds),
     );
     session.update(&mut tx).await?;
+    audit::log(auth.user_id(), AuditAction::SudoEnabled, None, &mut tx).await?;
     tx.commit().await?;
 
     Ok(())

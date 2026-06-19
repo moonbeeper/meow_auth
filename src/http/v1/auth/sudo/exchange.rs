@@ -6,6 +6,7 @@ use webauthn_rs::prelude::PasskeyAuthentication;
 use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
+    audit::{self, AuditAction},
     auth::{
         mailer::AuthMailer,
         otp::verify_otp_code,
@@ -98,7 +99,7 @@ pub async fn sudo_otp_exchange(
     flow.update(&mut transaction).await?;
     transaction.commit().await?;
 
-    enable_sudo_tx(auth.session_id(), &global.database, &global.settings)
+    enable_sudo_tx(&auth, &global.database, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed enabling sudo: {e}");
@@ -161,10 +162,12 @@ pub async fn sudo_webauthn_exchange(
     };
 
     // check counter to account for cloning attackssss
+    // TODO: move to helper method for common usage in login and sudo
     if auth_result.counter() <= passkey.counter as u32 {
         let mut tx = global.database.begin().await?;
         passkey.enabled = false;
         passkey.update(&mut tx).await?;
+        audit::log(auth.user_id(), AuditAction::PasskeyDisabled, None, &mut tx).await?;
         tx.commit().await?;
         AuthMailer::webauthn_compromised(
             user.login,
@@ -188,7 +191,7 @@ pub async fn sudo_webauthn_exchange(
     passkey.update(&mut tx).await?;
     tx.commit().await?;
 
-    enable_sudo_tx(auth.session_id(), &global.database, &global.settings)
+    enable_sudo_tx(&auth, &global.database, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed enabling sudo: {e}");
@@ -249,6 +252,7 @@ pub async fn sudo_totp_exchange(
     })?;
 
     // TODO: regex for recovery codes
+    // TODO: move to helper method for common usage in login and sudo ???
     if request.code.len() == 6 {
         let totp_client =
             get_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
@@ -292,7 +296,7 @@ pub async fn sudo_totp_exchange(
     flow.update(&mut transaction).await?;
     transaction.commit().await?;
 
-    enable_sudo_tx(auth.session_id(), &global.database, &global.settings)
+    enable_sudo_tx(&auth, &global.database, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed enabling sudo: {e}");

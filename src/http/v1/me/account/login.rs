@@ -4,6 +4,7 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
+    audit::{self, AuditAction},
     auth::{RE_AUTH_FLOW_LOGIN, mailer::AuthMailer},
     database::models::user::User,
     global::GlobalState,
@@ -68,6 +69,7 @@ pub async fn change_user_login(
 
     let mut tx = global.database.begin().await?;
     user.update(&mut tx).await?;
+    audit::log(auth.user_id(), AuditAction::LoginChanged, None, &mut tx).await?;
     tx.commit().await?;
 
     AuthMailer::login_updated(user.login, user.email, &global.database).await?;

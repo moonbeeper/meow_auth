@@ -6,6 +6,7 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
+    audit::{self, AuditAction},
     database::models::{user::User as DbUser, user_session::UserSession},
     global::GlobalState,
     http::{
@@ -61,6 +62,7 @@ pub async fn logout(
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let mut tx = global.database.begin().await?;
     UserSession::delete_by_id(auth.session_id(), &mut tx).await?;
+    audit::log(auth.user_id(), AuditAction::SessionDeleted, None, &mut tx).await?;
     tx.commit().await?;
     Ok(Json(AlrightResponse::default()))
 }

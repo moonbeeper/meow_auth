@@ -161,3 +161,20 @@ impl<L: IntoResponse, R: IntoResponse> IntoResponse for RouteEither<L, R> {
         }
     }
 }
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct AuditLog {
+    pub action: String,
+    pub metadata: serde_json::Value,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl From<database::models::audit_log::AuditLog> for AuditLog {
+    fn from(value: database::models::audit_log::AuditLog) -> Self {
+        Self {
+            action: value.action,
+            metadata: value.metadata,
+            created_at: value.created_at,
+        }
+    }
+}

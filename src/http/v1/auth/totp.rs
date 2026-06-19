@@ -4,6 +4,7 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
+    audit::{self, AuditAction},
     auth::{
         mailer::AuthMailer,
         totp::{create_user_totp, decrypt_secrets, get_totp, usable_recovery_codes},
@@ -91,7 +92,7 @@ pub struct VerifyTotpRequest {
     code: String,
 }
 
-/// Exchange the TOTP enrollment code
+/// Exchange the TOTP enrollment with a generated code
 ///
 /// This will enable TOTP for your account
 #[utoipa::path(
@@ -147,6 +148,7 @@ pub async fn exchange_totp_creation(
     user.totp_enabled = true;
     user.update(&mut tx).await?;
     db_totp.update(&mut tx).await?;
+    audit::log(auth.user_id(), AuditAction::TotpEnabled, None, &mut tx).await?;
     tx.commit().await?;
 
     AuthMailer::totp_enabled(user.login, user.email, &global.database).await?;
@@ -155,8 +157,6 @@ pub async fn exchange_totp_creation(
 }
 
 /// Disable TOTP
-///
-/// This will make use of the Six Digit code generated on your authenticator
 #[utoipa::path(
     delete,
     path = "/",
@@ -209,6 +209,7 @@ pub async fn disable_totp(
     user.totp_enabled = false;
     user.update(&mut tx).await?;
     db_totp.delete(&mut tx).await?;
+    audit::log(auth.user_id(), AuditAction::TotpDisabled, None, &mut tx).await?;
     tx.commit().await?;
 
     AuthMailer::totp_disabled(user.login, user.email, &global.database).await?;
@@ -274,6 +275,13 @@ pub async fn see_recovery_codes(
 
     let mut tx = global.database.begin().await?;
     db_totp.update(&mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        AuditAction::TotpRecoveryCodesSeen,
+        None,
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     AuthMailer::totp_recovery_codes_seen(user.login, user.email, &global.database).await?;

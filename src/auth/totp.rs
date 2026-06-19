@@ -3,6 +3,7 @@ use sqlx::PgPool;
 use totp_rs::Secret;
 
 use crate::{
+    audit::{self, AuditAction},
     crypto::{EncryptedSecret, SecretKey, decrypt_secret, encrypt_secret, get_secret_key},
     database::models::{user::UserId, user_totp::UserTotp},
     settings::Settings,
@@ -194,6 +195,13 @@ pub async fn set_recovery_code_used(
     let mut tx = db.begin().await?;
     user_totp.mark_recovery_code_used(idx);
     user_totp.update(&mut tx).await?;
+    audit::log(
+        user_totp.user_id,
+        AuditAction::TotpRecoveryCodesUsed,
+        None,
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     Ok(())

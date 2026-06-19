@@ -56,7 +56,7 @@ sqlx = { version = "0.9.0", features = [
     "uuid",
     "runtime-tokio",
 ] }
-strum = { version = "0.28.0", features = ["derive"] }
+strum = { version = "0.28.0", features = ["derive", "phf"] }
 tera = "1.20.1"
 thiserror = "2.0.18"
 tokio = { version = "1.52.3", features = ["full"] }

@@ -102,6 +102,13 @@ impl From<()> for ApiErrorCodes {
     }
 }
 
+// TODO: Should trace the error.
+impl From<anyhow::Error> for ApiErrorCodes {
+    fn from(_: anyhow::Error) -> Self {
+        Self::InternalServerError
+    }
+}
+
 impl ApiErrorCodes {
     fn as_api_error<'a>(&self) -> ApiError<'a> {
         ApiError {
