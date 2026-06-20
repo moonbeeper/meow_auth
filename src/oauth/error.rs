@@ -1,9 +1,18 @@
 use axum::{
     http::StatusCode,
-    response::{IntoResponse, Redirect, Response},
+    response::{IntoResponse, Response},
 };
 use url::Url;
 
+#[derive(Debug, serde::Serialize)]
+pub struct OauthError {
+    error: OauthErrorCodes,
+    error_description: String,
+    state: Option<String>,
+    iss: String,
+}
+
+// should have custom error codes for application related stuff like... "hey, your id? no? get out" short circuit??
 #[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum OauthErrorCodes {
@@ -21,7 +30,7 @@ pub enum OauthErrorCodes {
 }
 
 impl OauthErrorCodes {
-    fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             OauthErrorCodes::InvalidRequest => "invalid_request",
             OauthErrorCodes::InvalidClient => "invalid_client",
@@ -36,61 +45,43 @@ impl OauthErrorCodes {
             OauthErrorCodes::TemporarilyUnavailble => "temporarily_unavailable",
         }
     }
+    pub fn description(&self) -> &str {
+        match self {
+            _ => "meow meow meow meow meow wawa",
+        }
+    }
 
-    fn description(&self) -> &str {
-        "todo" // TODO: descriptions for oauth error codes
+    fn status_code(&self) -> StatusCode {
+        match self {
+            _ => StatusCode::IM_A_TEAPOT,
+        }
     }
 }
 
 // TODO: return http 400 for token endpoint
 
-#[derive(Debug, serde::Serialize)]
-pub struct OauthError {
-    error: OauthErrorCodes,
-    error_description: String,
-    state: Option<String>,
-    iss: String,
-}
-
 impl OauthError {
-    pub fn new(error: OauthErrorCodes, iss: &Url, state: &Option<String>) -> Self {
+    pub fn new(
+        error: OauthErrorCodes,
+        iss: &Url,
+        custom_description: Option<String>,
+        state: &Option<String>,
+    ) -> Self {
+        let description = match custom_description {
+            Some(desc) => desc,
+            None => error.description().to_string(),
+        };
         OauthError {
-            error_description: error.description().to_string(),
+            error_description: description,
             error,
             state: state.clone(),
             iss: iss.to_string(), // oncelock?
         }
     }
-
-    pub fn description(mut self, description: String) -> Self {
-        self.error_description = description;
-        self
-    }
 }
 
 impl IntoResponse for OauthError {
     fn into_response(self) -> Response {
-        // TODO: GREAT HARDCODED GREEEAT
-        (StatusCode::INTERNAL_SERVER_ERROR, axum::Json(self)).into_response()
+        (self.error.status_code(), axum::Json(self)).into_response()
     }
-}
-
-pub fn redirect_to(url: &Url) -> Response {
-    Redirect::to(url.as_str()).into_response()
-}
-
-pub fn redirect_with_error(mut url: Url, error: OauthError) -> Response {
-    // bruh
-    {
-        let mut q = url.query_pairs_mut();
-        q.append_pair("error", error.error.as_str());
-        q.append_pair("error_description", &error.error_description);
-        q.append_pair("iss", &error.iss);
-
-        if let Some(state) = error.state {
-            q.append_pair("state", &state);
-        }
-    }
-
-    Redirect::to(url.as_str()).into_response()
 }

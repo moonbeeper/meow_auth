@@ -5,6 +5,8 @@ use flagset::{FlagSet, flags};
 pub const ALL_SCOPES: [Scope; 3] = [Scope::OpenId, Scope::Profile, Scope::Email];
 
 flags! {
+    // #[derive(strum::EnumString)] peace of crap. i hate this, anyways for what ethe heck i use sturm anyways in the whole codebase
+    // #[strum(serialize_all="snake_case")]
     pub enum Scope: i64 {
         OpenId,
         Profile,
@@ -21,6 +23,7 @@ impl Scope {
         }
     }
 
+    #[allow(clippy::should_implement_trait)] // shut
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "openid" => Some(Scope::OpenId),
@@ -31,31 +34,27 @@ impl Scope {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum ScopeParseErrors {
-    #[error("invalid scope: {0}")]
-    InvalidScope(String),
-}
+// #[derive(Debug, thiserror::Error)]
+// pub enum ScopeParseErrors {
+//     #[error("invalid scope: {0}")]
+//     InvalidScope(String),
+// }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub struct Scopes(pub FlagSet<Scope>);
 
 impl Scopes {
-    pub fn from_str(s: &str, ignore_bad: bool) -> Result<Self, ScopeParseErrors> {
+    pub fn from_str(s: &str) -> Self {
         let mut this = FlagSet::<Scope>::default();
 
         for scope in s.split_whitespace() {
             let Some(scope) = Scope::from_str(scope) else {
-                if ignore_bad {
-                    continue;
-                } else {
-                    return Err(ScopeParseErrors::InvalidScope(scope.to_string()));
-                }
+                continue;
             };
             this |= scope;
         }
 
-        Ok(Self(this))
+        Self(this)
     }
 
     pub fn bits(self) -> i64 {

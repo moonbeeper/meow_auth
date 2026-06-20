@@ -54,6 +54,7 @@ pub struct HttpSettings {
     #[default(SocketAddr::from(([127,0,0,1],8080)))]
     pub bind: SocketAddr,
     pub api_docs: ApiDocsSettings,
+    // must be always set, its where this application is running.
     #[default(Url::parse("http://localhost:8080").expect("failed to parse default origin burh"))]
     pub origin: Url,
 }

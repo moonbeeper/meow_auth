@@ -3,46 +3,52 @@ use std::sync::OnceLock;
 use tower_cookies::{Cookies, cookie};
 
 use crate::{
-    database::models::oauth_pending_authorization::OauthPendingAuthorizationId, settings::Settings,
+    auth::{create_cookie, get_cookie},
+    database::models::oauth_pending_authorization::OauthPendingAuthorizationId,
+    settings::Settings,
 };
+
+static OAUTH_KEY: OnceLock<cookie::Key> = OnceLock::new();
+
+fn get_key(settings: &Settings) -> &cookie::Key {
+    OAUTH_KEY.get_or_init(|| {
+        cookie::Key::from(
+            &settings
+                .application
+                .master_key
+                .derivate("20/06/2026 04:12:01 OAUTH cookie key v1", 64),
+        )
+    })
+}
 
 static COOKIE_OAUTH_KEY: OnceLock<cookie::Key> = OnceLock::new();
 
 pub fn create_oauth_cookie(
-    authorization_id: OauthPendingAuthorizationId,
+    pending_id: OauthPendingAuthorizationId,
     cookies: &Cookies,
     settings: &Settings,
 ) {
-    let encrypted_key =
-        COOKIE_OAUTH_KEY.get_or_init(|| cookie::Key::from(settings.oauth.secret_key.as_bytes()));
-    let cookie_jar = cookies.private(encrypted_key);
-    let cookie = cookie::Cookie::build((
-        format!("{}_pending_oauth", settings.session.cookie_name),
-        authorization_id.to_string(),
-    ))
-    .http_only(true)
-    .path("/")
-    .permanent(); // future muaahahah
-    cookie_jar.add(cookie.into());
+    create_cookie(
+        pending_id.to_string(),
+        &format!("{}_pending_oauth", settings.session.cookie_name),
+        get_key(settings),
+        None, // expire can be pushed forward by the renew.
+        cookies,
+        settings,
+    );
 }
 
-fn get_oauth_cookie(cookies: &Cookies, settings: &Settings) -> Option<cookie::Cookie<'static>> {
-    let encrypted_key =
-        COOKIE_OAUTH_KEY.get_or_init(|| cookie::Key::from(settings.oauth.secret_key.as_bytes()));
-    let cookie_jar = cookies.private(encrypted_key);
-    let value = cookie_jar.get(&format!("{}_pending_oauth", settings.session.cookie_name));
-    delete_oauth_cookie(cookies, settings);
-    value
+pub fn get_oauth_cookie(cookies: &Cookies, settings: &Settings) -> Option<cookie::Cookie<'static>> {
+    get_cookie(
+        true,
+        &format!("{}_pending_oauth", settings.session.cookie_name),
+        get_key(settings),
+        cookies,
+        settings,
+    )
 }
 
-fn delete_oauth_cookie(cookies: &Cookies, settings: &Settings) {
-    let cookie = cookie::Cookie::build(format!("{}_pending_oauth", settings.session.cookie_name))
-        .http_only(true)
-        .path("/");
-    cookies.remove(cookie.into());
-}
-
-pub fn get_pending_authorization_id_from_cookies(
+pub fn parse_oauth_cookie(
     cookies: &Cookies,
     settings: &Settings,
 ) -> Option<OauthPendingAuthorizationId> {
@@ -50,7 +56,11 @@ pub fn get_pending_authorization_id_from_cookies(
     match cookie.value().parse::<OauthPendingAuthorizationId>() {
         Ok(v) => Some(v),
         Err(e) => {
-            tracing::error!("failed parsing pending authorization cookie value: {}", e);
+            // I frankly don't know if I should have this. maybe i should introduce secrecy around these sites?
+            tracing::error!(
+                "failed parsing pending oauth authorization cookie value: {}",
+                e
+            );
             None
         }
     }
