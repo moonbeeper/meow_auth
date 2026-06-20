@@ -6,6 +6,7 @@ master_key = "df2f3ba178ecaa9968c042e230661d668e96f73881da2968a525af802d72692c"
 [http]
 bind = "127.0.0.1:8080"
 origin = "http://localhost:8080/"
+frontend = "http://localhost:3000/"
 
 [http.api_docs]
 enabled = true

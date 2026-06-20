@@ -22,14 +22,14 @@ pub enum ResponseType {
 
 // must be s256
 #[derive(Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema, PartialEq, Eq, Clone)]
-#[serde(rename_all = "snake_case")]
 pub enum CodeChallengeMethod {
+    #[serde(rename = "plain")]
     Plain,
     S256,
 }
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
-pub struct AuthorizationFinishRequest {
+pub struct AuthorizationDecisionRequest {
     pub consent: bool,
     pub client_id: UlidId,
 }

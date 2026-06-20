@@ -4,7 +4,10 @@ use typed_builder::TypedBuilder;
 use crate::database::{
     error::DatabaseError,
     id::UlidId,
-    models::{oauth_application::OauthApplicationId, user::UserId, user_session::UserSessionId},
+    models::{
+        oauth_application::OauthApplicationId, oauth_authorization::OauthAuthorizationId,
+        user::UserId, user_session::UserSessionId,
+    },
 };
 
 pub type OauthPendingAuthorizationId = UlidId;
@@ -17,12 +20,15 @@ pub struct OauthPendingAuthorization {
     pub client_id: OauthApplicationId,
     pub user_session: UserSessionId,
     #[builder(default = None)]
+    pub old_authorization_id: Option<OauthAuthorizationId>,
+    #[builder(default = None)]
     pub old_scopes: Option<i64>,
     #[builder(default = 0)]
     pub requested_scopes: i64,
     pub code_challenge: String,
     pub state: Option<String>,
     pub nonce: Option<String>,
+    pub redirect_url: String,
     #[builder(default = chrono::Utc::now() + chrono::Duration::minutes(15))]
     pub expires_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
@@ -37,27 +43,31 @@ impl OauthPendingAuthorization {
                 user_id,
                 client_id,
                 user_session,
+                old_authorization_id,
                 old_scopes,
                 requested_scopes,
                 code_challenge,
                 state,
                 nonce,
+                redirect_url,
                 expires_at
             )
-            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             ",
             self.id as OauthPendingAuthorizationId,
             self.user_id as UserId,
             self.client_id as OauthApplicationId,
             self.user_session as UserSessionId,
+            self.old_authorization_id as Option<OauthAuthorizationId>,
             self.old_scopes,
             self.requested_scopes,
             self.code_challenge,
             self.state,
             self.nonce,
+            self.redirect_url,
             self.expires_at
         )
-        .fetch_one(&mut **transaction)
+        .execute(&mut **transaction) // wtf, when did i put fetch_one here !?
         .await?;
 
         Ok(())
@@ -85,19 +95,21 @@ impl OauthPendingAuthorization {
     ) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
-            "select
+            r#"select
                 id,
                 user_id,
                 client_id,
                 user_session,
+                old_authorization_id as "old_authorization_id?: OauthAuthorizationId",
                 old_scopes,
                 requested_scopes,
                 code_challenge,
                 state,
                 nonce,
+                redirect_url,
                 expires_at,
                 created_at
-            from oauth_pending_authorizations where id = $1 and expires_at > now()",
+            from oauth_pending_authorizations where id = $1 and expires_at > now()"#,
             id as OauthPendingAuthorizationId
         )
         .fetch_optional(pool)
@@ -112,21 +124,23 @@ impl OauthPendingAuthorization {
     ) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
-            "delete from oauth_pending_authorizations
+            r#"delete from oauth_pending_authorizations
                 where id = $1 and expires_at > now()
                 returning
                     id,
                     user_id,
                     client_id,
                     user_session,
+                    old_authorization_id as "old_authorization_id?: OauthAuthorizationId",
                     old_scopes,
                     requested_scopes,
                     code_challenge,
                     state,
                     nonce,
+                    redirect_url,
                     expires_at,
                     created_at
-            ",
+            "#,
             id as OauthPendingAuthorizationId
         )
         .fetch_optional(&mut **transaction)

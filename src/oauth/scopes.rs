@@ -44,6 +44,7 @@ impl Scope {
 pub struct Scopes(pub FlagSet<Scope>);
 
 impl Scopes {
+    #[allow(clippy::should_implement_trait)] // shut x2
     pub fn from_str(s: &str) -> Self {
         let mut this = FlagSet::<Scope>::default();
 
@@ -69,8 +70,9 @@ impl Scopes {
         self.0.contains(scopes.0)
     }
 
-    pub fn sanitize(self, scopes: Scopes) -> Self {
-        Self(self.0 & scopes.0)
+    /// Removes any scopes that are not in the allowed scopes. Useful for deleting old scopes that no longer exist
+    pub fn sanitize(self, allowed_scopes: Scopes) -> Self {
+        Self(self.0 & allowed_scopes.0)
     }
 }
 

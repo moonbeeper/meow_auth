@@ -10,7 +10,7 @@ pub type OauthPendingTokenId = String;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, TypedBuilder)]
 pub struct OauthPendingToken {
-    #[builder(default = nanoid::nanoid!())]
+    #[builder(default = nanoid::nanoid!(32))]
     pub code: OauthPendingTokenId,
     pub user_id: UserId,
     pub client_id: OauthApplicationId,
@@ -49,21 +49,20 @@ impl OauthPendingToken {
             self.nonce,
             self.expires_at
         )
-        .fetch_one(&mut **transaction)
+        .execute(&mut **transaction)
         .await?;
 
         Ok(())
     }
 
-    pub async fn delete_all_by_user_and_client_id(
-        user_id: UserId,
-        client_id: OauthApplicationId,
+    pub async fn delete_all(
+        &self,
         transaction: &mut PgTransaction<'_>,
     ) -> Result<(), DatabaseError> {
         sqlx::query!(
-            "delete from oauth_pending_tokens where user_id = $1 and client_id = $2 and expires_at > now()",
-            user_id as UserId,
-            client_id as OauthApplicationId
+            "delete from oauth_pending_tokens where user_id = $1 and client_id = $2",
+            self.user_id as UserId,
+            self.client_id as OauthApplicationId
         )
         .execute(&mut **transaction)
         .await?;

@@ -21,8 +21,6 @@ fn get_key(settings: &Settings) -> &cookie::Key {
     })
 }
 
-static COOKIE_OAUTH_KEY: OnceLock<cookie::Key> = OnceLock::new();
-
 pub fn create_oauth_cookie(
     pending_id: OauthPendingAuthorizationId,
     cookies: &Cookies,
@@ -32,27 +30,24 @@ pub fn create_oauth_cookie(
         pending_id.to_string(),
         &format!("{}_pending_oauth", settings.session.cookie_name),
         get_key(settings),
-        None, // expire can be pushed forward by the renew.
+        None,
         cookies,
         settings,
     );
 }
 
-pub fn get_oauth_cookie(cookies: &Cookies, settings: &Settings) -> Option<cookie::Cookie<'static>> {
-    get_cookie(
+pub fn get_oauth_cookie(
+    cookies: &Cookies,
+    settings: &Settings,
+) -> Option<OauthPendingAuthorizationId> {
+    let cookie = get_cookie(
         true,
         &format!("{}_pending_oauth", settings.session.cookie_name),
         get_key(settings),
         cookies,
         settings,
-    )
-}
+    )?;
 
-pub fn parse_oauth_cookie(
-    cookies: &Cookies,
-    settings: &Settings,
-) -> Option<OauthPendingAuthorizationId> {
-    let cookie = get_oauth_cookie(cookies, settings)?;
     match cookie.value().parse::<OauthPendingAuthorizationId>() {
         Ok(v) => Some(v),
         Err(e) => {

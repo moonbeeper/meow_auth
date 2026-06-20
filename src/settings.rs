@@ -55,8 +55,11 @@ pub struct HttpSettings {
     pub bind: SocketAddr,
     pub api_docs: ApiDocsSettings,
     // must be always set, its where this application is running.
-    #[default(Url::parse("http://localhost:8080").expect("failed to parse default origin burh"))]
+    #[default(Url::parse("http://localhost:8080").expect("failed to parse default origin url burh"))]
     pub origin: Url,
+    // must be always set, its where this application is running.
+    #[default(Url::parse("http://localhost:3000").expect("failed to parse default frontend url burh"))]
+    pub frontend: Url,
 }
 
 #[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]

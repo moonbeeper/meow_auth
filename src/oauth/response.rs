@@ -4,7 +4,7 @@ use axum::response::{IntoResponse, Redirect};
 
 use crate::oauth::error::{OauthError, OauthErrorCodes};
 
-static OAUTH_ISSUER: OnceLock<url::Url> = OnceLock::new();
+pub static OAUTH_ISSUER: OnceLock<url::Url> = OnceLock::new();
 
 #[derive(Debug, Default)]
 pub struct OauthResponse {
@@ -66,13 +66,13 @@ impl IntoResponse for OauthResponse {
                     let mut query_pairs = url.query_pairs_mut();
                     query_pairs.append_pair("error", error_meta.code.as_str());
                     query_pairs.append_pair("error_description", description);
-                    query_pairs.append_pair("iss", &issuer.to_string());
+                    query_pairs.append_pair("iss", issuer.as_ref());
 
                     if let Some(state) = error_meta.state {
                         query_pairs.append_pair("state", &state);
                     }
                 }
-                return Redirect::to(&url.to_string()).into_response();
+                return Redirect::to(url.as_ref()).into_response();
             }
 
             let error = OauthError::new(
