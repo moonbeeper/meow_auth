@@ -9,7 +9,7 @@
         "Uuid",
         "Varchar",
         "Text",
-        "Text",
+        "Bytea",
         "Bool",
         "Int8"
       ]

@@ -50,7 +50,7 @@
       {
         "ordinal": 4,
         "name": "secret",
-        "type_info": "Text",
+        "type_info": "Bytea",
         "origin": {
           "Table": {
             "table": "oauth_applications",
