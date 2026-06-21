@@ -48,9 +48,9 @@ pub struct TokenRequest {
     pub grant_type: GrantType,
     pub code: String,
     pub client_id: UlidId,
-    pub code_verifier: String,
-    pub redirect_uri: Option<String>,
     pub client_secret: String,
+    pub code_verifier: String,
+    pub redirect_uri: String,
 }
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema, PartialEq, Eq)]
@@ -63,10 +63,17 @@ pub enum GrantType {
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
+pub enum TokenType {
+    Bearer,
+    Mac,
+}
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
 pub struct TokenResponse {
     pub access_token: String,
-    pub token_type: String,
-    pub expires_in: u64,
+    pub token_type: TokenType,
+    pub expires_in: i64,
     pub scope: String,
     pub id_token: Option<String>, // oidc
 }

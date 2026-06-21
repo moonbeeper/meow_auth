@@ -12,7 +12,7 @@ pub struct OauthApplication {
     pub user_id: UserId,
     pub name: String,
     pub redirect_uri: String,
-    pub secret: String,
+    pub secret: Vec<u8>,
     #[builder(default = false)]
     pub public: bool,
     #[builder(default = 0)]

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     Extension, Json,
-    extract::{Query, State},
+    extract::{Form, State},
 };
 use tower_cookies::Cookies;
 use url::Url;
@@ -43,7 +43,6 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 #[utoipa::path(
     get,
     path = "/authorize",
-    params(AuthorizationRequest),
     responses(
         (status = 303, description = "redirect to consent screen or redirect_uri with code"),
         (status = 500, description = "internal server error", body = ApiError)
@@ -53,7 +52,7 @@ pub async fn authorize(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(cookies): Extension<Cookies>,
-    Query(request): Query<AuthorizationRequest>,
+    Form(request): Form<AuthorizationRequest>,
 ) -> OauthResponse {
     OauthResponse::set_issuer(global.settings.http.origin.clone());
 
