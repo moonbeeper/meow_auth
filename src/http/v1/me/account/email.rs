@@ -165,6 +165,7 @@ pub async fn exchange_change_user_email(
 
     if email_request.current_email_verified && email_request.new_email_verified {
         user.email = email_request.new_email.clone();
+        user.email_verified = true;
 
         let mut tx = global.database.begin().await?;
         user.update(&mut tx).await?;

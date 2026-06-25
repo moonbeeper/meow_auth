@@ -15,4 +15,5 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .merge(authorization::routes())
         .merge(token::routes())
         .merge(jwks::routes())
+        .merge(user_info::routes())
 }

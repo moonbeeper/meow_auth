@@ -1,4 +1,4 @@
-use compact_jwt::{Jwk, JwsEs256Signer};
+use compact_jwt::{Jwk, JwsEs256Signer, OidcToken};
 use data_encoding::BASE64URL_NOPAD;
 
 use crate::database::id::UlidId;
@@ -196,4 +196,27 @@ pub enum TokenAuthMethod {
     ClientSecretBasic,
     ClientSecretJwt,
     PrivateKeyJwt,
+}
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub struct OpenIdUserInfo {
+    pub sub: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub email_verified: Option<bool>,
+}
+
+impl From<OidcToken> for OpenIdUserInfo {
+    fn from(value: OidcToken) -> Self {
+        Self {
+            sub: value.sub.to_string(),
+            name: value.s_claims.name,
+            email: value.s_claims.email,
+            email_verified: value.s_claims.email_verified,
+        }
+    }
 }

@@ -7,6 +7,7 @@ use crate::database::{
     models::{oauth_application::OauthApplicationId, user::UserId},
 };
 
+// what the fuck, HWO DID I SET THIS TO 'String' what. stupid goofy ass bird brain I AM
 pub type OauthTokenId = UlidId;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, TypedBuilder)]
@@ -59,10 +60,7 @@ impl OauthToken {
         Ok(())
     }
 
-    pub async fn find_by_token(
-        id: OauthTokenId,
-        pool: &PgPool,
-    ) -> Result<Option<Self>, DatabaseError> {
+    pub async fn find_by_token(id: String, pool: &PgPool) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -74,7 +72,7 @@ impl OauthToken {
                 created_at,
                 updated_at
              from oauth_tokens where token = $1",
-            id as OauthTokenId
+            id
         )
         .fetch_optional(pool)
         .await?;

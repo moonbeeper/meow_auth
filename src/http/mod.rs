@@ -16,7 +16,9 @@ use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable};
 
 use crate::{
-    global::GlobalState, http::middleware::auth_manager::AuthManagerLayer, manager::WatcherChild,
+    global::GlobalState,
+    http::middleware::{auth_manager::AuthManagerLayer, oauth_manager::OauthManagerLayer},
+    manager::WatcherChild,
 };
 
 #[derive(OpenApi)] // my dumb heck thought that IT was inside the derive macro where you set the attribute tags smh.
@@ -40,6 +42,7 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
         // .routes(routes!(v1::oauth2::well_known::wellknown_oauth))
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(AuthManagerLayer::new(global.clone()))
+        .layer(OauthManagerLayer::new(global.clone()))
         .layer(CookieManagerLayer::new())
         // below the auth manager layer so we don't gotta check for auth (useless) on these static handlers
         .merge(root::routes())

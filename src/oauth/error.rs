@@ -8,6 +8,7 @@ use url::Url;
 pub struct OauthError {
     error: OauthErrorCodes,
     error_description: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     state: Option<String>,
     iss: String,
 }
@@ -16,7 +17,6 @@ pub struct OauthError {
 #[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum OauthErrorCodes {
-    InvalidRequest,
     InvalidClient,
     InvalidGrant,
     UnsupportedGrantType,
@@ -31,6 +31,10 @@ pub enum OauthErrorCodes {
     InteractionRequired,
     LoginRequired,
     ConsentRequired,
+    // General Application
+    InvalidRequest,
+    InvalidToken,
+    InsufficientScope,
 }
 
 impl OauthErrorCodes {
@@ -50,6 +54,8 @@ impl OauthErrorCodes {
             OauthErrorCodes::InteractionRequired => "interaction_required",
             OauthErrorCodes::LoginRequired => "login_required",
             OauthErrorCodes::ConsentRequired => "consent_required",
+            OauthErrorCodes::InvalidToken => "invalid_token",
+            OauthErrorCodes::InsufficientScope => "insufficient_scope",
         }
     }
     pub fn description(&self) -> &str {

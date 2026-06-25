@@ -48,6 +48,17 @@ pub fn verify_secret(secret: &str, hash: &[u8], settings: &Settings) -> bool {
     mac.verify_slice(hash).is_ok()
 }
 
+// could maybe mix it with the get_secret_pair?
+pub fn hash_secret(secret: &str, settings: &Settings) -> String {
+    let mut mac =
+        HmacSha256::new_from_slice(get_key(settings)).expect("HMAC key must have an exact length");
+    mac.update(secret.as_bytes());
+
+    let result = mac.finalize().into_bytes();
+
+    hex::encode(result)
+}
+
 pub fn check_pkce(code_verifier: &str, original_code_verifier: &str) -> bool {
     let hashed_challenge = BASE64URL_NOPAD.encode(&Sha256::digest(code_verifier.as_bytes()));
 

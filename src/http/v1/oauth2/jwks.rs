@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
 use axum::{Json, extract::State};
-use compact_jwt::Jwk;
-use data_encoding::BASE64URL_NOPAD;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
