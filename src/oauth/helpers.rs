@@ -15,6 +15,8 @@ use crate::{
     settings::Settings,
 };
 
+use super::types::PromptType;
+
 #[allow(clippy::too_many_arguments)] // SHUT
 pub async fn action_past_authorized(
     request: &AuthorizationRequest,
@@ -22,6 +24,7 @@ pub async fn action_past_authorized(
     mut authorization: OauthAuthorization,
     requested_scopes: Scopes,
     mut redirect_url: url::Url,
+    is_openid: bool,
     auth_context: &AuthContext,
     cookies: &Cookies,
     settings: &Settings,
@@ -29,6 +32,22 @@ pub async fn action_past_authorized(
 ) -> anyhow::Result<url::Url> {
     let sanitized_authorization_scopes =
         Scopes::from_bits(authorization.scopes).sanitize(Scopes::from_bits(oauth_client.scopes));
+
+    if is_openid && request.prompt == Some(PromptType::Consent) {
+        return action_new_authorization(
+            request,
+            oauth_client,
+            requested_scopes,
+            redirect_url,
+            is_openid,
+            Some(authorization),
+            auth_context,
+            cookies,
+            settings,
+            tx,
+        )
+        .await;
+    }
 
     if !sanitized_authorization_scopes.contains(requested_scopes) {
         let pending_auth = OauthPendingAuthorization::builder()
@@ -42,6 +61,7 @@ pub async fn action_past_authorized(
             .old_authorization_id(Some(authorization.id))
             .old_scopes(Some(sanitized_authorization_scopes.bits()))
             .redirect_url(redirect_url.to_string())
+            .is_openid(is_openid)
             .build();
 
         authorization.scopes = sanitized_authorization_scopes.bits();
@@ -63,6 +83,7 @@ pub async fn action_past_authorized(
         .scopes(requested_scopes.bits())
         .state(request.state.clone())
         .user_id(auth_context.user_id())
+        .is_openid(is_openid)
         .build();
 
     {
@@ -86,6 +107,8 @@ pub async fn action_new_authorization(
     oauth_client: OauthApplication,
     requested_scopes: Scopes,
     redirect_url: url::Url,
+    is_openid: bool,
+    past_authorization: Option<OauthAuthorization>,
     auth_context: &AuthContext,
     cookies: &Cookies,
     settings: &Settings,
@@ -100,6 +123,8 @@ pub async fn action_new_authorization(
         .user_session(auth_context.session_id())
         .requested_scopes(requested_scopes.bits())
         .redirect_url(redirect_url.to_string())
+        .old_authorization_id(past_authorization.map(|v| v.id))
+        .is_openid(is_openid)
         .build();
 
     pending_auth.delete_all(tx).await?;

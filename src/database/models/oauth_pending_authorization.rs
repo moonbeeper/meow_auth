@@ -22,12 +22,14 @@ pub struct OauthPendingAuthorization {
     #[builder(default = None)]
     pub old_authorization_id: Option<OauthAuthorizationId>,
     #[builder(default = None)]
-    pub old_scopes: Option<i64>,
+    pub old_scopes: Option<i64>, // seems useless
     #[builder(default = 0)]
     pub requested_scopes: i64,
     pub code_challenge: String,
     pub state: Option<String>,
     pub nonce: Option<String>,
+    #[builder(default = false)]
+    pub is_openid: bool, // openid id token
     pub redirect_url: String,
     #[builder(default = chrono::Utc::now() + chrono::Duration::minutes(15))]
     pub expires_at: chrono::DateTime<chrono::Utc>,
@@ -49,10 +51,11 @@ impl OauthPendingAuthorization {
                 code_challenge,
                 state,
                 nonce,
+                is_openid,
                 redirect_url,
                 expires_at
             )
-            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             ",
             self.id as OauthPendingAuthorizationId,
             self.user_id as UserId,
@@ -64,6 +67,7 @@ impl OauthPendingAuthorization {
             self.code_challenge,
             self.state,
             self.nonce,
+            self.is_openid,
             self.redirect_url,
             self.expires_at
         )
@@ -106,6 +110,7 @@ impl OauthPendingAuthorization {
                 code_challenge,
                 state,
                 nonce,
+                is_openid,
                 redirect_url,
                 expires_at,
                 created_at
@@ -137,6 +142,7 @@ impl OauthPendingAuthorization {
                     code_challenge,
                     state,
                     nonce,
+                    is_openid,
                     redirect_url,
                     expires_at,
                     created_at

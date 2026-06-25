@@ -12,6 +12,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(health))
         .routes(routes!(application_info))
+        .merge(super::v1::oauth2::well_known::routes())
 }
 
 /// Health endpoint, returns always OK

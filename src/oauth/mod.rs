@@ -13,6 +13,7 @@ use crate::{
 pub mod cookies;
 pub mod error;
 pub mod helpers;
+pub mod openid;
 pub mod response;
 pub mod scopes;
 pub mod secrets;
@@ -71,5 +72,3 @@ pub fn pending_authorization_checks(
 
     true
 }
-
-

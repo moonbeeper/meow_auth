@@ -1,5 +1,6 @@
 // mod base; for models :)
 pub mod audit_log;
+pub mod jwk_key;
 pub mod oauth_application;
 pub mod oauth_authorization;
 pub mod oauth_pending_authorization;

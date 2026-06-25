@@ -3,7 +3,7 @@ use std::{sync::Arc, time::Duration};
 use anyhow::Context;
 use webauthn_rs::{Webauthn, WebauthnBuilder};
 
-use crate::{database, mailer::Mailer, settings::Settings};
+use crate::{crypto::jwks::JwksKeys, database, mailer::Mailer, settings::Settings};
 
 #[derive(Debug)]
 pub struct GlobalState {
@@ -11,6 +11,7 @@ pub struct GlobalState {
     pub database: sqlx::PgPool,
     pub mailer: Mailer,
     pub webauthn: Arc<Webauthn>,
+    pub jwks: JwksKeys,
 }
 
 impl GlobalState {
@@ -26,12 +27,16 @@ impl GlobalState {
                 settings.webauthn.timeout_seconds as u64,
             ))
             .build()?;
+        let jwks_list = JwksKeys::new(&database, &settings)
+            .await
+            .context("failed to get JWKS")?;
 
         Ok(Arc::new(Self {
             settings,
             database,
             mailer,
             webauthn: Arc::new(webauth),
+            jwks: jwks_list,
         }))
     }
 }

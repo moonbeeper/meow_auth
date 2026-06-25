@@ -1,18 +1,20 @@
 use std::sync::Arc;
 
 use axum::{extract::Form, extract::State};
+use compact_jwt::JwsSigner;
 use url::Url;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
     database::models::{
         oauth_application::OauthApplication, oauth_pending_token::OauthPendingToken,
-        oauth_token::OauthToken,
+        oauth_token::OauthToken, user::User,
     },
     global::GlobalState,
     http::{error::ApiError, extractor::Json},
     oauth::{
         error::OauthErrorCodes,
+        openid::get_id_token_data,
         response::OauthResponse,
         scopes::Scopes,
         secrets::{check_pkce, get_secret_pair, verify_secret},
@@ -71,6 +73,10 @@ pub async fn token(
         return Err(OauthResponse::new().error(OauthErrorCodes::InvalidClient, None, None));
     };
 
+    let Ok(Some(user)) = User::find_by_id(pending_token.user_id, &global.database).await else {
+        return Err(OauthResponse::new().error(OauthErrorCodes::InvalidClient, None, None));
+    };
+
     // code must be for the client_id provided
     if pending_token.client_id != client.id {
         return Err(OauthResponse::new().error(OauthErrorCodes::InvalidClient, None, None));
@@ -103,14 +109,14 @@ pub async fn token(
         ));
     }
 
-    // even this can't use 'AccessDenied'.. and it would look reallly great here..
-    if !verify_secret(&request.client_secret, &client.secret, &global.settings) {
-        return Err(OauthResponse::new().error(
-            OauthErrorCodes::InvalidClient,
-            Some("client_secret is invalid"),
-            None,
-        ));
-    }
+    // // even this can't use 'AccessDenied'.. and it would look reallly great here..
+    // if !verify_secret(&request.client_secret, &client.secret, &global.settings) {
+    //     return Err(OauthResponse::new().error(
+    //         OauthErrorCodes::InvalidClient,
+    //         Some("client_secret is invalid"),
+    //         None,
+    //     ));
+    // }
 
     let secret_pain = get_secret_pair(&global.settings);
 
@@ -137,11 +143,28 @@ pub async fn token(
         .await
         .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
 
+    let mut id_token = None;
+    if pending_token.is_openid {
+        let current_signer = global.jwks.get_current();
+        let token_data = get_id_token_data(
+            user,
+            pending_token.client_id,
+            pending_token.nonce,
+            scopes,
+            &global.settings,
+        );
+        let token = current_signer
+            .signer
+            .sign(&token_data)
+            .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
+        id_token = Some(token.to_string());
+    }
+
     Ok(Json(TokenResponse {
         access_token: secret_pain.code,
         token_type: TokenType::Bearer,
         expires_in: chrono::Duration::MAX.num_seconds(), // no expiry :)
         scope: scopes.to_string(),
-        id_token: None, // id tokens for oidc...
+        id_token, // id tokens for oidc...
     }))
 }

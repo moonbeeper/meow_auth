@@ -1,6 +1,7 @@
 mod authorization;
-mod oidc;
+pub mod jwks;
 mod token;
+mod user_info;
 pub mod well_known;
 
 use std::sync::Arc;
@@ -13,4 +14,5 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .merge(authorization::routes())
         .merge(token::routes())
+        .merge(jwks::routes())
 }

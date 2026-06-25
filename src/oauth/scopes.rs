@@ -49,6 +49,7 @@ impl Scopes {
         let mut this = FlagSet::<Scope>::default();
 
         for scope in s.split_whitespace() {
+            let scope = &scope.trim().to_lowercase();
             let Some(scope) = Scope::from_str(scope) else {
                 continue;
             };
@@ -66,8 +67,14 @@ impl Scopes {
         Self(FlagSet::new_truncated(bits))
     }
 
+    /// Returns true if all scopes in `scopes` are contained in this instance
     pub fn contains(self, scopes: Scopes) -> bool {
         self.0.contains(scopes.0)
+    }
+
+    /// Returns true if a singular scope is contained in this instance
+    pub fn has(self, scope: Scope) -> bool {
+        self.0.contains(FlagSet::from(scope))
     }
 
     /// Removes any scopes that are not in the allowed scopes. Useful for deleting old scopes that no longer exist

@@ -129,6 +129,19 @@ pub struct WebauthnSettings {
     pub timeout_seconds: i64,
 }
 
+#[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
+
+pub struct OauthSettings {
+    #[default(60*60)]
+    pub oidc_id_token_expire_seconds: i64,
+    #[default(60*60*24*30*2)]
+    pub jwk_active_seconds: i64,
+    #[default(60*60*24*30*3)]
+    pub jwk_expired_after_seconds: i64,
+    #[default(60*60*12)]
+    pub jwk_cycle_after_seconds: i64,
+}
+
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Settings {
     #[serde(default)]
@@ -140,6 +153,7 @@ pub struct Settings {
     pub session: SessionSettings,
     pub totp: TotpSettings,
     pub webauthn: WebauthnSettings,
+    pub oauth: OauthSettings,
 }
 
 impl Settings {

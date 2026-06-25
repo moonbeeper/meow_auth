@@ -25,9 +25,10 @@ use crate::{
         helpers::{action_new_authorization, action_past_authorized},
         pending_authorization_checks,
         response::{OAUTH_ISSUER, OauthResponse},
-        scopes::Scopes,
+        scopes::{Scope, Scopes},
         types::{
-            AuthorizationDecisionRequest, AuthorizationRequest, CodeChallengeMethod, ResponseType,
+            AuthorizationDecisionRequest, AuthorizationRequest, CodeChallengeMethod, PromptType,
+            ResponseType,
         },
         valid_redirect_uri,
     },
@@ -122,7 +123,17 @@ pub async fn authorize(
         requested_scopes = requested;
     }
 
+    let is_openid = requested_scopes.has(Scope::OpenId);
+
     if !auth.is_authenticated() {
+        if is_openid && request.prompt == Some(PromptType::None) {
+            return OauthResponse::new().error(
+                OauthErrorCodes::LoginRequired,
+                Some("this request needs an authenticated user"),
+                request.state.clone(),
+            );
+        }
+
         return OauthResponse::new().error(
             OauthErrorCodes::AccessDenied,
             Some("this request needs an authenticated user"),
@@ -140,6 +151,14 @@ pub async fn authorize(
             request.state.clone(),
         );
     };
+
+    if authorization.is_none() && request.prompt == Some(PromptType::None) {
+        return OauthResponse::new().error(
+            OauthErrorCodes::ConsentRequired,
+            None,
+            request.state.clone(),
+        );
+    }
 
     // at this point, we've validated the request, and we have an authenticated user and a correct client.
     // NOW we have to check if the user has already authorized this client with the requested scopes. If not,
@@ -172,6 +191,7 @@ pub async fn authorize(
             authorization,
             requested_scopes,
             redirect_url,
+            is_openid,
             &auth,
             &cookies,
             &global.settings,
@@ -194,6 +214,8 @@ pub async fn authorize(
             client,
             requested_scopes,
             redirect_url,
+            is_openid,
+            None,
             &auth,
             &cookies,
             &global.settings,

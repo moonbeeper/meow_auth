@@ -4,6 +4,7 @@ use std::time::Duration;
 use anyhow::Context as _;
 use futures_util::TryFutureExt;
 use meow_auth2::{
+    crypto::jwks::worker::JwkCycleWorker,
     global::GlobalState,
     http,
     job_queue::QueueRegistry,
@@ -25,7 +26,9 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed to create global state")?;
     let watcher = Watcher::new();
-    let queues = QueueRegistry::new(global.clone()).register(MailerJob);
+    let queues = QueueRegistry::new(global.clone())
+        .register(MailerJob)
+        .register(JwkCycleWorker);
     spawn_service("http", http::run(global.clone(), watcher.child()));
     spawn_service(
         "queues",

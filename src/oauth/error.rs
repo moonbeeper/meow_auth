@@ -27,6 +27,10 @@ pub enum OauthErrorCodes {
     InvalidRedirect,
     ServerError,
     TemporarilyUnavailble,
+    // OIDC - skips account selection because currently you can only have one logged in account
+    InteractionRequired,
+    LoginRequired,
+    ConsentRequired,
 }
 
 impl OauthErrorCodes {
@@ -43,6 +47,9 @@ impl OauthErrorCodes {
             OauthErrorCodes::InvalidRedirect => "invalid_redirect",
             OauthErrorCodes::ServerError => "server_error",
             OauthErrorCodes::TemporarilyUnavailble => "temporarily_unavailable",
+            OauthErrorCodes::InteractionRequired => "interaction_required",
+            OauthErrorCodes::LoginRequired => "login_required",
+            OauthErrorCodes::ConsentRequired => "consent_required",
         }
     }
     pub fn description(&self) -> &str {

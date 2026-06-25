@@ -37,36 +37,66 @@ pub enum JobQueueErrors {
     Dispatch(Box<JobQueueErrors>),
 }
 
+/// A trait that defines a job that can be stored in the job registry and executed by a worker.
 pub trait QueuedJob: Send + Sync + 'static {
     type Input: serde::Serialize + serde::de::DeserializeOwned + Send + 'static;
 
+    /// The method that will be called when the job is executed. Should contain the logic of the job (wow)
     fn run(
         &self,
         global: Arc<GlobalState>,
         input: Self::Input,
     ) -> impl Future<Output = anyhow::Result<()>> + Send;
+
+    /// The name of the job handler. Used to identify which job uses what handler, defaults to the Type Name.
     fn name() -> &'static str {
         std::any::type_name::<Self>()
     }
+
+    /// The duration after which the job cannot be executed anymore.
     fn expires_in() -> chrono::Duration {
         chrono::Duration::days(1)
     }
+
+    /// Dispatch the job to be executed as soon as possible.
     fn dispatch(pool: &PgPool, input: Self::Input) -> impl Future<Output = JobQueueResult<()>> {
+        Self::dispatch_at(pool, chrono::Utc::now(), false, input)
+    }
+
+    /// Dispatch the job to be executed at a specific time in the future.
+    ///
+    /// *The job will probably have a jitter of 2 minutes or more before starting lol.*
+    fn dispatch_at(
+        pool: &PgPool,
+        available_at: chrono::DateTime<Utc>,
+        delete_all_past: bool,
+        input: Self::Input,
+    ) -> impl Future<Output = JobQueueResult<()>> {
         async move {
             let input = postcard::to_allocvec(&input)
                 .map_err(JobQueueErrors::from)
                 .map_err(|e| JobQueueErrors::Dispatch(Box::new(e)))?;
 
+            if delete_all_past {
+                sqlx::query!(
+                    "delete from queued_jobs where handler = $1 and state in ('pending', 'inprogress')",
+                    Self::name().to_string()
+                ).execute(pool)
+                .await
+                .map_err(JobQueueErrors::from)?;
+            }
+
             sqlx::query!(
                 "insert into
-                    queued_jobs (id, handler, state, input, expires_at)
+                    queued_jobs (id, handler, state, input, expires_at, available_at)
                 values
-                    ($1, $2, $3, $4, $5)",
+                    ($1, $2, $3, $4, $5, $6)",
                 QueuedJobId::new() as QueuedJobId,
                 Self::name().to_string(),
                 QueuedJobState::Pending.as_str(),
                 input,
-                Utc::now() + Self::expires_in()
+                Utc::now() + Self::expires_in(),
+                available_at
             )
             .execute(pool)
             .await
@@ -304,6 +334,7 @@ impl Worker {
                 and success_at is null
                 and retry_count < retry_max_count
                 AND expires_at > now()
+                AND available_at <= now()
               order by created_at
               for update skip locked
               limit $4
@@ -316,7 +347,8 @@ impl Worker {
                 and updated_at < now() - make_interval(secs => $3)
                 and success_at is null
                 and retry_count < retry_max_count
-                and expires_at > now()
+                AND expires_at > now()
+                AND available_at <= now()
               order by updated_at
               for update skip locked
               limit GREATEST(0, $4 - (select count(*) from pending))
@@ -358,7 +390,15 @@ impl Worker {
         _ticket: OwnedSemaphorePermit,
     ) -> JobQueueResult<()> {
         let _guard = _ticket;
+        let job_id = job.id;
+
         let Some(handler) = self.job_handlers.get(job.handler.as_str()) else {
+            tracing::error!(
+                job_id = job_id.to_string(),
+                handler = job.handler.as_str(),
+                "the requested handler is not registered"
+            );
+
             self.release_fail(
                 job.id,
                 true,
@@ -368,7 +408,6 @@ impl Worker {
             return Ok(());
         };
 
-        let job_id = job.id;
         let pool = self.global.database.clone();
         let heartbeat_interval = self.heartbeat_interval;
         let heartbeat = tokio::spawn(async move {

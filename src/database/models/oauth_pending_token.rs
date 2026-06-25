@@ -19,6 +19,8 @@ pub struct OauthPendingToken {
     pub code_challenge: String,
     pub state: Option<String>,
     pub nonce: Option<String>, // openid id token
+    #[builder(default = false)]
+    pub is_openid: bool, // openid id token
     #[builder(default = chrono::Utc::now() + chrono::Duration::minutes(15))]
     pub expires_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
@@ -36,9 +38,10 @@ impl OauthPendingToken {
                 code_challenge,
                 state,
                 nonce,
+                is_openid,
                 expires_at
             )
-            values ($1, $2, $3, $4, $5, $6, $7, $8)
+            values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             ",
             self.code,
             self.user_id as UserId,
@@ -47,6 +50,7 @@ impl OauthPendingToken {
             self.code_challenge,
             self.state,
             self.nonce,
+            self.is_openid,
             self.expires_at
         )
         .execute(&mut **transaction)
@@ -86,6 +90,7 @@ impl OauthPendingToken {
                     code_challenge,
                     state,
                     nonce,
+                    is_openid,
                     expires_at,
                     created_at
             ",

@@ -45,3 +45,9 @@ digits = 6
 rp_id = "localhost"
 rp_display_name = "MeowAuth"
 timeout_seconds = 300
+
+[oauth]
+oidc_id_token_expire_seconds = 3600
+jwk_active_seconds = 5184000
+jwk_expired_after_seconds = 7776000
+jwk_cycle_after_seconds = 43200

@@ -91,6 +91,8 @@ hmac = "0.13.0"
 validator = { version = "0.20.0", features = ["derive"] }
 email_address = "0.2.9"
 shadow-rs = { version = "2.0.0", default-features = false }
+compact_jwt = "0.5.6"
+arc-swap = "1.9.1"
 
 [build-dependencies]
 shadow-rs = "2.0.0"
