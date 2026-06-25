@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into oauth_pending_tokens (\n                code,\n                user_id,\n                client_id,\n                scopes,\n                code_challenge,\n                state,\n                nonce,\n                is_openid,\n                expires_at\n            )\n            values ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Int8",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "507d24ffa82171e9d9922e705627800c17b5f4257cf4ee73249ee51a7ad0db9e"
+}

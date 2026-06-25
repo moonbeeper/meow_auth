@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with pending as (\n              select id, created_at\n              from queued_jobs\n              where\n                state = $1\n                and success_at is null\n                and retry_count < retry_max_count\n                AND expires_at > now()\n                AND available_at <= now()\n              order by created_at\n              for update skip locked\n              limit $4\n            ),\n            stale_inprogress as (\n              select id, updated_at\n              from queued_jobs\n              where\n                state = $2\n                and updated_at < now() - make_interval(secs => $3)\n                and success_at is null\n                and retry_count < retry_max_count\n                AND expires_at > now()\n                AND available_at <= now()\n              order by updated_at\n              for update skip locked\n              limit GREATEST(0, $4 - (select count(*) from pending))\n            ),\n            picked as (\n              select id FROM pending\n              UNION ALL\n              select id FROM stale_inprogress\n            )\n            update queued_jobs job\n            set state = $2, updated_at = now()\n            from picked\n            where job.id = picked.id\n            returning job.id, job.handler, job.input",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "queued_jobs",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "handler",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "queued_jobs",
+            "name": "handler"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "input",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "queued_jobs",
+            "name": "input"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Float8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "76eba2f8953e348493fd59bbd1eb7a06a29bdb91c90465bf92104ce1b3a57209"
+}

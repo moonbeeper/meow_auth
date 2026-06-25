@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from queued_jobs where handler = $1 and state in ('pending', 'inprogress')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c319225e2947c2f53e2a6e0b301ea8731b80aad83b3c6051b1dfac46f0d9b9dc"
+}

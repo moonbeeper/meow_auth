@@ -1,0 +1,110 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n                id,\n                secret,\n                nonce,\n                retired,\n                retired_at,\n                max_public_age_at,\n                updated_at,\n                created_at\n             from jwks_keys where retired and max_public_age_at >= now() order by created_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "jwks_keys",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "secret",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "jwks_keys",
+            "name": "secret"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "nonce",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "jwks_keys",
+            "name": "nonce"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "retired",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "jwks_keys",
+            "name": "retired"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "retired_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "jwks_keys",
+            "name": "retired_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "max_public_age_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "jwks_keys",
+            "name": "max_public_age_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "jwks_keys",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "jwks_keys",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9d332848fb6280c4766401fd118964c1133369982c6a186a00fec0e5dd116130"
+}

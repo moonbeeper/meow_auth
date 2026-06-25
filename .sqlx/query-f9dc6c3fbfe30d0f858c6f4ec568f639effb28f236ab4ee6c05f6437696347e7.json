@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update jwks_keys set\n                retired = true,\n                updated_at = now()\n            where not retired and id != (\n                select id from jwks_keys where not retired order by created_at desc limit 1\n            )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "f9dc6c3fbfe30d0f858c6f4ec568f639effb28f236ab4ee6c05f6437696347e7"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from jwks_keys where max_public_age_at < NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "d75d098582b0fc2e76a08fbee69a95c3e1a187cf29968352dafaea3efeab5972"
+}
