@@ -6,12 +6,6 @@ use sha2::{Digest as _, Sha256};
 
 use crate::{crypto::SecretKey, settings::Settings};
 
-#[derive(Debug)]
-pub struct SecretPair {
-    pub code: String,
-    pub hash: String,
-}
-
 static OAUTH_SECRET_KEY: OnceLock<SecretKey> = OnceLock::new();
 
 // god (me, lord space birb), please just add this to the crypto module so I dont have to copy past it two or more times.
@@ -26,6 +20,13 @@ fn get_key(settings: &Settings) -> &SecretKey {
     })
 }
 
+#[derive(Debug)]
+pub struct SecretPair {
+    pub secret: String,
+    pub hash: String,
+    pub hash_bytes: Vec<u8>,
+}
+
 // lord me, please also this
 pub fn get_secret_pair(settings: &Settings) -> SecretPair {
     let code = nanoid::nanoid!(128); // LONG ASS STRING :DDDDD = less secure :(
@@ -36,7 +37,11 @@ pub fn get_secret_pair(settings: &Settings) -> SecretPair {
     let result = mac.finalize().into_bytes();
     let hash = hex::encode(result);
 
-    SecretPair { code, hash }
+    SecretPair {
+        secret: code,
+        hash,
+        hash_bytes: result.to_vec(),
+    }
 }
 
 // LORD! and also this, me

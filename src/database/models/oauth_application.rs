@@ -67,6 +67,17 @@ impl OauthApplication {
         Ok(())
     }
 
+    pub async fn delete(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
+        sqlx::query!(
+            "delete from oauth_applications where id = $1",
+            self.id as OauthApplicationId,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn find_by_id(
         id: OauthApplicationId,
         pool: &PgPool,
@@ -108,7 +119,7 @@ impl OauthApplication {
                 scopes,
                 created_at,
                 updated_at
-             from oauth_applications where id = $1",
+             from oauth_applications where user_id = $1",
             user_id as UserId
         )
         .fetch_all(pool)

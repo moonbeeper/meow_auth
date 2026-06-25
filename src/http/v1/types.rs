@@ -4,6 +4,7 @@ use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::database::{
     self,
+    id::UlidId,
     models::{
         user::UserId,
         user_session::PIDUserSessionId,
@@ -174,6 +175,31 @@ impl From<database::models::audit_log::AuditLog> for AuditLog {
         Self {
             action: value.action,
             metadata: value.metadata,
+            created_at: value.created_at,
+        }
+    }
+}
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct OauthApplication {
+    pub id: UlidId,
+    pub name: String,
+    pub redirect_uri: String,
+    pub public: bool,
+    pub scopes: i64,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl From<database::models::oauth_application::OauthApplication> for OauthApplication {
+    fn from(value: database::models::oauth_application::OauthApplication) -> Self {
+        Self {
+            id: value.id,
+            name: value.name,
+            redirect_uri: value.redirect_uri,
+            public: value.public,
+            scopes: value.scopes,
+            updated_at: value.updated_at,
             created_at: value.created_at,
         }
     }

@@ -81,6 +81,11 @@ impl Scopes {
     pub fn sanitize(self, allowed_scopes: Scopes) -> Self {
         Self(self.0 & allowed_scopes.0)
     }
+
+    /// Returns a Scopes instance with all available scopes.
+    pub fn all() -> Self {
+        Self(FlagSet::full())
+    }
 }
 
 impl Display for Scopes {

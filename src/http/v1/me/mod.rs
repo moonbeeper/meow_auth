@@ -1,4 +1,5 @@
 mod account;
+mod oauth;
 
 use std::sync::Arc;
 
@@ -22,6 +23,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(current_user_info))
         .routes(routes!(logout))
         .nest("/account", account::routes())
+        .nest("/oauth", oauth::routes())
         .layer(RequireAuthenticationLayer::new())
 }
 

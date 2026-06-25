@@ -24,7 +24,7 @@ pub fn get_id_token_data(
         sub: OidcSubject::S(user.id.to_string()),
         aud: client_id.to_string(),
         exp: expires.timestamp(),
-        nbf: Some(expires.timestamp()),
+        nbf: Some(now.timestamp()),
         iat: now.timestamp(),
         nonce,
         s_claims: Default::default(),

@@ -10,6 +10,7 @@ mod me;
 pub mod oauth2;
 pub mod types;
 
+// TODO: when returning a list of something, RETURN IT INSIDE A (common) struct called "data" or something like that.
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .nest("/auth", auth::routes())

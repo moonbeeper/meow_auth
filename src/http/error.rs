@@ -93,6 +93,9 @@ pub enum ApiErrorCodes {
     FlowNotFound,
     #[error("you cannot change your login so soon after the last change")]
     LoginChangeTooSoon,
+    /// ->>
+    #[error("the requested oauth application was not found")]
+    OauthApplicationNotFound,
 }
 
 // wtf
@@ -157,6 +160,7 @@ impl ApiErrorCodes {
             ApiErrorCodes::AlreadyVerified => StatusCode::BAD_REQUEST,
             ApiErrorCodes::FlowNotFound => StatusCode::NOT_FOUND,
             ApiErrorCodes::LoginChangeTooSoon => StatusCode::FORBIDDEN,
+            ApiErrorCodes::OauthApplicationNotFound => StatusCode::NOT_FOUND,
         }
     }
 }

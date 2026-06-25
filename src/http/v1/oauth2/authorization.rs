@@ -297,6 +297,7 @@ pub async fn finish_authorization(
         .scopes(requested_scopes.bits())
         .state(pending_authorization.state.clone())
         .user_id(auth.user_id())
+        .is_openid(pending_authorization.is_openid)
         .build();
 
     let new_authorization = OauthAuthorization::builder()

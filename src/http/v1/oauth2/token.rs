@@ -109,14 +109,14 @@ pub async fn token(
         ));
     }
 
-    // // even this can't use 'AccessDenied'.. and it would look reallly great here..
-    // if !verify_secret(&request.client_secret, &client.secret, &global.settings) {
-    //     return Err(OauthResponse::new().error(
-    //         OauthErrorCodes::InvalidClient,
-    //         Some("client_secret is invalid"),
-    //         None,
-    //     ));
-    // }
+    // even this can't use 'AccessDenied'.. and it would look reallly great here..
+    if !verify_secret(&request.client_secret, &client.secret, &global.settings) {
+        return Err(OauthResponse::new().error(
+            OauthErrorCodes::InvalidClient,
+            Some("client_secret is invalid"),
+            None,
+        ));
+    }
 
     let secret_pain = get_secret_pair(&global.settings);
 
@@ -161,7 +161,7 @@ pub async fn token(
     }
 
     Ok(Json(TokenResponse {
-        access_token: secret_pain.code,
+        access_token: secret_pain.secret,
         token_type: TokenType::Bearer,
         expires_in: chrono::Duration::MAX.num_seconds(), // no expiry :)
         scope: scopes.to_string(),
