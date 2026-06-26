@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                id,\n                user_id,\n                redirect_uri,\n                name,\n                secret,\n                public,\n                scopes,\n                created_at,\n                updated_at\n             from oauth_applications where id = $1",
+  "query": "select\n                id,\n                user_id,\n                redirect_uri,\n                name,\n                secret,\n                public,\n                scopes,\n                created_at,\n                updated_at\n             from oauth_applications where user_id = $1 and ($2::uuid is null or id::uuid > $2) order by created_at asc limit 20+1",
   "describe": {
     "columns": [
       {
@@ -105,6 +105,7 @@
     ],
     "parameters": {
       "Left": [
+        "Uuid",
         "Uuid"
       ]
     },
@@ -120,5 +121,5 @@
       false
     ]
   },
-  "hash": "9f76c521b9d2fb95fe14cbbf3ec20ba8c7f714687bd4793b88892637b64268dd"
+  "hash": "e04297df7f19c6f38a6c306155fef0fbf1445b67e2c665a673ba577ae7698a4f"
 }
