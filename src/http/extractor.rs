@@ -10,6 +10,8 @@ use validator::ValidateArgs;
 
 use crate::http::{error::ApiErrorCodes, validator::HasValidateArgs};
 
+// TODO: add Query and Path extractors wrappers too.
+
 /// !!! A wrapper around [axum::Json] to provide our own error messages
 ///
 /// JSON Extractor / Response.

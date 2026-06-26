@@ -1,7 +1,12 @@
 use sqlx::{PgPool, PgTransaction};
 use typed_builder::TypedBuilder;
 
-use crate::database::{error::DatabaseError, id::UlidId, models::user::UserId};
+use crate::database::{
+    error::DatabaseError,
+    id::UlidId,
+    models::user::UserId,
+    pagination::{PaginatedId, PaginationResult},
+};
 
 pub type UserSessionId = UlidId;
 pub type PIDUserSessionId = UlidId;
@@ -172,6 +177,39 @@ impl UserSession {
         Ok(data)
     }
 
+    pub async fn find_many_by_user_id_paginated(
+        user_id: UserId,
+        from: Option<PIDUserSessionId>,
+        want_total: bool,
+        pool: &PgPool,
+    ) -> Result<PaginationResult<Self>, DatabaseError> {
+        let data = sqlx::query_as!(
+            Self,
+            "select
+                id,
+                user_id,
+                pid,
+                active_expires_at,
+                sudo_expires_at,
+                expires_at,
+                created_at,
+                updated_at
+             from user_sessions where user_id = $1 and ($2::uuid is null or id::uuid > $2) order by created_at asc limit 20+1",
+            user_id as UserId,
+            from as Option<PIDUserSessionId>
+        )
+        .fetch_all(pool)
+        .await?;
+
+        let total_rows = if want_total {
+            Self::count_by_user_id(user_id, pool).await?
+        } else {
+            None
+        };
+
+        Ok(PaginationResult::new(data, total_rows))
+    }
+
     pub async fn find_by_user_id(id: UserId, pool: &PgPool) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
@@ -221,5 +259,25 @@ impl UserSession {
         self.sudo_expires_at
             .map(|v| v > chrono::Utc::now())
             .unwrap_or(false)
+    }
+
+    pub async fn count_by_user_id(
+        user_id: UserId,
+        pool: &PgPool,
+    ) -> Result<Option<i64>, DatabaseError> {
+        let data = sqlx::query_scalar!(
+            "select count(*) from user_sessions where user_id = $1",
+            user_id as UserId,
+        )
+        .fetch_one(pool)
+        .await?;
+
+        Ok(data)
+    }
+}
+
+impl PaginatedId for UserSession {
+    fn paginated_id(&self) -> UlidId {
+        self.id
     }
 }

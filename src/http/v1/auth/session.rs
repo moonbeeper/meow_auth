@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     Extension,
-    extract::{Path, State},
+    extract::{Path, Query, State},
 };
 use utoipa_axum::{router::OpenApiRouter, routes};
 
@@ -14,7 +14,7 @@ use crate::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
         middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
-        v1::types::{AlrightResponse, Session},
+        v1::types::{AlrightResponse, ListDataRequest, ListDataResponse, Session},
     },
 };
 
@@ -62,13 +62,26 @@ pub async fn current_session_info(
 pub async fn list_sessions(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
-) -> Result<Json<Vec<Session>>, ApiErrorCodes> {
-    let Ok(sessions) = DbUserSession::find_many_by_user_id(auth.user_id(), &global.database).await
+    Query(request): Query<ListDataRequest>,
+) -> Result<Json<ListDataResponse<Session>>, ApiErrorCodes> {
+    let Ok(paginated) = DbUserSession::find_many_by_user_id_paginated(
+        auth.user_id(),
+        request.from,
+        request.want_total.unwrap_or_default(),
+        &global.database,
+    )
+    .await
     else {
         return Err(ApiErrorCodes::InternalServerError);
     };
-    let sessions: Vec<_> = sessions.into_iter().map(Session::from).collect();
-    Ok(Json(sessions))
+
+    let data: Vec<_> = paginated.items.into_iter().map(Session::from).collect();
+
+    Ok(Json(ListDataResponse {
+        data,
+        total: paginated.total_rows,
+        next: paginated.next_id,
+    }))
 }
 
 #[derive(Debug, serde::Deserialize)]

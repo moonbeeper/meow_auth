@@ -17,6 +17,8 @@ pub mod scopes;
 pub mod secrets;
 pub mod types;
 
+// TODO: add Query, Form extractors to return Oauth errors
+
 pub fn valid_redirect_uri(uri: &Url, client_uri: &Url) -> bool {
     if uri.scheme() != client_uri.scheme() {
         return false;
