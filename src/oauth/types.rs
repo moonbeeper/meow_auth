@@ -1,3 +1,4 @@
+use chrono::Utc;
 use compact_jwt::{Jwk, JwsEs256Signer, OidcToken};
 use data_encoding::BASE64URL_NOPAD;
 
@@ -219,4 +220,15 @@ impl From<OidcToken> for OpenIdUserInfo {
             email_verified: value.s_claims.email_verified,
         }
     }
+}
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub struct ConsentMetadata {
+    pub id: UlidId,
+    pub name: String,
+    pub scopes: i64,
+    pub old_scopes: i64,
+    pub redirect_url: String,
+    pub created_at: chrono::DateTime<Utc>,
 }

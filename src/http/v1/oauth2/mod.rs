@@ -1,4 +1,5 @@
 mod authorization;
+mod consent;
 pub mod jwks;
 mod token;
 mod user_info;
@@ -16,4 +17,5 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .merge(token::routes())
         .merge(jwks::routes())
         .merge(user_info::routes())
+        .merge(consent::routes())
 }

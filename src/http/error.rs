@@ -96,6 +96,8 @@ pub enum ApiErrorCodes {
     /// ->>
     #[error("the requested oauth application was not found")]
     OauthApplicationNotFound,
+    #[error("the requested oauth metadata was not found")]
+    OauthMetadataNotFound,
 }
 
 // wtf
@@ -161,6 +163,7 @@ impl ApiErrorCodes {
             ApiErrorCodes::FlowNotFound => StatusCode::NOT_FOUND,
             ApiErrorCodes::LoginChangeTooSoon => StatusCode::FORBIDDEN,
             ApiErrorCodes::OauthApplicationNotFound => StatusCode::NOT_FOUND,
+            ApiErrorCodes::OauthMetadataNotFound => StatusCode::NOT_FOUND,
         }
     }
 }

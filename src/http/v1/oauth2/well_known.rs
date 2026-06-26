@@ -20,9 +20,11 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(wellknown_openid))
 }
 
+/// Get the oauth server's metadata
 #[utoipa::path(
     get,
     path = "/.well-known/oauth-authorization-server",
+    tags = ["oauth_srv"],
     responses(
         (status = 200, description = "oauth authentication server metadata", body = OauthMetadata),
     )
@@ -68,9 +70,11 @@ pub async fn wellknown_oauth(State(global): State<Arc<GlobalState>>) -> Json<Oau
     })
 }
 
+/// Get the OpenId server's metadata
 #[utoipa::path(
     get,
     path = "/.well-known/openid-configuration",
+    tags = ["oauth_srv"],
     responses(
         (status = 200, description = "openid authentication server metadata", body = OauthMetadata),
     )

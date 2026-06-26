@@ -1,4 +1,7 @@
+use std::str::FromStr;
+
 use axum::response::IntoResponse;
+use serde::Deserialize;
 use webauthn_rs::prelude::RegisterPublicKeyCredential;
 use webauthn_rs_proto::PublicKeyCredential;
 
@@ -203,4 +206,44 @@ impl From<database::models::oauth_application::OauthApplication> for OauthApplic
             created_at: value.created_at,
         }
     }
+}
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct ListDataResponse<T> {
+    pub data: Vec<T>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub total: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    // fixes "[Circular]" in openapi schema
+    #[schema(value_type = Option<String>, format = Ulid)]
+    pub next: Option<UlidId>,
+}
+
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, utoipa::IntoParams)]
+pub struct ListDataRequest {
+    #[serde(
+        default,
+        deserialize_with = "please_shut_up_and_let_me_use_an_empty_string_as_none"
+    )]
+    pub from: Option<UlidId>,
+    #[serde(
+        default,
+        deserialize_with = "please_shut_up_and_let_me_use_an_empty_string_as_none"
+    )]
+    pub want_total: Option<bool>,
+}
+
+fn please_shut_up_and_let_me_use_an_empty_string_as_none<'a, T, A>(
+    s: T,
+) -> Result<Option<A>, T::Error>
+where
+    T: serde::Deserializer<'a>,
+    A: FromStr,
+    A::Err: std::fmt::Display,
+{
+    let s = String::deserialize(s)?;
+    if s.is_empty() {
+        return Ok(None);
+    }
+    s.parse::<A>().map(Some).map_err(serde::de::Error::custom)
 }

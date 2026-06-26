@@ -27,10 +27,11 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new().routes(routes!(token))
 }
 
-#[axum::debug_handler]
+/// Exchange an authorization code for an access token
 #[utoipa::path(
     post,
     path = "/token",
+    tags = ["oauth_srv"],
     responses(
         (status = 200, description = "oauth token data", body = TokenResponse),
         (status = 500, description = "internal server error", body = ApiError)

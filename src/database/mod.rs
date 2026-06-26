@@ -1,6 +1,7 @@
 pub mod error;
 pub mod id;
 pub mod models;
+pub mod pagination;
 
 use sqlx::{PgPool, postgres::PgPoolOptions};
 

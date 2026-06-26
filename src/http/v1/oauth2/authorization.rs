@@ -40,10 +40,15 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(authorize))
 }
 
-#[axum::debug_handler]
+/// Authorize an oauth application.
+///
+/// This endpoint is used to authorize an oauth application.
+/// It will redirect to the consent screen if the current user has not authorized this application
+/// else it will redirect to the application's redirect_uri with typical oauth stuff.
 #[utoipa::path(
     get,
     path = "/authorize",
+    tags = ["oauth_srv"],
     responses(
         (status = 303, description = "redirect to consent screen or redirect_uri with code"),
         (status = 500, description = "internal server error", body = ApiError)
@@ -248,9 +253,11 @@ pub async fn authorize(
     OauthResponse::new().redirect(going_to.to_string())
 }
 
+/// Give consent to a pending oauth authorization.
 #[utoipa::path(
     post,
-    path = "/authorize",
+    path = "/consent",
+    tags = ["oauth_srv"],
     responses(
         (status = 200, description = "current session info"),
         (status = 500, description = "internal server error", body = ApiError)

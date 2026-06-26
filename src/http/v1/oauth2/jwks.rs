@@ -12,9 +12,11 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new().routes(routes!(oauth_discovery_jwks))
 }
 
+/// Get the oauth server's public keys (JWKs)
 #[utoipa::path(
     get,
     path = "/discovery/keys",
+    tags = ["oauth_srv"],
     responses(
         (status = 200, description = "oauth authentication server jwks", body = JwkKeySet),
     )

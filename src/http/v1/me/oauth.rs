@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     Extension,
-    extract::{Path, State},
+    extract::{Path, Query, State},
 };
 use utoipa_axum::{router::OpenApiRouter, routes};
 
@@ -13,7 +13,7 @@ use crate::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
         middleware::auth_manager::AuthContext,
-        v1::types::{AlrightResponse, OauthApplication},
+        v1::types::{AlrightResponse, ListDataRequest, ListDataResponse, OauthApplication},
         validator::Valid,
     },
     oauth::{scopes::Scopes, secrets::get_secret_pair},
@@ -32,24 +32,41 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 /// List your oauth applications
 #[utoipa::path(
     get,
+    params(ListDataRequest),
     path = "/list",
     tags = ["oauth"],
     responses(
-        (status = 200, description = "list of oauth applications", body = Vec<OauthApplication>),
+        (status = 200, description = "list of oauth applications", body = ListDataResponse<OauthApplication>),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
 pub async fn list_applications(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
-) -> Result<Json<Vec<OauthApplication>>, ApiErrorCodes> {
-    let Ok(user) = DbOauthApplication::find_many_by_user_id(auth.user_id(), &global.database).await
+    Query(request): Query<ListDataRequest>,
+) -> Result<Json<ListDataResponse<OauthApplication>>, ApiErrorCodes> {
+    let Ok(paginated) = DbOauthApplication::find_many_by_user_id_paginated(
+        auth.user_id(),
+        request.from,
+        request.want_total.unwrap_or_default(),
+        &global.database,
+    )
+    .await
     else {
         return Err(ApiErrorCodes::InternalServerError);
     };
 
-    let data: Vec<_> = user.into_iter().map(OauthApplication::from).collect();
-    Ok(Json(data))
+    let data: Vec<_> = paginated
+        .items
+        .into_iter()
+        .map(OauthApplication::from)
+        .collect();
+
+    Ok(Json(ListDataResponse {
+        data,
+        total: paginated.total_rows,
+        next: paginated.next_id,
+    }))
 }
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
@@ -67,7 +84,7 @@ pub struct OauthApplicationData {
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
-pub struct OauthApplicationCreateResponse {
+pub struct OauthApplicationDataResponse {
     pub id: UlidId,
     pub secret: String,
 }
@@ -78,7 +95,7 @@ pub struct OauthApplicationCreateResponse {
     path = "/create",
     tags = ["oauth"],
     responses(
-        (status = 200, description = "successfully created oauth application", body = OauthApplicationCreateResponse),
+        (status = 200, description = "successfully created oauth application", body = OauthApplicationDataResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -86,7 +103,7 @@ pub async fn create_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Valid(Json(request)): Valid<Json<OauthApplicationData>>,
-) -> Result<Json<OauthApplicationCreateResponse>, ApiErrorCodes> {
+) -> Result<Json<OauthApplicationDataResponse>, ApiErrorCodes> {
     let scopes = Scopes::from_bits(request.scopes).sanitize(Scopes::all());
     let secret_pair = get_secret_pair(&global.settings);
     let app = DbOauthApplication::builder()
@@ -103,7 +120,7 @@ pub async fn create_application(
     // audit::log(auth.user_id(), AuditAction::SessionDeleted, None, &mut tx).await?;
     tx.commit().await?;
 
-    Ok(Json(OauthApplicationCreateResponse {
+    Ok(Json(OauthApplicationDataResponse {
         id: app.id,
         secret: secret_pair.secret,
     }))
@@ -214,7 +231,7 @@ pub async fn delete_application(
     path = "/{id}/rotate_keys",
     tags = ["oauth"],
     responses(
-        (status = 200, description = "successfully rotated the oauth application secret", body = OauthApplicationCreateResponse),
+        (status = 200, description = "successfully rotated the oauth application secret", body = OauthApplicationDataResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -222,7 +239,7 @@ pub async fn rotate_secret_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Path(request): Path<OauthApplicationIdParam>,
-) -> Result<Json<OauthApplicationCreateResponse>, ApiErrorCodes> {
+) -> Result<Json<OauthApplicationDataResponse>, ApiErrorCodes> {
     let Ok(Some(mut app)) = DbOauthApplication::find_by_id(request.id, &global.database).await
     else {
         return Err(ApiErrorCodes::OauthApplicationNotFound);
@@ -239,7 +256,7 @@ pub async fn rotate_secret_application(
     app.update(&mut tx).await?;
     tx.commit().await?;
 
-    Ok(Json(OauthApplicationCreateResponse {
+    Ok(Json(OauthApplicationDataResponse {
         id: app.id,
         secret: keys.secret,
     }))

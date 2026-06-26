@@ -3,7 +3,7 @@ use std::sync::OnceLock;
 use tower_cookies::{Cookies, cookie};
 
 use crate::{
-    auth::{create_cookie, get_cookie},
+    auth::{create_cookie, delete_cookie, get_cookie},
     database::models::oauth_pending_authorization::OauthPendingAuthorizationId,
     settings::Settings,
 };
@@ -59,4 +59,12 @@ pub fn get_oauth_cookie(
             None
         }
     }
+}
+
+pub fn delete_oauth_cookie(cookies: &Cookies, settings: &Settings) {
+    delete_cookie(
+        &format!("{}_pending_oauth", settings.session.cookie_name),
+        cookies,
+        settings,
+    );
 }
