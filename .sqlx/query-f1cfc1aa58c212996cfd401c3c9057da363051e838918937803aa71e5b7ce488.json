@@ -1,0 +1,101 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n                id,\n                user_id,\n                client_id,\n                scopes,\n                last_used_at,\n                created_at,\n                updated_at\n             from oauth_authorizations where user_id = $1 and ($2::uuid is null or id::uuid > $2) order by created_at asc limit 20+1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth_authorizations",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth_authorizations",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "client_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "oauth_authorizations",
+            "name": "client_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "scopes",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "oauth_authorizations",
+            "name": "scopes"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "last_used_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth_authorizations",
+            "name": "last_used_at"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth_authorizations",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "oauth_authorizations",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "f1cfc1aa58c212996cfd401c3c9057da363051e838918937803aa71e5b7ce488"
+}
