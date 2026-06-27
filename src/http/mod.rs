@@ -31,8 +31,8 @@ use crate::{
         (name = "passkeys", description = "passkey authentication management"),
         (name = "sessions", description = "session management"),
         (name = "application", description = "application health and status"),
+        (name = "oauth", description = "oauth management operations"),
         (name = "oauth_srv", description = "oauth server operations"),
-        (name = "oauth", description = "oauth management operations")
     )
 )]
 struct ApiDocs;

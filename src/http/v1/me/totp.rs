@@ -14,7 +14,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
+        middleware::auth_manager::AuthContext,
         v1::types::AlrightResponse,
     },
 };
@@ -25,7 +25,6 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(exchange_totp_creation))
         .routes(routes!(disable_totp))
         .routes(routes!(see_recovery_codes))
-        .layer(RequireAuthenticationLayer::new())
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]

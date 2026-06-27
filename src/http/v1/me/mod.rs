@@ -1,5 +1,8 @@
 mod account;
 mod oauth;
+mod session;
+mod totp;
+mod webauthn;
 
 use std::sync::Arc;
 
@@ -24,6 +27,9 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(logout))
         .nest("/account", account::routes())
         .nest("/oauth", oauth::routes())
+        .nest("/session", session::routes())
+        .nest("/totp", totp::routes())
+        .nest("/webauthn", webauthn::routes())
         .layer(RequireAuthenticationLayer::new())
 }
 

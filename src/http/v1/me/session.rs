@@ -13,7 +13,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
+        middleware::auth_manager::AuthContext,
         v1::types::{AlrightResponse, ListDataRequest, ListDataResponse, Session},
     },
 };
@@ -24,7 +24,6 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(list_sessions))
         .routes(routes!(delete_session))
         .routes(routes!(delete_all_sessions))
-        .layer(RequireAuthenticationLayer::new())
 }
 
 /// Current session info

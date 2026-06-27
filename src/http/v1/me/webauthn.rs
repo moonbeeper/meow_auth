@@ -24,7 +24,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
+        middleware::auth_manager::AuthContext,
         v1::types::{AlrightResponse, Passkey, RegisterPasskeyRequest},
     },
 };
@@ -35,7 +35,6 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(register_passkey_exchange))
         .routes(routes!(list_passkeys))
         .routes(routes!(delete_passkey))
-        .layer(RequireAuthenticationLayer::new())
 }
 
 /// Get the passkey creation options
