@@ -148,11 +148,11 @@ pub async fn get_info_application(
     Path(request): Path<OauthApplicationIdParam>,
 ) -> Result<Json<OauthApplication>, ApiErrorCodes> {
     let Ok(Some(app)) = DbOauthApplication::find_by_id(request.id, &global.database).await else {
-        return Err(ApiErrorCodes::OauthApplicationNotFound);
+        return Err(ApiErrorCodes::DataNotFound("oauth application"));
     };
 
     if app.user_id != auth.user_id() {
-        return Err(ApiErrorCodes::OauthApplicationNotFound);
+        return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 
     Ok(Json(app.into()))
@@ -177,11 +177,11 @@ pub async fn edit_application(
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(mut app)) = DbOauthApplication::find_by_id(request.id, &global.database).await
     else {
-        return Err(ApiErrorCodes::OauthApplicationNotFound);
+        return Err(ApiErrorCodes::DataNotFound("oauth application"));
     };
 
     if app.user_id != auth.user_id() {
-        return Err(ApiErrorCodes::OauthApplicationNotFound);
+        return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 
     let scopes = Scopes::from_bits(data.scopes).sanitize(Scopes::all());
@@ -214,11 +214,11 @@ pub async fn delete_application(
     Path(request): Path<OauthApplicationIdParam>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(app)) = DbOauthApplication::find_by_id(request.id, &global.database).await else {
-        return Err(ApiErrorCodes::OauthApplicationNotFound);
+        return Err(ApiErrorCodes::DataNotFound("oauth application"));
     };
 
     if app.user_id != auth.user_id() {
-        return Err(ApiErrorCodes::OauthApplicationNotFound);
+        return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 
     let mut tx = global.database.begin().await?;
@@ -246,11 +246,11 @@ pub async fn rotate_secret_application(
 ) -> Result<Json<OauthApplicationDataResponse>, ApiErrorCodes> {
     let Ok(Some(mut app)) = DbOauthApplication::find_by_id(request.id, &global.database).await
     else {
-        return Err(ApiErrorCodes::OauthApplicationNotFound);
+        return Err(ApiErrorCodes::DataNotFound("oauth application"));
     };
 
     if app.user_id != auth.user_id() {
-        return Err(ApiErrorCodes::OauthApplicationNotFound);
+        return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 
     let keys = get_secret_pair(&global.settings);

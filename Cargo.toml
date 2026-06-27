@@ -12,7 +12,6 @@ strip = true
 [dependencies]
 openssl = { version = "0.10", features = ["vendored"] }
 anyhow = "1.0.102"
-argon2 = { version = "0.6.0-rc.7", features = ["rand_core"] }
 axum = { version = "0.8.9", features = ["macros"] }
 axum-valid = { version = "0.24.0", default-features = false, features = [
     "validator",

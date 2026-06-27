@@ -76,7 +76,7 @@ pub async fn wellknown_oauth(State(global): State<Arc<GlobalState>>) -> Json<Oau
     path = "/.well-known/openid-configuration",
     tags = ["oauth_srv"],
     responses(
-        (status = 200, description = "openid authentication server metadata", body = OauthMetadata),
+        (status = 200, description = "openid authentication server metadata", body = OpenIdMetadata),
     )
 )]
 pub async fn wellknown_openid(State(global): State<Arc<GlobalState>>) -> Json<OpenIdMetadata> {

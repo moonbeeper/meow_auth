@@ -17,7 +17,7 @@ use crate::{
         cookies::{delete_oauth_cookie, get_oauth_cookie},
         response::OauthResponse,
         scopes::Scopes,
-        types::{ConsentMetadata, TokenResponse},
+        types::ConsentMetadata,
     },
 };
 
@@ -31,7 +31,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     path = "/consent",
     tags = ["oauth_srv"],
     responses(
-        (status = 200, description = "oauth token data", body = TokenResponse),
+        (status = 200, description = "current oauth pending authorization consent info", body = ConsentMetadata),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

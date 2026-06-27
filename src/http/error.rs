@@ -19,8 +19,6 @@ pub enum ApiErrorCodes {
     AlreadyAuthenticated,
     #[error("you are unauthenticated")]
     Unauthenticated,
-    #[error("an error occurred while hashing a secret")]
-    HashingError(#[from] argon2::password_hash::Error),
     #[error("meow *blep*")]
     Meow,
     #[error("an error occurred while interacting with the database")]
@@ -29,8 +27,6 @@ pub enum ApiErrorCodes {
     RouteDatabase(#[from] sqlx::Error),
     #[error("an unknown error occurred")]
     InternalServerError,
-    #[error("the requested session was not found")]
-    SessionNotFound,
     #[error("totp is already enabled for this account")]
     TotpAlreadyEnabled,
     #[error("the totp flow was not started before exchanging")]
@@ -78,12 +74,6 @@ pub enum ApiErrorCodes {
     #[error("Failed to buffer the request body")]
     FailedToBufferContent,
     /// ->
-    #[error("Something went really wrong back there")]
-    NotGood,
-    /// ->
-    #[error("the requested passkey was not found")]
-    WebauthnNotFound,
-    /// ->
     #[error("{0}")]
     ValidationError(String),
     /// ->
@@ -93,16 +83,10 @@ pub enum ApiErrorCodes {
     FlowNotFound,
     #[error("you cannot change your login so soon after the last change")]
     LoginChangeTooSoon,
-    /// ->>
-    #[error("the requested oauth application was not found")]
-    OauthApplicationNotFound,
-    #[error("the requested oauth metadata was not found")]
-    OauthMetadataNotFound,
-    // GOD PLEASE HECKING FILTER OUT THESE HEEECKIGN REPEATED ERRORS LIKE MAKE A GENERIC ONE
-    // CMON LORD SPACE BRIB ME  PLEEASE DO IT NOW I DONT WANT TO CONTINUE MAKING MORE OF THESE
-    // ITS JSUT TOO MUCH WORK AND COPY PASTING AND GOD DUDE
-    #[error("the requested oauth authorization was not found")]
-    OauthAuthorizationNotFound,
+    // lord moon has ripped a feather from my wings to make your desires true.
+    // Merged some "*NotFound" errors into this one.
+    #[error("the requested {0} was not found")]
+    DataNotFound(&'static str),
 }
 
 // wtf
@@ -132,13 +116,11 @@ impl ApiErrorCodes {
         match self {
             ApiErrorCodes::OtpExpired => StatusCode::UNAUTHORIZED,
             ApiErrorCodes::AlreadyAuthenticated => StatusCode::BAD_REQUEST,
-            ApiErrorCodes::HashingError(..) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiErrorCodes::Meow => StatusCode::IM_A_TEAPOT,
             ApiErrorCodes::Database(..) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiErrorCodes::RouteDatabase(..) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiErrorCodes::InternalServerError => StatusCode::INTERNAL_SERVER_ERROR,
             ApiErrorCodes::Unauthenticated => StatusCode::UNAUTHORIZED,
-            ApiErrorCodes::SessionNotFound => StatusCode::NOT_FOUND,
             ApiErrorCodes::InvalidCode => StatusCode::UNAUTHORIZED,
             ApiErrorCodes::TotpAlreadyEnabled => StatusCode::BAD_REQUEST,
             ApiErrorCodes::TotpFlowNotFound => StatusCode::NOT_FOUND,
@@ -161,15 +143,11 @@ impl ApiErrorCodes {
             ApiErrorCodes::JsonSyntaxError(..) => StatusCode::BAD_REQUEST,
             ApiErrorCodes::MissingJsonContentType => StatusCode::UNSUPPORTED_MEDIA_TYPE,
             ApiErrorCodes::FailedToBufferContent => StatusCode::INTERNAL_SERVER_ERROR,
-            ApiErrorCodes::NotGood => StatusCode::INTERNAL_SERVER_ERROR,
-            ApiErrorCodes::WebauthnNotFound => StatusCode::NOT_FOUND,
             ApiErrorCodes::ValidationError(..) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiErrorCodes::AlreadyVerified => StatusCode::BAD_REQUEST,
             ApiErrorCodes::FlowNotFound => StatusCode::NOT_FOUND,
             ApiErrorCodes::LoginChangeTooSoon => StatusCode::FORBIDDEN,
-            ApiErrorCodes::OauthApplicationNotFound => StatusCode::NOT_FOUND,
-            ApiErrorCodes::OauthMetadataNotFound => StatusCode::NOT_FOUND,
-            ApiErrorCodes::OauthAuthorizationNotFound => StatusCode::NOT_FOUND,
+            ApiErrorCodes::DataNotFound(_) => StatusCode::NOT_FOUND,
         }
     }
 }

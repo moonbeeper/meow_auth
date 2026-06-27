@@ -2,6 +2,7 @@ use sqlx::PgTransaction;
 use tower_cookies::Cookies;
 
 use crate::{
+    audit::{self, AuditAction},
     database::models::{
         oauth_application::OauthApplication, oauth_authorization::OauthAuthorization,
         oauth_pending_authorization::OauthPendingAuthorization,
@@ -69,6 +70,13 @@ pub async fn action_past_authorized(
         authorization.update(tx).await?;
         pending_auth.delete_all(tx).await?;
         pending_auth.insert(tx).await?;
+        audit::log(
+            auth_context.user_id(),
+            AuditAction::OauthAuthorizationIntiated,
+            None,
+            tx,
+        )
+        .await?;
 
         create_oauth_cookie(pending_auth.id, cookies, settings);
 
@@ -129,6 +137,13 @@ pub async fn action_new_authorization(
 
     pending_auth.delete_all(tx).await?;
     pending_auth.insert(tx).await?;
+    audit::log(
+        auth_context.user_id(),
+        AuditAction::OauthAuthorizationIntiated,
+        None,
+        tx,
+    )
+    .await?;
     create_oauth_cookie(pending_auth.id, cookies, settings);
 
     Ok(settings.http.frontend.join("/oauth/consent")?)

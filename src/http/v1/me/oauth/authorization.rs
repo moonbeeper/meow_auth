@@ -119,11 +119,11 @@ pub async fn delete_oauth_authorization(
     Path(request): Path<OauthAuthorizationIdParam>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(app)) = DbOauthAuthorization::find_by_id(request.id, &global.database).await else {
-        return Err(ApiErrorCodes::OauthAuthorizationNotFound);
+        return Err(ApiErrorCodes::DataNotFound("oauth authorization"));
     };
 
     if app.user_id != auth.user_id() {
-        return Err(ApiErrorCodes::OauthAuthorizationNotFound);
+        return Err(ApiErrorCodes::DataNotFound("oauth authorization"));
     }
 
     let mut tx = global.database.begin().await?;

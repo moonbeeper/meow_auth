@@ -116,7 +116,7 @@ pub async fn delete_session(
         return Err(ApiErrorCodes::InternalServerError);
     };
     if session.user_id != auth.user_id() {
-        return Err(ApiErrorCodes::SessionNotFound);
+        return Err(ApiErrorCodes::DataNotFound("session"));
     }
 
     let mut tx = global.database.begin().await?;

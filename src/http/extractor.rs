@@ -122,7 +122,7 @@ where
                     Err(ApiErrorCodes::MissingJsonContentType)
                 }
                 JsonRejection::BytesRejection(_) => Err(ApiErrorCodes::FailedToBufferContent),
-                _ => Err(ApiErrorCodes::NotGood),
+                _ => Err(ApiErrorCodes::InternalServerError),
             },
         }
     }
@@ -149,7 +149,7 @@ where
                     Err(ApiErrorCodes::MissingJsonContentType)
                 }
                 JsonRejection::BytesRejection(_) => Err(ApiErrorCodes::FailedToBufferContent),
-                _ => Err(ApiErrorCodes::NotGood),
+                _ => Err(ApiErrorCodes::InternalServerError),
             },
         }
     }

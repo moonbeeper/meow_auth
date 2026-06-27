@@ -23,6 +23,15 @@ pub enum AuditAction {
     TotpRecoveryCodesUsed,
     TotpRecoveryCodesSeen,
     SudoEnabled, // should add metadata for what was used to enable it (like the session)
+    OauthApplicationCreated,
+    OauthApplicationUpdated,
+    OauthApplicationDeleted,
+    OauthApplictionKeysRotated,
+    OauthAuthorizationIntiated,
+    OauthAuthorizationApproved,
+    OauthAuthorizationDenied,
+    OauthAuthorizationRevoked,
+    OauthAuthorizationUpdated,
 }
 
 impl Display for AuditAction {
@@ -45,6 +54,15 @@ impl Display for AuditAction {
             AuditAction::TotpRecoveryCodesUsed => write!(f, "totp_recovery_codes_used"),
             AuditAction::TotpRecoveryCodesSeen => write!(f, "totp_recovery_codes_seen"),
             AuditAction::SudoEnabled => write!(f, "sudo_enabled"),
+            AuditAction::OauthApplicationCreated => write!(f, "oauth_application_created"),
+            AuditAction::OauthApplicationUpdated => write!(f, "oauth_application_updated"),
+            AuditAction::OauthApplicationDeleted => write!(f, "oauth_application_deleted"),
+            AuditAction::OauthApplictionKeysRotated => write!(f, "oauth_application_keys_rotated"),
+            AuditAction::OauthAuthorizationIntiated => write!(f, "oauth_authorization_initiated"),
+            AuditAction::OauthAuthorizationApproved => write!(f, "oauth_authorization_approved"),
+            AuditAction::OauthAuthorizationDenied => write!(f, "oauth_authorization_denied"),
+            AuditAction::OauthAuthorizationRevoked => write!(f, "oauth_authorization_revoked"),
+            AuditAction::OauthAuthorizationUpdated => write!(f, "oauth_authorization_updated"),
         }
     }
 }

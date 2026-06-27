@@ -234,7 +234,7 @@ pub async fn delete_passkey(
         return Err(ApiErrorCodes::InternalServerError);
     };
     if session.user_id != auth.user_id() {
-        return Err(ApiErrorCodes::WebauthnNotFound);
+        return Err(ApiErrorCodes::DataNotFound("passkey"));
     }
 
     let mut tx = global.database.begin().await?;

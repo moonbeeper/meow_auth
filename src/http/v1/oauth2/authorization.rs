@@ -9,6 +9,7 @@ use url::Url;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
+    audit::{self, AuditAction},
     database::models::{
         oauth_application::OauthApplication, oauth_authorization::OauthAuthorization,
         oauth_pending_authorization::OauthPendingAuthorization,
@@ -17,7 +18,9 @@ use crate::{
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
+        extractor::Json as MJson,
         middleware::auth_manager::AuthContext,
+        v1::types::{AlrightResponse, RouteEither},
     },
     oauth::{
         cookies::get_oauth_cookie,
@@ -259,7 +262,8 @@ pub async fn authorize(
     path = "/consent",
     tags = ["oauth_srv"],
     responses(
-        (status = 200, description = "current session info"),
+        (status = 303, description = "consent given, redirected to client's redirect url"),
+        (status = 200, description = "consent denied"),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -268,7 +272,7 @@ pub async fn finish_authorization(
     Extension(auth): Extension<AuthContext>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<AuthorizationDecisionRequest>,
-) -> Result<OauthResponse, ApiErrorCodes> {
+) -> Result<RouteEither<OauthResponse, MJson<AlrightResponse>>, ApiErrorCodes> {
     OauthResponse::set_issuer(global.settings.http.origin.clone());
     if !auth.is_authenticated() {
         return Err(ApiErrorCodes::Unauthenticated);
@@ -285,6 +289,14 @@ pub async fn finish_authorization(
 
     if !pending_authorization_checks(&pending_authorization, &auth, request.client_id) {
         return Err(ApiErrorCodes::FlowNotFound);
+    }
+
+    if !request.consent {
+        let mut tx = global.database.begin().await?;
+        pending_authorization.delete_all(&mut tx).await?;
+        tx.commit().await?;
+
+        return Ok(RouteEither::Right(MJson(AlrightResponse::default())));
     }
 
     let Ok(Some(oauth_client)) =
@@ -314,13 +326,29 @@ pub async fn finish_authorization(
         .build();
 
     let mut tx = global.database.begin().await.unwrap();
+    let mut audit_as_update = false;
     if let Some(old_auth_id) = pending_authorization.old_authorization_id {
         OauthAuthorization::delete_by_id(old_auth_id, &mut tx).await?;
+        audit_as_update = true;
     }
     pending_authorization.delete_all(&mut tx).await?;
     new_authorization.insert(&mut tx).await?;
+
     pending_token.delete_all(&mut tx).await?;
     pending_token.insert(&mut tx).await?;
+
+    audit::log(
+        auth.user_id(),
+        if audit_as_update {
+            AuditAction::OauthAuthorizationUpdated
+        } else {
+            AuditAction::OauthAuthorizationApproved
+        },
+        None,
+        &mut tx,
+    )
+    .await?;
+
     tx.commit().await?;
 
     // redirect_uri must be good to get to this point.
@@ -334,5 +362,7 @@ pub async fn finish_authorization(
         }
     }
 
-    Ok(OauthResponse::new().redirect(url.to_string()))
+    Ok(RouteEither::Left(
+        OauthResponse::new().redirect(url.to_string()),
+    ))
 }
