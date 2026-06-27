@@ -19,7 +19,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .layer(RequireOauthLayer::new())
 }
 
-/// Get the OpenId userinfo for the token's user.
+/// Get the openid userinfo for the token's user.
 ///
 /// This handler requires that the token has the `openid` scope.
 #[utoipa::path(

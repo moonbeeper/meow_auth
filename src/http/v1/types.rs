@@ -209,6 +209,18 @@ impl From<database::models::oauth_application::OauthApplication> for OauthApplic
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+pub struct OauthAuthorization {
+    pub id: UlidId,
+    pub name: String,
+    pub redirect_uri: String,
+    pub scopes: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub last_used_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct ListDataResponse<T> {
     pub data: Vec<T>,
     #[serde(skip_serializing_if = "Option::is_none")]

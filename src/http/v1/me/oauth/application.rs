@@ -138,6 +138,7 @@ pub struct OauthApplicationIdParam {
     tags = ["oauth"],
     responses(
         (status = 200, description = "info about an oauth application", body = OauthApplication),
+        (status = 404, description = "oauth application not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -164,6 +165,7 @@ pub async fn get_info_application(
     tags = ["oauth"],
     responses(
         (status = 200, description = "successfully updated the oauth application", body = AlrightResponse),
+        (status = 404, description = "oauth application not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -202,6 +204,7 @@ pub async fn edit_application(
     tags = ["oauth"],
     responses(
         (status = 200, description = "successfully deleted the oauth application"),
+        (status = 404, description = "oauth application not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -232,6 +235,7 @@ pub async fn delete_application(
     tags = ["oauth"],
     responses(
         (status = 200, description = "successfully rotated the oauth application secret", body = OauthApplicationDataResponse),
+        (status = 404, description = "oauth application not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

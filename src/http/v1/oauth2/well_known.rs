@@ -70,7 +70,7 @@ pub async fn wellknown_oauth(State(global): State<Arc<GlobalState>>) -> Json<Oau
     })
 }
 
-/// Get the OpenId server's metadata
+/// Get the openid server's metadata
 #[utoipa::path(
     get,
     path = "/.well-known/openid-configuration",

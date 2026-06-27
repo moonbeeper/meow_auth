@@ -133,6 +133,31 @@ impl OauthApplication {
         Ok(data)
     }
 
+    pub async fn find_many_by_id(
+        ids: &[OauthApplicationId],
+        pool: &PgPool,
+    ) -> Result<Vec<Self>, DatabaseError> {
+        let data = sqlx::query_as!(
+            Self,
+            "select
+                id,
+                user_id,
+                redirect_uri,
+                name,
+                secret,
+                public,
+                scopes,
+                created_at,
+                updated_at
+             from oauth_applications where id = any($1)",
+            &ids as &[OauthApplicationId]
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(data)
+    }
+
     pub async fn find_many_by_user_id_paginated(
         user_id: UserId,
         from: Option<OauthApplicationId>,

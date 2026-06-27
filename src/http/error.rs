@@ -98,6 +98,11 @@ pub enum ApiErrorCodes {
     OauthApplicationNotFound,
     #[error("the requested oauth metadata was not found")]
     OauthMetadataNotFound,
+    // GOD PLEASE HECKING FILTER OUT THESE HEEECKIGN REPEATED ERRORS LIKE MAKE A GENERIC ONE
+    // CMON LORD SPACE BRIB ME  PLEEASE DO IT NOW I DONT WANT TO CONTINUE MAKING MORE OF THESE
+    // ITS JSUT TOO MUCH WORK AND COPY PASTING AND GOD DUDE
+    #[error("the requested oauth authorization was not found")]
+    OauthAuthorizationNotFound,
 }
 
 // wtf
@@ -164,6 +169,7 @@ impl ApiErrorCodes {
             ApiErrorCodes::LoginChangeTooSoon => StatusCode::FORBIDDEN,
             ApiErrorCodes::OauthApplicationNotFound => StatusCode::NOT_FOUND,
             ApiErrorCodes::OauthMetadataNotFound => StatusCode::NOT_FOUND,
+            ApiErrorCodes::OauthAuthorizationNotFound => StatusCode::NOT_FOUND,
         }
     }
 }
