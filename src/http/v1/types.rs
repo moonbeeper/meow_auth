@@ -130,8 +130,10 @@ pub struct Passkey {
     pub id: PIDUserWebauthnId,
     pub display_name: String,
     pub enabled: bool,
+    /// The Authenticator Attestation GUID. An identifier used to determine the type of authenticator.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub aaguid: Option<uuid::Uuid>,
+    /// The point in time that the passkey was permanently disabled.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub disabled_at: Option<chrono::DateTime<chrono::Utc>>,
     #[serde(skip_serializing_if = "Option::is_none")]

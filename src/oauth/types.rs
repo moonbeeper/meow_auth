@@ -103,6 +103,7 @@ pub struct OauthMetadata {
     pub jwks_uri: String,
     pub scopes_supported: Vec<String>,
     pub response_types_supported: Vec<ResponseType>,
+    /// The way the client can send the response to related endpoints
     pub response_modes_supported: Vec<ResponseModes>,
     pub grant_types_supported: Vec<GrantType>,
     pub code_challenge_methods_supported: Vec<CodeChallengeMethod>,
@@ -168,10 +169,13 @@ pub struct OpenIdMetadata {
     pub userinfo_endpoint: String,
     pub jwks_uri: String,
     pub subject_types_supported: Vec<SubjectTypes>,
+    /// The signing algorithms supported (JWKs) for the Id token to be signed with
     pub id_token_signing_alg_values_supported: Vec<IdTokenSigningAlg>,
+    /// The way to get the token by the client
     pub token_endpoint_auth_methods_supported: Vec<TokenAuthMethod>,
     pub scopes_supported: Vec<String>,
     pub response_types_supported: Vec<ResponseType>,
+    /// The way the client can send the response to related endpoints
     pub response_modes_supported: Vec<ResponseModes>,
     pub grant_types_supported: Vec<GrantType>,
     pub code_challenge_methods_supported: Vec<CodeChallengeMethod>,
