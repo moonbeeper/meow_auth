@@ -7,6 +7,7 @@ pub mod well_known;
 
 use std::sync::Arc;
 
+use axum::routing::get;
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::global::GlobalState;
@@ -18,4 +19,5 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .merge(jwks::routes())
         .merge(user_info::routes())
         .merge(consent::routes())
+        .route("/", get(|| async { "beep boop, i am the provider." }))
 }

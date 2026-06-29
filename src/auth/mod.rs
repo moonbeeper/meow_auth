@@ -14,6 +14,7 @@ use crate::{
 };
 
 pub mod email;
+pub mod flags;
 pub mod mailer;
 pub mod otp;
 pub mod session;

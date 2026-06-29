@@ -5,20 +5,22 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
     audit::{self, AuditAction},
-    auth::{RE_AUTH_FLOW_LOGIN, mailer::AuthMailer},
+    auth::{RE_AUTH_FLOW_LOGIN, flags::UserFlag, mailer::AuthMailer},
     database::models::user::User,
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, require_user_flag::RequireUserFlagLayer},
         v1::types::AlrightResponse,
         validator::Valid,
     },
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
-    OpenApiRouter::new().routes(routes!(change_user_login))
+    OpenApiRouter::new()
+        .routes(routes!(change_user_login))
+        .layer(RequireUserFlagLayer::new().forbid(UserFlag::CannotModifyLogin))
 }
 
 #[derive(Debug, serde::Deserialize, validator::Validate, utoipa::ToSchema)]

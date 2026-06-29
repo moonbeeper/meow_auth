@@ -8,9 +8,12 @@ use tower::{Layer, Service};
 use tower_cookies::Cookies;
 
 use crate::{
-    auth::session::{delete_session_cookie, get_session_cookie, renew_session},
+    auth::{
+        flags::UserFlags,
+        session::{delete_session_cookie, get_session_cookie, renew_session},
+    },
     database::models::{
-        user::UserId,
+        user::{User, UserId},
         user_session::{PIDUserSessionId, UserSession, UserSessionId},
     },
     global::GlobalState,
@@ -20,6 +23,7 @@ use crate::{
 pub enum AuthContext {
     Authenticated {
         user_id: UserId,
+        user_flags: UserFlags,
         session_id: UserSessionId,
         is_sudo_enabled: bool,
     },
@@ -35,6 +39,13 @@ impl AuthContext {
         match self {
             AuthContext::Authenticated { user_id, .. } => *user_id,
             AuthContext::Unauthenticated => UserId::nil(),
+        }
+    }
+
+    pub fn user_flags(&self) -> UserFlags {
+        match self {
+            AuthContext::Authenticated { user_flags, .. } => *user_flags,
+            AuthContext::Unauthenticated => UserFlags::default(),
         }
     }
 
@@ -154,6 +165,17 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
         return;
     };
 
+    let Ok(Some(user_flags)) = User::get_flags_by_id(session.user_id, &global_state.database).await
+    else {
+        tracing::error!("failed fetching from db or user does not exist");
+        delete_session_cookie(cookies, &global_state.settings);
+        request
+            .extensions_mut()
+            .insert(AuthContext::Unauthenticated);
+        return;
+    };
+
+    let user_flags = UserFlags::from_bits(user_flags);
     let now = chrono::Utc::now();
 
     // session is expired
@@ -190,6 +212,7 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
 
         request.extensions_mut().insert(AuthContext::Authenticated {
             user_id: session.user_id,
+            user_flags,
             session_id: session.id,
             is_sudo_enabled: session.is_sudo_enabled(),
         });
@@ -216,6 +239,7 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
 
         request.extensions_mut().insert(AuthContext::Authenticated {
             user_id: session.user_id,
+            user_flags,
             session_id: session.id,
             is_sudo_enabled: session.is_sudo_enabled(),
         });

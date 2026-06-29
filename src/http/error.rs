@@ -87,6 +87,8 @@ pub enum ApiErrorCodes {
     // Merged some "*NotFound" errors into this one.
     #[error("the requested {0} was not found")]
     DataNotFound(&'static str),
+    #[error("the requested action is not allowed for this account")]
+    ActionBlocked,
 }
 
 // wtf
@@ -148,6 +150,7 @@ impl ApiErrorCodes {
             ApiErrorCodes::FlowNotFound => StatusCode::NOT_FOUND,
             ApiErrorCodes::LoginChangeTooSoon => StatusCode::FORBIDDEN,
             ApiErrorCodes::DataNotFound(_) => StatusCode::NOT_FOUND,
+            ApiErrorCodes::ActionBlocked => StatusCode::FORBIDDEN,
         }
     }
 }

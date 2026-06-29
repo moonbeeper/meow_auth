@@ -29,5 +29,6 @@ impl<T: PaginatedId> PaginationResult<T> {
 }
 
 pub trait PaginatedId {
+    /// Used to get the id of an item for purposes like using it for the `next` id for the NEXT page of items
     fn paginated_id(&self) -> UlidId;
 }

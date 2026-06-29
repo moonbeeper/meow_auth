@@ -20,6 +20,7 @@ pub struct User {
     pub id: UserId,
     pub login: String,
     pub email: String,
+    pub flags: i64,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -30,6 +31,7 @@ impl From<database::models::user::User> for User {
             id: value.id,
             login: value.login,
             email: value.email,
+            flags: value.flags,
             created_at: value.created_at,
             updated_at: value.updated_at,
         }
@@ -235,11 +237,13 @@ pub struct ListDataResponse<T> {
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema, utoipa::IntoParams)]
 pub struct ListDataRequest {
+    /// The id of the last item from the previous page. Normally provided in the `next` field of the previous response.
     #[serde(
         default,
         deserialize_with = "please_shut_up_and_let_me_use_an_empty_string_as_none"
     )]
     pub from: Option<UlidId>,
+    /// If the total number of items should be returned.
     #[serde(
         default,
         deserialize_with = "please_shut_up_and_let_me_use_an_empty_string_as_none"
@@ -260,4 +264,16 @@ where
         return Ok(None);
     }
     s.parse::<A>().map(Some).map_err(serde::de::Error::custom)
+}
+
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
+pub struct IdParam<T> {
+    pub id: T,
+}
+
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
+pub struct TwoIdParam<T, G> {
+    pub id: T,
+    #[serde(alias = "cid")]
+    pub child_id: G,
 }

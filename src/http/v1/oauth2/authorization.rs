@@ -10,6 +10,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
     audit::{self, AuditAction},
+    auth::flags::UserFlag,
     database::models::{
         oauth_application::OauthApplication, oauth_authorization::OauthAuthorization,
         oauth_pending_authorization::OauthPendingAuthorization,
@@ -145,6 +146,17 @@ pub async fn authorize(
         return OauthResponse::new().error(
             OauthErrorCodes::AccessDenied,
             Some("this request needs an authenticated user"),
+            request.state.clone(),
+        );
+    }
+
+    if auth
+        .user_flags()
+        .has(UserFlag::CannotAuthorizeOauthApplications)
+    {
+        return OauthResponse::new().error(
+            OauthErrorCodes::AccessDenied,
+            Some("the requested action is not allowed for this account"),
             request.state.clone(),
         );
     }

@@ -105,6 +105,17 @@ impl UserSession {
         Ok(())
     }
 
+    pub async fn delete_all_by_user_id(
+        id: UserId,
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<(), DatabaseError> {
+        sqlx::query!("delete from user_sessions where user_id = $1", id as UserId)
+            .execute(&mut **transaction)
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn find_by_id(
         id: UserSessionId,
         pool: &PgPool,
@@ -278,6 +289,6 @@ impl UserSession {
 
 impl PaginatedId for UserSession {
     fn paginated_id(&self) -> UlidId {
-        self.id
+        self.pid
     }
 }

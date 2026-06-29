@@ -7,6 +7,7 @@ use crate::{
     audit::{self, AuditAction},
     auth::{
         email::{get_token, hash_token},
+        flags::UserFlag,
         mailer::{AuthMailer, NewEmailVerificationCodeKind},
     },
     database::models::{user::User, user_email_mod_request::UserEmailModificationRequest},
@@ -14,7 +15,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, require_user_flag::RequireUserFlagLayer},
         v1::types::AlrightResponse,
         validator::Valid,
     },
@@ -24,6 +25,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(change_user_email))
         .routes(routes!(exchange_change_user_email))
+        .layer(RequireUserFlagLayer::new().forbid(UserFlag::CannotModifyEmail))
 }
 
 #[derive(Debug, serde::Deserialize, validator::Validate, utoipa::ToSchema)]

@@ -24,6 +24,7 @@ use crate::{
 #[derive(OpenApi)] // my dumb heck thought that IT was inside the derive macro where you set the attribute tags smh.
 #[openapi(
     tags(
+        (name = "admin", description = "admin operations"),
         (name = "auth", description = "authentication (login, register)"),
         (name = "sudo", description = "sensitive operations re-authentication"),
         (name = "user", description = "current user operations"),

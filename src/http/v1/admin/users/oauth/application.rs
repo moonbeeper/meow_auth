@@ -1,20 +1,18 @@
 use std::sync::Arc;
 
-use axum::{
-    Extension,
-    extract::{Path, Query, State},
-};
+use axum::extract::{Path, Query, State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    auth::flags::UserFlag,
     database::{id::UlidId, models::oauth_application::OauthApplication as DbOauthApplication},
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, require_user_flag::RequireUserFlagLayer},
-        v1::types::{AlrightResponse, ListDataRequest, ListDataResponse, OauthApplication},
+        v1::types::{
+            AlrightResponse, IdParam, ListDataRequest, ListDataResponse, OauthApplication,
+            TwoIdParam,
+        },
         validator::Valid,
     },
     oauth::{scopes::Scopes, secrets::get_secret_pair},
@@ -22,35 +20,36 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(create_application))
-        .routes(routes!(edit_application))
-        .routes(routes!(delete_application))
-        .routes(routes!(rotate_secret_application))
-        .layer(RequireUserFlagLayer::new().forbid(UserFlag::CannotManageOauthApplications))
-        .routes(routes!(list_applications))
-        .routes(routes!(get_info_application))
+        .routes(routes!(admin_list_user_applications))
+        .routes(routes!(admin_edit_user_application))
+        .routes(routes!(admin_delete_user_application))
+        .routes(routes!(admin_rotate_secret_user_application))
 }
 
-/// List your oauth applications
+/// List oauth applications of a user
 #[utoipa::path(
     get,
     params(ListDataRequest),
     path = "/list",
-    tags = ["oauth"],
+    tags = ["admin"],
+    params(
+        ("id" = UlidId, description = "the id of the user"),
+    ),
     responses(
         (status = 200, description = "list of oauth applications", body = ListDataResponse<OauthApplication>),
+        (status = 403, description = "current user not allowed to do action", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn list_applications(
+pub async fn admin_list_user_applications(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
-    Query(request): Query<ListDataRequest>,
+    Path(request): Path<IdParam<UlidId>>,
+    Query(data): Query<ListDataRequest>,
 ) -> Result<Json<ListDataResponse<OauthApplication>>, ApiErrorCodes> {
     let Ok(paginated) = DbOauthApplication::find_many_by_user_id_paginated(
-        auth.user_id(),
-        request.from,
-        request.want_total.unwrap_or_default(),
+        request.id,
+        data.from,
+        data.want_total.unwrap_or_default(),
         &global.database,
     )
     .await
@@ -91,98 +90,34 @@ pub struct OauthApplicationDataResponse {
     pub secret: String,
 }
 
-/// Create a new oauth application
-#[utoipa::path(
-    post,
-    path = "/create",
-    tags = ["oauth"],
-    responses(
-        (status = 200, description = "successfully created oauth application", body = OauthApplicationDataResponse),
-        (status = 500, description = "internal server error", body = ApiError)
-    )
-)]
-pub async fn create_application(
-    State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
-    Valid(Json(request)): Valid<Json<OauthApplicationData>>,
-) -> Result<Json<OauthApplicationDataResponse>, ApiErrorCodes> {
-    let scopes = Scopes::from_bits(request.scopes).sanitize(Scopes::all());
-    let secret_pair = get_secret_pair(&global.settings);
-    let app = DbOauthApplication::builder()
-        .name(request.name)
-        .redirect_uri(request.redirect_uri)
-        .public(request.public)
-        .scopes(scopes.bits())
-        .secret(secret_pair.hash_bytes)
-        .user_id(auth.user_id())
-        .build();
-
-    let mut tx = global.database.begin().await?;
-    app.insert(&mut tx).await?;
-    // audit::log(auth.user_id(), AuditAction::SessionDeleted, None, &mut tx).await?;
-    tx.commit().await?;
-
-    Ok(Json(OauthApplicationDataResponse {
-        id: app.id,
-        secret: secret_pair.secret,
-    }))
-}
-
-#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
-pub struct OauthApplicationIdParam {
-    pub id: UlidId,
-}
-
-/// Get info about a specific oauth application
-#[utoipa::path(
-    get,
-    path = "/{id}",
-    tags = ["oauth"],
-    responses(
-        (status = 200, description = "info about an oauth application", body = OauthApplication),
-        (status = 404, description = "oauth application not found", body = ApiError),
-        (status = 500, description = "internal server error", body = ApiError)
-    )
-)]
-pub async fn get_info_application(
-    State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
-    Path(request): Path<OauthApplicationIdParam>,
-) -> Result<Json<OauthApplication>, ApiErrorCodes> {
-    let Ok(Some(app)) = DbOauthApplication::find_by_id(request.id, &global.database).await else {
-        return Err(ApiErrorCodes::DataNotFound("oauth application"));
-    };
-
-    if app.user_id != auth.user_id() {
-        return Err(ApiErrorCodes::DataNotFound("oauth application"));
-    }
-
-    Ok(Json(app.into()))
-}
-
 /// Update an existing oauth application
 #[utoipa::path(
     patch,
-    path = "/{id}",
-    tags = ["oauth"],
+    path = "/{cid}",
+    tags = ["admin"],
+    params(
+        ("id" = UlidId, description = "the id of the user"),
+        ("cid" = UlidId, description = "the id of the oauth application")
+    ),
     responses(
         (status = 200, description = "successfully updated the oauth application", body = AlrightResponse),
         (status = 404, description = "oauth application not found", body = ApiError),
+        (status = 403, description = "current user not allowed to do action", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn edit_application(
+pub async fn admin_edit_user_application(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
-    Path(request): Path<OauthApplicationIdParam>,
+    Path(request): Path<TwoIdParam<UlidId, UlidId>>,
     Valid(Json(data)): Valid<Json<OauthApplicationData>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    let Ok(Some(mut app)) = DbOauthApplication::find_by_id(request.id, &global.database).await
+    let Ok(Some(mut app)) =
+        DbOauthApplication::find_by_id(request.child_id, &global.database).await
     else {
         return Err(ApiErrorCodes::DataNotFound("oauth application"));
     };
 
-    if app.user_id != auth.user_id() {
+    if app.user_id != request.id {
         return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 
@@ -202,24 +137,29 @@ pub async fn edit_application(
 /// Delete an existing oauth application
 #[utoipa::path(
     delete,
-    path = "/{id}",
-    tags = ["oauth"],
+    path = "/{cid}",
+    tags = ["admin"],
+    params(
+        ("id" = UlidId, description = "the id of the user"),
+        ("cid" = UlidId, description = "the id of the oauth application")
+    ),
     responses(
         (status = 200, description = "successfully deleted the oauth application"),
         (status = 404, description = "oauth application not found", body = ApiError),
+        (status = 403, description = "current user not allowed to do action", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn delete_application(
+pub async fn admin_delete_user_application(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
-    Path(request): Path<OauthApplicationIdParam>,
+    Path(request): Path<TwoIdParam<UlidId, UlidId>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    let Ok(Some(app)) = DbOauthApplication::find_by_id(request.id, &global.database).await else {
+    let Ok(Some(app)) = DbOauthApplication::find_by_id(request.child_id, &global.database).await
+    else {
         return Err(ApiErrorCodes::DataNotFound("oauth application"));
     };
 
-    if app.user_id != auth.user_id() {
+    if app.user_id != request.id {
         return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 
@@ -233,25 +173,30 @@ pub async fn delete_application(
 /// Rotate the secret of an existing oauth application
 #[utoipa::path(
     patch,
-    path = "/{id}/rotate_keys",
-    tags = ["oauth"],
+    path = "/{cid}/rotate_keys",
+    tags = ["admin"],
+    params(
+        ("id" = UlidId, description = "the id of the user"),
+        ("cid" = UlidId, description = "the id of the oauth application")
+    ),
     responses(
         (status = 200, description = "successfully rotated the oauth application secret", body = OauthApplicationDataResponse),
         (status = 404, description = "oauth application not found", body = ApiError),
+        (status = 403, description = "current user not allowed to do action", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn rotate_secret_application(
+pub async fn admin_rotate_secret_user_application(
     State(global): State<Arc<GlobalState>>,
-    Extension(auth): Extension<AuthContext>,
-    Path(request): Path<OauthApplicationIdParam>,
+    Path(request): Path<TwoIdParam<UlidId, UlidId>>,
 ) -> Result<Json<OauthApplicationDataResponse>, ApiErrorCodes> {
-    let Ok(Some(mut app)) = DbOauthApplication::find_by_id(request.id, &global.database).await
+    let Ok(Some(mut app)) =
+        DbOauthApplication::find_by_id(request.child_id, &global.database).await
     else {
         return Err(ApiErrorCodes::DataNotFound("oauth application"));
     };
 
-    if app.user_id != auth.user_id() {
+    if app.user_id != request.id {
         return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 

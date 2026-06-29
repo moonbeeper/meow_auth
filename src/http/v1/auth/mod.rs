@@ -12,5 +12,8 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .nest("/flow", flows::routes())
         .nest("/sudo", sudo::routes())
-        .route("/", get(|| async { "hi there" }))
+        .route(
+            "/",
+            get(|| async { "hi there, welcome to... uhh, The Authentication Realm" }),
+        )
 }

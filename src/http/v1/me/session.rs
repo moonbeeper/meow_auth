@@ -54,7 +54,7 @@ pub async fn current_session_info(
     path = "/list",
     tags = ["sessions"],
     responses(
-        (status = 200, description = "list of open sessions", body = Vec<Session>),
+        (status = 200, description = "list of open sessions", body = ListDataResponse<Session>),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -97,7 +97,7 @@ pub struct SessionQuery {
         ("id" = UlidId, description = "the id of the session to delete")
     ),
     responses(
-        (status = 200, description = "successfully deleted the session"),
+        (status = 200, description = "successfully revoked the session"),
         (status = 401, description = "sudo not enabled", body = ApiError),
         (status = 404, description = "session not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
@@ -135,7 +135,7 @@ pub async fn delete_session(
     path = "/all",
     tags = ["sessions"],
     responses(
-        (status = 200, description = "successfully deleted all open sessions"),
+        (status = 200, description = "successfully revoked all open sessions"),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

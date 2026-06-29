@@ -11,14 +11,7 @@ use crate::{
     oauth::{error::OauthErrorCodes, response::OauthResponse},
 };
 
-/// this layer checks if the user is authenticated or not, returning the appropriate [ApiErrorCodes].
-///
-/// the `need_auth` param controls whether the use needs to be authenticated or not.
-///
-/// `enforce` is enabled by default, so authenticated users cannot access routes meant for unauthenticated users.
-///
-/// disabling `enforce`, allows authenticated users to access routes meant for unauthenticated users, without returning an error.
-/// **this only affects authenticated users**
+/// this layer checks if the oauth token is valid, returning the appropriate [OauthErrorCodes] when it is not.
 #[derive(Clone)]
 pub struct RequireOauthLayer;
 
