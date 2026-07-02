@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
@@ -9,7 +9,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        v1::types::{AuditLog, IdParam},
+        v1::types::{AuditLog, IdParam, ListDataRequest, ListDataResponse},
     },
 };
 
@@ -34,11 +34,24 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 pub async fn admin_user_audit_log(
     State(global): State<Arc<GlobalState>>,
     Path(request): Path<IdParam<UlidId>>,
-) -> Result<Json<Vec<AuditLog>>, ApiErrorCodes> {
-    let Ok(audit_log) = DbAuditLog::find_by_user(request.id, &global.database).await else {
+    Query(data): Query<ListDataRequest>,
+) -> Result<Json<ListDataResponse<AuditLog>>, ApiErrorCodes> {
+    let Ok(paginated) = DbAuditLog::find_many_by_user_id_with_logins_paginated(
+        request.id,
+        data.from,
+        data.want_total.unwrap_or_default(),
+        &global.database,
+    )
+    .await
+    else {
         return Err(ApiErrorCodes::InternalServerError);
     };
 
-    let log: Vec<_> = audit_log.into_iter().map(AuditLog::from).collect();
-    Ok(Json(log))
+    let data: Vec<_> = paginated.items.into_iter().map(AuditLog::from).collect();
+
+    Ok(Json(ListDataResponse {
+        data,
+        total: paginated.total_rows,
+        next: paginated.next_id,
+    }))
 }

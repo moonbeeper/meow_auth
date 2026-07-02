@@ -1,9 +1,14 @@
 use std::{collections::HashMap, sync::Arc};
 
-use axum::extract::{Path, Query, State};
+use axum::{
+    Extension,
+    extract::{Path, Query, State},
+};
+use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
+    audit::{self, AuditAction},
     database::{
         id::UlidId,
         models::{
@@ -15,6 +20,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
+        middleware::auth_manager::AuthContext,
         v1::types::{
             AlrightResponse, IdParam, ListDataRequest, ListDataResponse, OauthApplication,
             OauthAuthorization, TwoIdParam,
@@ -110,6 +116,7 @@ pub async fn admin_list_user_oauth_authorizations(
 )]
 pub async fn admin_delete_user_oauth_authorization(
     State(global): State<Arc<GlobalState>>,
+    Extension(auth): Extension<AuthContext>,
     Path(request): Path<TwoIdParam<UlidId, UlidId>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(app)) = DbOauthAuthorization::find_by_id(request.child_id, &global.database).await
@@ -123,6 +130,16 @@ pub async fn admin_delete_user_oauth_authorization(
 
     let mut tx = global.database.begin().await?;
     app.delete(&mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        app.user_id,
+        AuditAction::OauthAuthorizationsRevoked,
+        Some(json!({
+            "app_id": app.id.to_string(),
+        })),
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

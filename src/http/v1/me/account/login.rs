@@ -71,7 +71,14 @@ pub async fn change_user_login(
 
     let mut tx = global.database.begin().await?;
     user.update(&mut tx).await?;
-    audit::log(auth.user_id(), AuditAction::LoginChanged, None, &mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        auth.user_id(),
+        AuditAction::LoginChanged,
+        None,
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     AuthMailer::login_updated(user.login, user.email, &global.database).await?;

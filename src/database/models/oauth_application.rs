@@ -20,6 +20,8 @@ pub struct OauthApplication {
     pub secret: Vec<u8>,
     #[builder(default = false)]
     pub public: bool,
+    #[builder(default = false)]
+    pub disabled: bool,
     #[builder(default = 0)]
     pub scopes: i64,
     #[builder(default = chrono::Utc::now())]
@@ -32,15 +34,16 @@ impl OauthApplication {
     pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "insert into
-                oauth_applications (id, user_id, name, redirect_uri, secret, public, scopes, created_at, updated_at)
+                oauth_applications (id, user_id, name, redirect_uri, secret, public, disabled, scopes, created_at, updated_at)
              values
-                ($1, $2, $3, $4, $5, $6, $7, now(), now())",
+                ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())",
             self.id as OauthApplicationId,
             self.user_id as UserId,
             self.name,
             self.redirect_uri,
             self.secret,
             self.public,
+            self.disabled,
             self.scopes,
         )
         .execute(&mut **transaction)
@@ -57,6 +60,7 @@ impl OauthApplication {
                 secret = $4,
                 public = $5,
                 scopes = $6,
+                disabled = $7,
                 updated_at = now()
              where id = $1",
             self.id as OauthApplicationId,
@@ -65,6 +69,7 @@ impl OauthApplication {
             self.secret,
             self.public,
             self.scopes,
+            self.disabled
         )
         .execute(&mut **transaction)
         .await?;
@@ -96,6 +101,7 @@ impl OauthApplication {
                 redirect_uri,
                 secret,
                 public,
+                disabled,
                 scopes,
                 created_at,
                 updated_at
@@ -121,6 +127,7 @@ impl OauthApplication {
                 name,
                 secret,
                 public,
+                disabled,
                 scopes,
                 created_at,
                 updated_at
@@ -146,6 +153,7 @@ impl OauthApplication {
                 name,
                 secret,
                 public,
+                disabled,
                 scopes,
                 created_at,
                 updated_at
@@ -173,6 +181,7 @@ impl OauthApplication {
                 name,
                 secret,
                 public,
+                disabled,
                 scopes,
                 created_at,
                 updated_at

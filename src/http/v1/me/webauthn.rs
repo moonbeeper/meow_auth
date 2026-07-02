@@ -171,7 +171,14 @@ pub async fn register_passkey_exchange(
     user.has_webauthn = true;
     user.update(&mut tx).await?;
     passkey.insert(&mut tx).await?;
-    audit::log(auth.user_id(), AuditAction::PasskeyAdded, None, &mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        auth.user_id(),
+        AuditAction::PasskeyAdded,
+        None,
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     AuthMailer::webauthn_registered(user.login, passkey_name, user.email, &global.database).await?;
@@ -239,7 +246,14 @@ pub async fn delete_passkey(
 
     let mut tx = global.database.begin().await?;
     session.delete(&mut tx).await?;
-    audit::log(auth.user_id(), AuditAction::PasskeyRemoved, None, &mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        auth.user_id(),
+        AuditAction::PasskeyRemoved,
+        None,
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

@@ -72,6 +72,7 @@ pub async fn action_past_authorized(
         pending_auth.insert(tx).await?;
         audit::log(
             auth_context.user_id(),
+            auth_context.user_id(),
             AuditAction::OauthAuthorizationIntiated,
             None,
             tx,
@@ -138,6 +139,7 @@ pub async fn action_new_authorization(
     pending_auth.delete_all(tx).await?;
     pending_auth.insert(tx).await?;
     audit::log(
+        auth_context.user_id(),
         auth_context.user_id(),
         AuditAction::OauthAuthorizationIntiated,
         None,

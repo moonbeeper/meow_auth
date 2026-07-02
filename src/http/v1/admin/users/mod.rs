@@ -4,16 +4,25 @@ mod session;
 
 use std::sync::Arc;
 
-use axum::extract::{Path, Query, State};
+use axum::{
+    Extension,
+    extract::{Path, Query, State},
+};
+use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    auth::{RE_AUTH_FLOW_LOGIN, flags::UserFlags},
+    audit::{self, AuditAction},
+    auth::{
+        RE_AUTH_FLOW_LOGIN,
+        flags::{UserFlag, UserFlags},
+    },
     database::{id::UlidId, models::user::User as DbUser},
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
+        middleware::auth_manager::AuthContext,
         v1::types::{AlrightResponse, IdParam, ListDataRequest, ListDataResponse, User},
         validator::Valid,
     },
@@ -119,6 +128,7 @@ pub async fn admin_info_user(
 )]
 pub async fn admin_edit_user(
     State(global): State<Arc<GlobalState>>,
+    Extension(auth): Extension<AuthContext>,
     Path(request): Path<IdParam<UlidId>>,
     Valid(Json(data)): Valid<Json<UserUpdateRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
@@ -126,12 +136,20 @@ pub async fn admin_edit_user(
         return Err(ApiErrorCodes::DataNotFound("user"));
     };
 
+    let user_flags = UserFlags::from_bits(user.flags);
+    let mut updated_fields = vec![];
+
+    if user_flags.has(UserFlag::SuperAdmin) && !auth.user_flags().has(UserFlag::SuperAdmin) {
+        return Err(ApiErrorCodes::ActionBlocked);
+    }
+
     if let Some(login) = data.login {
         let Ok(None) = DbUser::find_by_login(login.clone(), &global.database).await else {
             return Err(ApiErrorCodes::LoginAlreadyAssociated);
         };
 
         user.login = login;
+        updated_fields.push("login");
     }
 
     if let Some(email) = data.email {
@@ -140,16 +158,28 @@ pub async fn admin_edit_user(
         };
 
         user.email = email;
+        updated_fields.push("email");
     }
 
     if let Some(flags) = data.flags {
         let flags = UserFlags::from_bits(flags);
 
         user.flags = flags.bits();
+        updated_fields.push("flags");
     }
 
     let mut tx = global.database.begin().await?;
     user.update(&mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        user.id,
+        AuditAction::UserUpdated,
+        Some(json!({
+            "fields_updated": updated_fields,
+        })),
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

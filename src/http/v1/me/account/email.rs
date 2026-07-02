@@ -81,6 +81,7 @@ pub async fn change_user_email(
     email_request.insert(&mut tx).await?;
     audit::log(
         auth.user_id(),
+        auth.user_id(),
         AuditAction::EmailChangeRequested,
         None,
         &mut tx,
@@ -172,7 +173,14 @@ pub async fn exchange_change_user_email(
         let mut tx = global.database.begin().await?;
         user.update(&mut tx).await?;
         email_request.delete(&mut tx).await?;
-        audit::log(auth.user_id(), AuditAction::EmailChanged, None, &mut tx).await?;
+        audit::log(
+            auth.user_id(),
+            auth.user_id(),
+            AuditAction::EmailChanged,
+            None,
+            &mut tx,
+        )
+        .await?;
         tx.commit().await?;
 
         AuthMailer::email_updated(

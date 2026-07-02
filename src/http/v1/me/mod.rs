@@ -70,7 +70,14 @@ pub async fn logout(
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let mut tx = global.database.begin().await?;
     UserSession::delete_by_id(auth.session_id(), &mut tx).await?;
-    audit::log(auth.user_id(), AuditAction::SessionDeleted, None, &mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        auth.user_id(),
+        AuditAction::SessionRevoked,
+        None,
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
     Ok(Json(AlrightResponse::default()))
 }

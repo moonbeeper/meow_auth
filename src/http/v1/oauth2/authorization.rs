@@ -91,6 +91,14 @@ pub async fn authorize(
         );
     };
 
+    if client.disabled {
+        return OauthResponse::new().error(
+            OauthErrorCodes::InvalidClient,
+            Some("client is disabled"),
+            request.state.clone(),
+        );
+    }
+
     // client redirect_uri should always be valid.
     let mut redirect_url = Url::parse(&client.redirect_uri).unwrap();
 
@@ -350,6 +358,7 @@ pub async fn finish_authorization(
     pending_token.insert(&mut tx).await?;
 
     audit::log(
+        auth.user_id(),
         auth.user_id(),
         if audit_as_update {
             AuditAction::OauthAuthorizationUpdated

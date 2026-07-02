@@ -167,7 +167,14 @@ pub async fn sudo_webauthn_exchange(
         let mut tx = global.database.begin().await?;
         passkey.enabled = false;
         passkey.update(&mut tx).await?;
-        audit::log(auth.user_id(), AuditAction::PasskeyDisabled, None, &mut tx).await?;
+        audit::log(
+            auth.user_id(),
+            auth.user_id(),
+            AuditAction::PasskeyDisabled,
+            None,
+            &mut tx,
+        )
+        .await?;
         tx.commit().await?;
         AuthMailer::webauthn_compromised(
             user.login,

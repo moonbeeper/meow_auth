@@ -87,7 +87,14 @@ pub async fn enable_sudo_tx(
         chrono::Utc::now() + chrono::Duration::seconds(settings.session.sudo_expire_age_seconds),
     );
     session.update(&mut tx).await?;
-    audit::log(auth.user_id(), AuditAction::SudoEnabled, None, &mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        auth.user_id(),
+        AuditAction::SudoEnabled,
+        None,
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     Ok(())

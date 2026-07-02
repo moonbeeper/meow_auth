@@ -72,6 +72,20 @@ impl OauthAuthorization {
         Ok(())
     }
 
+    pub async fn delete_all_by_client_id(
+        client_id: OauthApplicationId,
+        transaction: &mut PgTransaction<'_>,
+    ) -> Result<(), DatabaseError> {
+        sqlx::query!(
+            "delete from oauth_authorizations where client_id = $1",
+            client_id as OauthApplicationId,
+        )
+        .execute(&mut **transaction)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn delete_by_id(
         id: OauthAuthorizationId,
         transaction: &mut PgTransaction<'_>,

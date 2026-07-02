@@ -7,8 +7,8 @@ use crate::database::models::{audit_log::AuditLog, user::UserId};
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum AuditAction {
     SessionCreated, // should add metadata for what was used to create it (webauthn or otp)
-    SessionDeleted,
-    SessionsDeleted, // close all sessions
+    SessionRevoked,
+    SessionsRevoked, // close all sessions
     EmailChangeRequested,
     EmailChanged,
     LoginChanged,
@@ -32,14 +32,16 @@ pub enum AuditAction {
     OauthAuthorizationDenied,
     OauthAuthorizationRevoked,
     OauthAuthorizationUpdated,
+    OauthAuthorizationsRevoked,
+    UserUpdated,
 }
 
 impl Display for AuditAction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             AuditAction::SessionCreated => write!(f, "session_created"),
-            AuditAction::SessionDeleted => write!(f, "session_deleted"),
-            AuditAction::SessionsDeleted => write!(f, "sessions_deleted"),
+            AuditAction::SessionRevoked => write!(f, "session_deleted"),
+            AuditAction::SessionsRevoked => write!(f, "sessions_deleted"),
             AuditAction::EmailChangeRequested => write!(f, "email_change_requested"),
             AuditAction::EmailChanged => write!(f, "email_changed"),
             AuditAction::LoginChanged => write!(f, "login_changed"),
@@ -63,11 +65,14 @@ impl Display for AuditAction {
             AuditAction::OauthAuthorizationDenied => write!(f, "oauth_authorization_denied"),
             AuditAction::OauthAuthorizationRevoked => write!(f, "oauth_authorization_revoked"),
             AuditAction::OauthAuthorizationUpdated => write!(f, "oauth_authorization_updated"),
+            AuditAction::OauthAuthorizationsRevoked => write!(f, "oauth_authorizations_revoked"),
+            AuditAction::UserUpdated => write!(f, "user_updated"),
         }
     }
 }
 
 pub async fn log(
+    actor_id: UserId,
     user_id: UserId,
     action: AuditAction,
     metadata: Option<serde_json::Value>,
@@ -76,6 +81,7 @@ pub async fn log(
     let metadata = metadata.unwrap_or(serde_json::json!({}));
 
     let model = AuditLog::builder()
+        .actor_id(actor_id)
         .user_id(user_id)
         .action(action.to_string())
         .metadata(metadata)

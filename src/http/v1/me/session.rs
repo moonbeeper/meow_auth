@@ -4,6 +4,7 @@ use axum::{
     Extension,
     extract::{Path, Query, State},
 };
+use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
@@ -22,8 +23,8 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(current_session_info))
         .routes(routes!(list_sessions))
-        .routes(routes!(delete_session))
-        .routes(routes!(delete_all_sessions))
+        .routes(routes!(revoke_session))
+        .routes(routes!(revoke_all_sessions))
 }
 
 /// Current session info
@@ -103,7 +104,7 @@ pub struct SessionQuery {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn delete_session(
+pub async fn revoke_session(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Path(query): Path<SessionQuery>,
@@ -121,7 +122,16 @@ pub async fn delete_session(
 
     let mut tx = global.database.begin().await?;
     session.delete(&mut tx).await?;
-    audit::log(auth.user_id(), AuditAction::SessionDeleted, None, &mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        auth.user_id(),
+        AuditAction::SessionRevoked,
+        Some(json!({
+            "session_id": session.pid
+        })),
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
@@ -139,7 +149,7 @@ pub async fn delete_session(
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn delete_all_sessions(
+pub async fn revoke_all_sessions(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
@@ -155,7 +165,14 @@ pub async fn delete_all_sessions(
 
     let mut tx = global.database.begin().await?;
     DbUserSession::delete_many_by_id(ids, &mut tx).await?;
-    audit::log(auth.user_id(), AuditAction::SessionsDeleted, None, &mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        auth.user_id(),
+        AuditAction::SessionsRevoked,
+        None,
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

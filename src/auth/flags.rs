@@ -7,6 +7,7 @@ use flagset::{FlagSet, flags};
 flags! {
     pub enum UserFlag: i64 {
         SuperAdmin, // for big birds like me - moonbeeper :3
+        // Admin, I frankly dont see the point of having a lesser admin role. for now at least.
         CannotManageOauthApplications,
         CannotAuthorizeOauthApplications,
         CannotModifyLogin,

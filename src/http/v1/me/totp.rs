@@ -147,7 +147,14 @@ pub async fn exchange_totp_creation(
     user.totp_enabled = true;
     user.update(&mut tx).await?;
     db_totp.update(&mut tx).await?;
-    audit::log(auth.user_id(), AuditAction::TotpEnabled, None, &mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        auth.user_id(),
+        AuditAction::TotpEnabled,
+        None,
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     AuthMailer::totp_enabled(user.login, user.email, &global.database).await?;
@@ -208,7 +215,14 @@ pub async fn disable_totp(
     user.totp_enabled = false;
     user.update(&mut tx).await?;
     db_totp.delete(&mut tx).await?;
-    audit::log(auth.user_id(), AuditAction::TotpDisabled, None, &mut tx).await?;
+    audit::log(
+        auth.user_id(),
+        auth.user_id(),
+        AuditAction::TotpDisabled,
+        None,
+        &mut tx,
+    )
+    .await?;
     tx.commit().await?;
 
     AuthMailer::totp_disabled(user.login, user.email, &global.database).await?;
@@ -275,6 +289,7 @@ pub async fn see_recovery_codes(
     let mut tx = global.database.begin().await?;
     db_totp.update(&mut tx).await?;
     audit::log(
+        auth.user_id(),
         auth.user_id(),
         AuditAction::TotpRecoveryCodesSeen,
         None,

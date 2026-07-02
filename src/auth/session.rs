@@ -37,7 +37,7 @@ pub async fn create_session(
 
     let mut tx = db.begin().await?;
     session.insert(&mut tx).await?;
-    audit::log(user_id, AuditAction::SessionCreated, None, &mut tx).await?;
+    audit::log(user_id, user_id, AuditAction::SessionCreated, None, &mut tx).await?;
     tx.commit().await?;
     Ok(session.pid)
 }

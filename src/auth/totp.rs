@@ -197,6 +197,7 @@ pub async fn set_recovery_code_used(
     user_totp.update(&mut tx).await?;
     audit::log(
         user_totp.user_id,
+        user_totp.user_id,
         AuditAction::TotpRecoveryCodesUsed,
         None,
         &mut tx,

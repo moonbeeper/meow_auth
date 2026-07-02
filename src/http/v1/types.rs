@@ -172,15 +172,46 @@ impl<L: IntoResponse, R: IntoResponse> IntoResponse for RouteEither<L, R> {
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct AuditLog {
+    pub id: UlidId,
     pub action: String,
+    pub user_id: UlidId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub user_login: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub actor_id: Option<UlidId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub actor_login: Option<String>,
+    pub was_self: bool,
     pub metadata: serde_json::Value,
     pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+impl From<database::models::audit_log::AuditLogLogin> for AuditLog {
+    fn from(value: database::models::audit_log::AuditLogLogin) -> Self {
+        Self {
+            id: value.id,
+            action: value.action,
+            user_id: value.user_id,
+            user_login: Some(value.user_login),
+            actor_id: Some(value.actor_id),
+            actor_login: Some(value.actor_login),
+            was_self: value.user_id == value.actor_id,
+            metadata: value.metadata,
+            created_at: value.created_at,
+        }
+    }
 }
 
 impl From<database::models::audit_log::AuditLog> for AuditLog {
     fn from(value: database::models::audit_log::AuditLog) -> Self {
         Self {
+            id: value.id,
             action: value.action,
+            user_id: value.user_id,
+            user_login: None,
+            actor_id: None,
+            actor_login: None,
+            was_self: value.user_id == value.actor_id,
             metadata: value.metadata,
             created_at: value.created_at,
         }
