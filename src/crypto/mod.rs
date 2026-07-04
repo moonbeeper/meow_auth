@@ -3,8 +3,8 @@ pub mod jwks;
 use std::{fmt::Display, ops::Deref};
 
 use chacha20poly1305::{
-    AeadCore as _, ChaCha20Poly1305, Key, KeyInit as _, Nonce,
-    aead::{Aead as _, OsRng},
+    ChaCha20Poly1305, Key, KeyInit as _, Nonce,
+    aead::{Aead as _, Generate},
 };
 use data_encoding::BASE32_NOPAD;
 use rand::Rng as _;
@@ -99,10 +99,10 @@ impl EncryptedSecret {
 
 /// Encrypts a secret using ChaCha20Poly1305 with the provided secret key.
 pub fn encrypt_secret(message: &[u8], secret_key: &SecretKey) -> anyhow::Result<EncryptedSecret> {
-    let key = Key::from_slice(secret_key);
-    let cipher = ChaCha20Poly1305::new(key);
+    let key = Key::try_from(secret_key as &[u8])?;
+    let cipher = ChaCha20Poly1305::new(&key);
 
-    let secret_nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng); // 96-bits; unique per message
+    let secret_nonce = Nonce::generate(); // 96-bits; unique per message
 
     let secret = cipher
         .encrypt(&secret_nonce, message.as_ref())
@@ -119,13 +119,13 @@ pub fn decrypt_secret(
     encrypted: EncryptedSecret,
     secret_key: &SecretKey,
 ) -> anyhow::Result<Vec<u8>> {
-    let key = Key::from_slice(secret_key);
-    let cipher = ChaCha20Poly1305::new(key);
+    let key = Key::try_from(secret_key as &[u8])?;
+    let cipher = ChaCha20Poly1305::new(&key);
 
-    let secret_nonce = Nonce::from_slice(&encrypted.nonce); // 96-bits; unique per message
+    let secret_nonce = Nonce::try_from(&encrypted.nonce as &[u8])?; // 96-bits; unique per message
 
     let secret = cipher
-        .decrypt(secret_nonce, encrypted.secret.as_ref())
+        .decrypt(&secret_nonce, encrypted.secret.as_ref())
         .map_err(|_| anyhow::anyhow!("failed decrypting the secret"))?;
 
     Ok(secret)

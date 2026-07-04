@@ -1,14 +1,13 @@
 {% extends "partials/base.html" %}
-{% import "partials/macros.html" as m %}
 
 {% block content %}
-    {{ m::heading(text = globals.greeting ~ " " ~ user.login ~ "!") }}
-    {{ m::spacer(px = 16) }}
+    {{<ui.heading text={globals.greeting ~ " " ~ user.login ~ "!"} />}}
+    {{<ui.spacer px={16} />}}
     {% if kind == "current" %}
-        {{ m::text(text="Your account's email address has been updated to: " ~ user.new_address ~ ".") }}
+        {{<ui.text text={"Your account's email address has been updated to: " ~ user.new_address ~ "."} />}}
     {% elif kind == "new" %}
-        {{ m::text(text="Your account's email address has been successfully updated!") }}
+        {{<ui.text text="Your account's email address has been successfully updated!" />}}
     {% endif %}
-    {{ m::text(text="If this was you, no action is needed.") }}
-    {{ m::text(text="If this wasn't you... contact uh... wait. you are hecked. there's no contact address.") }}
+    {{<ui.text text="If this was you, no action is needed." />}}
+    {{<ui.text text="If this wasn't you... contact uh... wait. you are hecked. there's no contact address." />}}
 {% endblock content %}

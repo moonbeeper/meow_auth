@@ -76,7 +76,7 @@ pub struct RenderedTemplates {
 
 impl RawEmailTemplate {
     pub fn render(&self, mail_settings: &MailSettings) -> MailerResult<RenderedTemplates> {
-        let mut context = tera::Context::from_value(self.data.clone())?;
+        let mut context = tera::Context::from_serialize(&self.data)?;
         context.insert(
             "globals",
             &json!({

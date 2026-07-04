@@ -1,4 +1,4 @@
-{% macro spacer(px=16) %}
+{% component ui.spacer(px: integer = 16) %}
 <tr>
     <td>
         <div
@@ -15,9 +15,9 @@
         </div>
     </td>
 </tr>
-{% endmacro spacer %}
+{% endcomponent ui.spacer %}
 
-{% macro section_start() %}
+{% component ui.section_start() %}
 <tr>
     <td class="t24" align="center">
         <table
@@ -37,19 +37,19 @@
                         width="100%"
                         style="width: 100%"
                     >
-{% endmacro section_start %}
+{% endcomponent ui.section_start %}
 
-{% macro section_end() %}
+{% component ui.section_end() %}
                     </table>
                 </td>
             </tr>
         </table>
     </td>
 </tr>
-{% endmacro section_end %}
+{% endcomponent ui.section_end %}
 
-{% macro heading(text="meow") %}
-{{ self::section_start() }}
+{% component ui.heading(text = "meow") %}
+{{<ui.section_start />}}
 <tr>
     <td
         class="t13"
@@ -85,11 +85,11 @@
         </h1>
     </td>
 </tr>
-{{ self::section_end() }}
-{% endmacro heading %}
+{{<ui.section_end />}}
+{% endcomponent ui.heading %}
 
-{% macro text(text="awawawaaa wawa", color="#141414") %}
-{{ self::section_start() }}
+{% component ui.text(text = "awawawaaa wawa", color = "#141414") %}
+{{<ui.section_start />}}
 <tr>
     <td class="t20">
         <p
@@ -122,11 +122,11 @@
         </p>
     </td>
 </tr>
-{{ self::section_end() }}
-{% endmacro text %}
+{{<ui.section_end />}}
+{% endcomponent ui.text %}
 
-{% macro otp_code(code="123456") %}
-{{ self::section_start() }}
+{% component forms.otp_code(code = "123456") %}
+{{<ui.section_start />}}
 <tr>
     <td
         style="
@@ -197,12 +197,12 @@
         </table>
     </td>
 </tr>
-{{ self::section_end() }}
-{% endmacro otp_code %}
+{{<ui.section_end />}}
+{% endcomponent forms.otp_code %}
 
 
-{% macro button(text="click to get feather (i lied)", url="https://www.youtube.com/watch?v=E4WlUXrJgy4", color="#fdb41a") %}
-{{ self::section_start() }}
+{% component ui.button(text = "click to get feather (i lied)", url = "https://www.youtube.com/watch?v=E4WlUXrJgy4", color = "#fdb41a") %}
+{{<ui.section_start />}}
 <tr>
     <td
         class="t32"
@@ -247,5 +247,5 @@
         >
     </td>
 </tr>
-{{ self::section_end() }}
-{% endmacro button %}
+{{<ui.section_end />}}
+{% endcomponent ui.button %}

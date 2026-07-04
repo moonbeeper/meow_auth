@@ -1,14 +1,13 @@
 {% extends "partials/base.html" %}
-{% import "partials/macros.html" as m %}
 
 {% block content %}
-    {{ m::heading(text = globals.greeting ~ " " ~ user.login ~ "!") }}
-    {{ m::spacer(px = 16) }}
-    {{ m::text(text="You requested to sign in to your account. Your code is:") }}
-    {{ m::spacer(px = 8) }}
-    {{ m::otp_code(code = code) }}
-    {{ m::spacer(px = 8) }}
-    {{ m::text(text="This code expires in 5 minutes.") }}
-    {{ m::spacer(px = 8) }}
-    {{ m::text(text="If you didn't request to sign in, you can safely ignore this email. Probably someone typed your email by mistake.. yeah probably.", color = "#6e6e6e") }}
+    {{<ui.heading text={globals.greeting ~ " " ~ user.login ~ "!"} />}}
+    {{<ui.spacer px={16} />}}
+    {{<ui.text text="You requested to sign in to your account. Your code is:" />}}
+    {{<ui.spacer px={8} />}}
+    {{<forms.otp_code code={code} />}}
+    {{<ui.spacer px={8} />}}
+    {{<ui.text text="This code expires in 5 minutes." />}}
+    {{<ui.spacer px={8} />}}
+    {{<ui.text text="If you didn't request to sign in, you can safely ignore this email. Probably someone typed your email by mistake.. yeah probably." />}}
 {% endblock content %}

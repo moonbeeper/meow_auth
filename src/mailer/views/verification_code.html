@@ -1,22 +1,22 @@
 {% extends "partials/base.html" %}
-{% import "partials/macros.html" as m %}
+
+{% set sign_word = "in" %}
+{% if kind == "register" %}
+    {% set sign_word = "up" %}
+{% endif %}
 
 {% block content %}
-    {{ m::heading(text = globals.greeting ~ " " ~ user.login ~ "!") }}
-    {{ m::spacer(px = 16) }}
+    {{<ui.heading text={globals.greeting ~ " " ~ user.login ~ "!"} />}}
+    {{<ui.spacer px={16} />}}
     {% if kind == "register" %}
-        {{ m::text(text="Use this code to finish creating your account:") }}
+        {{<ui.text text="Use this code to finish creating your account:" />}}
     {% elif kind == "verification" %}
-        {{ m::text(text="Use this code to confirm it's you and continue:") }}
+        {{<ui.text text="Use this code to confirm it's you and continue:" />}}
     {% endif %}
-    {{ m::spacer(px = 8) }}
-    {{ m::otp_code(code = code) }}
-    {{ m::spacer(px = 8) }}
-    {{ m::text(text="This code expires in 5 minutes.") }}
-    {{ m::spacer(px = 8) }}
-    {% set sign_word = "in" %}
-    {% if kind == "register" %}
-        {% set sign_word = "up" %}
-    {% endif %}
-    {{ m::text(text="If you didn't request to sign " ~ sign_word ~ ", you can safely ignore this email. Probably someone typed your email by mistake.. yeah probably.", color = "#6e6e6e") }}
+    {{<ui.spacer px={8} />}}
+    {{<forms.otp_code code={code} />}}
+    {{<ui.spacer px={8} />}}
+    {{<ui.text text="This code expires in 5 minutes." />}}
+    {{<ui.spacer px={8} />}}
+    {{<ui.text text={"If you didn't request to sign " ~ sign_word ~ ", you can safely ignore this email. Probably someone typed your email by mistake.. yeah probably."} />}}
 {% endblock content %}
