@@ -11,6 +11,7 @@ pub mod logger;
 pub mod mailer;
 pub mod manager;
 pub mod oauth;
+pub mod ratelimiter;
 pub mod settings;
 
 shadow!(build);

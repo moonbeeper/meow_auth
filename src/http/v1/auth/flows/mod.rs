@@ -13,7 +13,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::require_auth::RequireAuthenticationLayer,
+        middleware::{ratelimit_manager::RatelimitLayer, require_auth::RequireAuthenticationLayer},
         v1::types::AuthMethod,
     },
 };
@@ -29,6 +29,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .nest("/exchange", exchange::routes())
         .nest("/info", info::routes())
         .layer(RequireAuthenticationLayer::new().need_auth(false))
+        .layer(RatelimitLayer::new(20, chrono::Duration::seconds(60)))
 }
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema)]

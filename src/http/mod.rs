@@ -17,7 +17,10 @@ use utoipa_scalar::{Scalar, Servable};
 
 use crate::{
     global::GlobalState,
-    http::middleware::{auth_manager::AuthManagerLayer, oauth_manager::OauthManagerLayer},
+    http::middleware::{
+        auth_manager::AuthManagerLayer, ip_manager::IpManagerLayer,
+        oauth_manager::OauthManagerLayer, ratelimit_manager::RatelimitLayer,
+    },
     manager::WatcherChild,
 };
 
@@ -47,6 +50,8 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
         .layer(AuthManagerLayer::new(global.clone()))
         .layer(OauthManagerLayer::new(global.clone()))
         .layer(CookieManagerLayer::new())
+        .layer(RatelimitLayer::new(500, chrono::Duration::seconds(1)))
+        .layer(IpManagerLayer::new(global.clone()))
         // below the auth manager layer so we don't gotta check for auth (useless) on these static handlers
         .merge(root::routes())
         .with_state(global)
@@ -78,13 +83,16 @@ pub async fn run(global: Arc<GlobalState>, watcher: WatcherChild) -> anyhow::Res
         false => router,
     };
 
-    axum::serve(listener, router)
-        .with_graceful_shutdown(async move {
-            watcher.cancelled().await;
-            tracing::info!("goodnight, sweet bits and flying toasters with wings");
-        })
-        .await
-        .context("Failed starting the HTTP server")?;
+    axum::serve(
+        listener,
+        router.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(async move {
+        watcher.cancelled().await;
+        tracing::info!("goodnight, sweet bits and flying toasters with wings");
+    })
+    .await
+    .context("Failed starting the HTTP server")?;
 
     Ok(())
 }

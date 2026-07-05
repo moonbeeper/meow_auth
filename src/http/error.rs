@@ -89,6 +89,8 @@ pub enum ApiErrorCodes {
     DataNotFound(&'static str),
     #[error("the requested action is not allowed for this account")]
     ActionBlocked,
+    #[error("you have reached the rate limit for this action. try again later.")]
+    RatelimitExceeded,
 }
 
 // wtf
@@ -151,6 +153,7 @@ impl ApiErrorCodes {
             ApiErrorCodes::LoginChangeTooSoon => StatusCode::FORBIDDEN,
             ApiErrorCodes::DataNotFound(_) => StatusCode::NOT_FOUND,
             ApiErrorCodes::ActionBlocked => StatusCode::FORBIDDEN,
+            ApiErrorCodes::RatelimitExceeded => StatusCode::TOO_MANY_REQUESTS,
         }
     }
 }

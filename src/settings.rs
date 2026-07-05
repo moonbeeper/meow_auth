@@ -60,6 +60,8 @@ pub struct HttpSettings {
     // must be always set, its where this application is running.
     #[default(Url::parse("http://localhost:3000").expect("failed to parse default frontend url burh"))]
     pub frontend: Url,
+    #[default(false)]
+    pub is_under_cloudflare: bool,
 }
 
 #[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
