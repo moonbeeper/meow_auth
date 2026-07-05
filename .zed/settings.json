@@ -1,0 +1,32 @@
+{
+  "lsp": {
+    "biome": {
+      "settings": {
+        "config_path": "frontend/biome.json",
+        "require_config_file": true,
+      },
+    },
+  },
+  "languages": {
+    "JavaScript": {
+      "language_servers": ["biome"],
+      "formatter": "language_server",
+      "format_on_save": "on",
+    },
+    "TypeScript": {
+      "language_servers": ["biome"],
+      "formatter": "language_server",
+      "format_on_save": "on",
+    },
+    "TSX": {
+      "language_servers": ["biome"],
+      "formatter": "language_server",
+      "format_on_save": "on",
+    },
+    "Svelte": {
+      "language_servers": ["biome"],
+      "formatter": "language_server",
+      "format_on_save": "on",
+    },
+  },
+}
