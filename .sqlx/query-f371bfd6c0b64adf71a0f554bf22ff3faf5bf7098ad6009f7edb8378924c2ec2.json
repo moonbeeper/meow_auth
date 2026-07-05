@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                id,\n                pid,\n                login,\n                email,\n                email_verified,\n                totp_enabled,\n                has_webauthn,\n                login_updated_at,\n                created_at,\n                updated_at\n             from users where id = any($1)",
+  "query": "select\n                id,\n                pid,\n                login,\n                email,\n                email_verified,\n                totp_enabled,\n                has_webauthn,\n                flags,\n                login_updated_at,\n                created_at,\n                updated_at\n             from users where id = any($1)",
   "describe": {
     "columns": [
       {
@@ -82,6 +82,17 @@
       },
       {
         "ordinal": 7,
+        "name": "flags",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "flags"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
         "name": "login_updated_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -92,7 +103,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -103,7 +114,7 @@
         }
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "updated_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -129,8 +140,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "3e7827f9a0f80846548c41c9a6d32b47a2bcde2705e6803a52dd75a7ed19c949"
+  "hash": "f371bfd6c0b64adf71a0f554bf22ff3faf5bf7098ad6009f7edb8378924c2ec2"
 }

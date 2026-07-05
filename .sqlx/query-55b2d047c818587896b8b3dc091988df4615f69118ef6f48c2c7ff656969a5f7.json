@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into\n                audit_logs (id, user_id, actor_id, action, metadata, created_at)\n             values\n                ($1, $2, $3, $4, $5, now())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "55b2d047c818587896b8b3dc091988df4615f69118ef6f48c2c7ff656969a5f7"
+}

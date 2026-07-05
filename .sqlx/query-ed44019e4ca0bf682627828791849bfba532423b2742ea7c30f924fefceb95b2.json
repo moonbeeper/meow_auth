@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select flags from users where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "flags",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "flags"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ed44019e4ca0bf682627828791849bfba532423b2742ea7c30f924fefceb95b2"
+}

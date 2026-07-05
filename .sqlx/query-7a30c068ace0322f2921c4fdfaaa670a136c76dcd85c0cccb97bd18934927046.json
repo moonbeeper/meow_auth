@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                id,\n                user_id,\n                redirect_uri,\n                name,\n                secret,\n                public,\n                scopes,\n                created_at,\n                updated_at\n             from oauth_applications where user_id = $1 and ($2::uuid is null or id::uuid > $2) order by created_at asc limit 20+1",
+  "query": "select\n                id,\n                user_id,\n                name,\n                redirect_uri,\n                secret,\n                public,\n                disabled,\n                scopes,\n                created_at,\n                updated_at\n             from oauth_applications where id = $1",
   "describe": {
     "columns": [
       {
@@ -27,23 +27,23 @@
       },
       {
         "ordinal": 2,
-        "name": "redirect_uri",
-        "type_info": "Text",
-        "origin": {
-          "Table": {
-            "table": "oauth_applications",
-            "name": "redirect_uri"
-          }
-        }
-      },
-      {
-        "ordinal": 3,
         "name": "name",
         "type_info": "Varchar",
         "origin": {
           "Table": {
             "table": "oauth_applications",
             "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "redirect_uri",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "oauth_applications",
+            "name": "redirect_uri"
           }
         }
       },
@@ -71,6 +71,17 @@
       },
       {
         "ordinal": 6,
+        "name": "disabled",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "oauth_applications",
+            "name": "disabled"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
         "name": "scopes",
         "type_info": "Int8",
         "origin": {
@@ -81,7 +92,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "created_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -92,7 +103,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "updated_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -105,7 +116,6 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
         "Uuid"
       ]
     },
@@ -118,8 +128,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "e04297df7f19c6f38a6c306155fef0fbf1445b67e2c665a673ba577ae7698a4f"
+  "hash": "7a30c068ace0322f2921c4fdfaaa670a136c76dcd85c0cccb97bd18934927046"
 }

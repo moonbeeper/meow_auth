@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into\n                oauth_applications (id, user_id, name, redirect_uri, secret, public, disabled, scopes, created_at, updated_at)\n             values\n                ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Text",
+        "Bytea",
+        "Bool",
+        "Bool",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f6e0b88342b2f9b9d98005b3e32aff31e98eab76c849099adc4ac05c6ed3da9a"
+}
