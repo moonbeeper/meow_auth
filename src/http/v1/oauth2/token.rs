@@ -71,21 +71,21 @@ pub async fn token(
         .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
 
     let Ok(Some(pending_token)) = OauthPendingToken::take_by_id(request.code, &mut tx).await else {
-        return Err(OauthResponse::new().error(OauthErrorCodes::InvalidClient, None, None));
+        return Err(OauthResponse::new().error(OauthErrorCodes::InvalidGrant, None, None));
     };
 
     let Ok(Some(user)) = User::find_by_id(pending_token.user_id, &global.database).await else {
-        return Err(OauthResponse::new().error(OauthErrorCodes::InvalidClient, None, None));
+        return Err(OauthResponse::new().error(OauthErrorCodes::InvalidGrant, None, None));
     };
 
     // code must be for the client_id provided
     if pending_token.client_id != client.id {
-        return Err(OauthResponse::new().error(OauthErrorCodes::InvalidClient, None, None));
+        return Err(OauthResponse::new().error(OauthErrorCodes::InvalidGrant, None, None));
     }
 
     if !check_pkce(&request.code_verifier, &pending_token.code_challenge) {
         return Err(OauthResponse::new().error(
-            OauthErrorCodes::InvalidClient,
+            OauthErrorCodes::InvalidGrant,
             Some("code_verifier is invalid"),
             None,
         ));
