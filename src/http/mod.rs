@@ -8,6 +8,7 @@ pub mod validator;
 use std::{net::SocketAddr, sync::Arc};
 
 use anyhow::Context;
+use axum::routing::get;
 use tokio::net::TcpSocket;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
@@ -37,6 +38,11 @@ use crate::{
         (name = "application", description = "application health and status"),
         (name = "oauth", description = "oauth management operations"),
         (name = "oauth_srv", description = "oauth server operations"),
+    ),
+    components(
+        schemas(
+            error::ApiErrorCodesFlattened
+        )
     )
 )]
 struct ApiDocs;
@@ -75,6 +81,18 @@ pub async fn run(global: Arc<GlobalState>, watcher: WatcherChild) -> anyhow::Res
     tracing::info!("HTTP server listening at http://{}", settings.bind);
 
     let (router, openapi) = router(global).split_for_parts();
+
+    // fat data goes here to be available for the openapi json endpoint (the other option was Arc or cloning [REAL bad with this BIG FAAAAT data])
+    let openapi_json: &'static str = Box::leak(
+        serde_json::to_string_pretty(&openapi)
+            .unwrap()
+            .into_boxed_str(),
+    );
+    // always include the openapi json without the scalar UI.
+    let router = router.route(
+        "/api-docs/openapi.json",
+        get(move || async move { ([("content-type", "application/json")], openapi_json) }),
+    );
     let router = match settings.api_docs.enabled {
         true => {
             tracing::info!("OpenApi documentation at http://{}/scalar", settings.bind);

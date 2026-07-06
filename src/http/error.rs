@@ -11,7 +11,8 @@ pub struct ApiError<'a> {
 
 // TODO: Should merge all common errors. To not have a thousand "not found" errors.
 
-#[derive(Debug, thiserror::Error, strum::IntoStaticStr)]
+#[derive(Debug, thiserror::Error, strum::IntoStaticStr, meow_macros::FlattenEnum)]
+#[flatten_enum(utoipa_name = "ApiErrorCodes")]
 pub enum ApiErrorCodes {
     #[error("meow meow")]
     OtpExpired,
