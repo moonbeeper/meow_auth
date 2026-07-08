@@ -40,7 +40,7 @@ pub fn get_id_token_data(
     let mut standard_claims = base.s_claims.clone();
 
     if scopes.has(Scope::Profile) {
-        standard_claims.name = Some(user.login.clone());
+        standard_claims.name = Some(user.name.clone());
     }
 
     if scopes.has(Scope::Email) {

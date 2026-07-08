@@ -1,4 +1,4 @@
-{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{{ globals.greeting ~ " " ~ user.name ~ "!" }}
 You requested to sign in to your account. Your code is:
 {{ code }}
 

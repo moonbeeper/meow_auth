@@ -1,4 +1,4 @@
-{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{{ globals.greeting ~ " " ~ user.name ~ "!" }}
 {% if kind == "register" %}
 Use this code to finish creating your account
 {% elif kind == "verification" %}

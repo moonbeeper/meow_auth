@@ -28,9 +28,9 @@ pub struct AuditLog {
 pub struct AuditLogLogin {
     pub id: AuditLogId,
     pub user_id: UserId,
-    pub user_login: String,
+    pub user_name: String,
     pub actor_id: UserId,
-    pub actor_login: String,
+    pub actor_name: String,
     pub action: String,
     pub metadata: serde_json::Value,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -83,9 +83,9 @@ impl AuditLog {
             r#"select
                 al.id,
                 al.user_id,
-                u.login as user_login,
+                u.name as user_name,
                 al.actor_id,
-                a.login as actor_login,
+                a.name as actor_name,
                 al.action,
                 al.metadata,
                 al.created_at
@@ -113,9 +113,9 @@ impl AuditLog {
             r#"select
                 al.id,
                 al.user_id,
-                u.login as user_login,
+                u.name as user_name,
                 al.actor_id,
-                a.login as actor_login,
+                a.name as actor_name,
                 al.action,
                 al.metadata,
                 al.created_at

@@ -177,7 +177,7 @@ pub async fn sudo_webauthn_exchange(
         .await?;
         tx.commit().await?;
         AuthMailer::webauthn_compromised(
-            user.login,
+            user.name,
             passkey.display_name,
             user.email,
             &global.database,
@@ -262,7 +262,7 @@ pub async fn sudo_totp_exchange(
     // TODO: move to helper method for common usage in login and sudo ???
     if request.code.len() == 6 {
         let totp_client =
-            get_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
+            get_totp(user.name.clone(), totp.secret, &global.settings).map_err(|e| {
                 tracing::error!("something went wrong while creating the totp client: {e}");
                 ApiErrorCodes::InternalServerError
             })?;
@@ -291,7 +291,7 @@ pub async fn sudo_totp_exchange(
             })?;
 
         AuthMailer::totp_recovery_code_used(
-            user.login.clone(),
+            user.name.clone(),
             user.email.clone(),
             &global.database,
         )

@@ -1,4 +1,4 @@
-{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{{ globals.greeting ~ " " ~ user.name ~ "!" }}
 Your Two factor authentication recovery codes were viewed.
 
 If you made this change, you're all set.

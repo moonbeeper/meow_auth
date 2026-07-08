@@ -7,16 +7,18 @@ use webauthn_rs_proto::RequestChallengeResponse;
 
 use crate::{
     auth::{
-        RE_AUTH_FLOW_LOGIN,
         mailer::{AuthMailer, EmailVerificationCodeKind},
         otp::get_otp_code,
         webauthn::{create_webauthn_cookie, get_user_passkeys},
     },
-    database::models::{
-        user::User,
-        user_auth_challenge::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
-        user_signup::UserSignup,
-        user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
+    database::{
+        id::UlidId,
+        models::{
+            user::User,
+            user_auth_challenge::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
+            user_signup::UserSignup,
+            user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
+        },
     },
     global::GlobalState,
     http::{
@@ -46,7 +48,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     tags = ["auth"],
     responses(
         (status = 200, description = "authentication flow created", body = FlowResponse),
-        (status = 404, description = "account not found", body = ApiError),
+        // (status = 404, description = "account not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -54,8 +56,12 @@ pub async fn otp_login(
     State(global): State<Arc<GlobalState>>,
     Json(request): Json<FlowRequest>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
-    let Ok(Some(user)) = User::find_by_login(request.login, &global.database).await else {
-        return Err(ApiErrorCodes::AccountNotFound);
+    let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
+        // return Err(ApiErrorCodes::AccountNotFound); HECK YOU >:( it will always say "invalid code" great job me! really great job!
+        return Ok(Json(FlowResponse {
+            flow_id: UlidId::new(),
+            next_method: vec![AuthMethod::Otp],
+        }));
     };
 
     let otp = get_otp_code(&global.settings);
@@ -73,7 +79,7 @@ pub async fn otp_login(
     AuthMailer::verification_code(
         otp.code,
         EmailVerificationCodeKind::Login,
-        user.login,
+        user.name,
         user.email,
         &global.database,
     )
@@ -87,11 +93,11 @@ pub async fn otp_login(
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
 pub struct RegisterRequest {
-    #[validate( // mr fmt doesnt format this aberration.
-        length(min = 3, max = 63, message = "must be between 4 letters and 64"), // counts from 0 duh
-        regex(path = *RE_AUTH_FLOW_LOGIN, message = "must be alphanumeric and can contain underscores")
-    )]
-    login: String,
+    // #[validate( // mr fmt doesnt format this aberration.
+    //     length(min = 3, max = 63, message = "must be between 4 letters and 64"), // counts from 0 duh
+    //     regex(path = *RE_AUTH_FLOW_LOGIN, message = "must be alphanumeric and can contain underscores")
+    // )]
+    // login: String,
     #[validate(custom(function = "crate::auth::valid_email"))]
     email: String,
 }
@@ -107,7 +113,7 @@ pub struct RegisterRequest {
     request_body = RegisterRequest,
     responses(
         (status = 200, description = "registration flow created", body = FlowResponse),
-        (status = 400, description = "email or login already associated", body = ApiError),
+        // (status = 400, description = "email or login already associated", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -116,29 +122,43 @@ pub async fn otp_register(
     Valid(Json(request)): Valid<Json<RegisterRequest>>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
     // awful
-    if User::find_by_email(request.email.clone(), &global.database)
-        .await?
-        .is_some()
-    {
-        return Err(ApiErrorCodes::EmailAlreadyAssociated);
-    }
+    if let Some(user) = User::find_by_email(request.email.clone(), &global.database).await? {
+        // return Err(ApiErrorCodes::EmailAlreadyAssociated);
+        // DIRTY JOB! TODO: cleanup and separate the otp login into another method to be able to reuse it
+        let otp = get_otp_code(&global.settings);
 
-    if User::find_by_login(request.login.clone(), &global.database)
-        .await?
-        .is_some()
-    {
-        return Err(ApiErrorCodes::LoginAlreadyAssociated);
+        let login_request = UserAuthChallenges::builder()
+            .user_id(Some(user.id))
+            .kind(AuthChallengeKind::Otp)
+            .secret(Some(otp.hash))
+            .build();
+
+        let mut transaction = global.database.begin().await?;
+        login_request.insert(&mut transaction).await?;
+        transaction.commit().await?;
+
+        AuthMailer::verification_code(
+            otp.code,
+            EmailVerificationCodeKind::Login,
+            user.name,
+            user.email,
+            &global.database,
+        )
+        .await?;
+
+        return Ok(Json(FlowResponse {
+            flow_id: login_request.id,
+            next_method: vec![AuthMethod::Otp],
+        }));
     }
 
     let otp = get_otp_code(&global.settings);
 
-    let user_signup = UserSignup::builder()
-        .email(request.email)
-        .login(request.login)
-        .build();
-    let mut transaction = global.database.begin().await.unwrap();
+    // I somehow forgot about this having unwraps lol
+    let user_signup = UserSignup::builder().email(request.email).build();
+    let mut transaction = global.database.begin().await?;
 
-    let user_signup = user_signup.upsert(&mut transaction).await.unwrap();
+    let user_signup = user_signup.upsert(&mut transaction).await?;
     let challenge = UserAuthChallenges::builder()
         .user_signup_id(Some(user_signup.id))
         .kind(AuthChallengeKind::Otp)
@@ -146,13 +166,13 @@ pub async fn otp_register(
         .secret(Some(otp.hash))
         .build();
 
-    challenge.insert(&mut transaction).await.unwrap();
-    transaction.commit().await.unwrap();
+    challenge.insert(&mut transaction).await?;
+    transaction.commit().await?;
 
     AuthMailer::verification_code(
         otp.code,
         EmailVerificationCodeKind::Register,
-        user_signup.login,
+        user_signup.email.clone(),
         user_signup.email,
         &global.database,
     )
@@ -173,8 +193,8 @@ pub async fn otp_register(
     tags = ["auth"],
     responses(
         (status = 200, description = "authentication flow created"),
-        (status = 404, description = "account not found", body = ApiError),
-        (status = 400, description = "webauthn not enabled", body = ApiError), // should i be even returning 400 here?
+        // (status = 404, description = "account not found", body = ApiError),
+        (status = 400, description = "user has webauthn not enabled", body = ApiError), // should i be even returning 400 here?
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -183,8 +203,8 @@ pub async fn webauthn_options(
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<FlowRequest>,
 ) -> Result<Json<RequestChallengeResponse>, ApiErrorCodes> {
-    let Ok(Some(user)) = User::find_by_login(request.login, &global.database).await else {
-        return Err(ApiErrorCodes::AccountNotFound);
+    let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
+        return Err(ApiErrorCodes::WebauthnNotEnabled); // mask the existence of the user
     };
 
     if !user.has_webauthn {

@@ -1,7 +1,7 @@
 {% extends "partials/base.html" %}
 
 {% block content %}
-    {{<ui.heading text={globals.greeting ~ " " ~ user.login ~ "!"} />}}
+    {{<ui.heading text={globals.greeting ~ " " ~ user.name ~ "!"} />}}
     {{<ui.spacer px={16} />}}
     {{<ui.text text={"We think that your passkey " ~ passkey.name ~ " may be compromised."} />}}
     {{<ui.text text="It has been deactivated, you may delete it and recreate it any time you like." />}}

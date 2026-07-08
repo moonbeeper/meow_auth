@@ -1,4 +1,4 @@
-{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{{ globals.greeting ~ " " ~ user.name ~ "!" }}
 A recovery code was used to verify into your account.
 
 If you made this change, you're all set.

@@ -13,10 +13,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
     audit::{self, AuditAction},
-    auth::{
-        RE_AUTH_FLOW_LOGIN,
-        flags::{UserFlag, UserFlags},
-    },
+    auth::flags::{UserFlag, UserFlags},
     database::{id::UlidId, models::user::User as DbUser},
     global::GlobalState,
     http::{
@@ -76,10 +73,10 @@ pub async fn admin_list_users(
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
 pub struct UserUpdateRequest {
     #[validate( // mr fmt doesnt format this aberration.
-        length(min = 3, max = 63, message = "must be between 4 letters and 64"), // counts from 0 duh
-        regex(path = *RE_AUTH_FLOW_LOGIN, message = "must be alphanumeric and can contain underscores")
+        length(min = 3, max = 50, message = "must be between 4 letters and 50"), // counts from 0 duh
+        // regex(path = *RE_AUTH_FLOW_LOGIN, message = "must be alphanumeric and can contain underscores")
     )]
-    pub login: Option<String>,
+    pub name: Option<String>,
     #[validate(custom(function = "crate::auth::valid_email"))]
     pub email: Option<String>,
     pub flags: Option<i64>,
@@ -143,13 +140,9 @@ pub async fn admin_edit_user(
         return Err(ApiErrorCodes::ActionBlocked);
     }
 
-    if let Some(login) = data.login {
-        let Ok(None) = DbUser::find_by_login(login.clone(), &global.database).await else {
-            return Err(ApiErrorCodes::LoginAlreadyAssociated);
-        };
-
-        user.login = login;
-        updated_fields.push("login");
+    if let Some(name) = data.name {
+        user.name = name;
+        updated_fields.push("name");
     }
 
     if let Some(email) = data.email {

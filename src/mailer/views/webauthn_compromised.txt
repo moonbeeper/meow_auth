@@ -1,4 +1,4 @@
-{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{{ globals.greeting ~ " " ~ user.name ~ "!" }}
 {{ "We think that your passkey " ~ passkey.name ~ " may be compromised." }}
 
 It has been deactivated, you may delete it and recreate it any time you like

@@ -17,7 +17,7 @@ pub struct User {
     pub id: UserId,
     #[builder(default = PIDUserId::new())]
     pub pid: PIDUserId,
-    pub login: String,
+    pub name: String,
     pub email: String,
     #[builder(default = false)]
     pub email_verified: bool,
@@ -28,7 +28,7 @@ pub struct User {
     #[builder(default = 0)]
     pub flags: i64,
     #[builder(default = chrono::Utc::now())]
-    pub login_updated_at: chrono::DateTime<chrono::Utc>,
+    pub name_updated_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
@@ -39,12 +39,12 @@ impl User {
     pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "insert into
-                users (id, pid, login, email, email_verified, flags, login_updated_at ,created_at, updated_at)
+                users (id, pid, name, email, email_verified, flags, name_updated_at ,created_at, updated_at)
              values
                 ($1, $2, lower($3), lower($4), $5, $6, now(), now(), now())",
             self.id as UserId,
             self.pid as PIDUserId,
-            self.login,
+            self.name,
             self.email,
             self.email_verified,
             self.flags
@@ -58,22 +58,22 @@ impl User {
     pub async fn update(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "update users set
-                login = $2,
+                name = $2,
                 email = $3,
                 email_verified = $4,
                 totp_enabled = $5,
                 has_webauthn = $6,
-                login_updated_at = $7,
+                name_updated_at = $7,
                 flags = $8,
                 updated_at = now()
              where id = $1",
             self.id as UserId,
-            self.login,
+            self.name,
             self.email,
             self.email_verified,
             self.totp_enabled,
             self.has_webauthn,
-            self.login_updated_at,
+            self.name_updated_at,
             self.flags
         )
         .execute(&mut **transaction)
@@ -88,13 +88,13 @@ impl User {
             "select
                 id,
                 pid,
-                login,
+                name,
                 email,
                 email_verified,
                 totp_enabled,
                 has_webauthn,
                 flags,
-                login_updated_at,
+                name_updated_at,
                 created_at,
                 updated_at
              from users where id = $1",
@@ -112,13 +112,13 @@ impl User {
             "select
                 id,
                 pid,
-                login,
+                name,
                 email,
                 email_verified,
                 totp_enabled,
                 has_webauthn,
                 flags,
-                login_updated_at,
+                name_updated_at,
                 created_at,
                 updated_at
              from users where pid = $1",
@@ -139,13 +139,13 @@ impl User {
             "select
                 id,
                 pid,
-                login,
+                name,
                 email,
                 email_verified,
                 totp_enabled,
                 has_webauthn,
                 flags,
-                login_updated_at,
+                name_updated_at,
                 created_at,
                 updated_at
              from users where email = lower($1)",
@@ -157,32 +157,32 @@ impl User {
         Ok(data)
     }
 
-    pub async fn find_by_login(
-        login: String,
-        pool: &PgPool,
-    ) -> Result<Option<Self>, DatabaseError> {
-        let data = sqlx::query_as!(
-            Self,
-            "select
-                id,
-                pid,
-                login,
-                email,
-                email_verified,
-                totp_enabled,
-                has_webauthn,
-                flags,
-                login_updated_at,
-                created_at,
-                updated_at
-             from users where login = lower($1)",
-            login
-        )
-        .fetch_optional(pool)
-        .await?;
+    // pub async fn find_by_login(
+    //     login: String,
+    //     pool: &PgPool,
+    // ) -> Result<Option<Self>, DatabaseError> {
+    //     let data = sqlx::query_as!(
+    //         Self,
+    //         "select
+    //             id,
+    //             pid,
+    //             login,
+    //             email,
+    //             email_verified,
+    //             totp_enabled,
+    //             has_webauthn,
+    //             flags,
+    //             login_updated_at,
+    //             created_at,
+    //             updated_at
+    //          from users where login = lower($1)",
+    //         login
+    //     )
+    //     .fetch_optional(pool)
+    //     .await?;
 
-        Ok(data)
-    }
+    //     Ok(data)
+    // }
 
     pub async fn find_many_by_id(
         ids: Vec<UserId>,
@@ -193,13 +193,13 @@ impl User {
             "select
                 id,
                 pid,
-                login,
+                name,
                 email,
                 email_verified,
                 totp_enabled,
                 has_webauthn,
                 flags,
-                login_updated_at,
+                name_updated_at,
                 created_at,
                 updated_at
              from users where id = any($1)",
@@ -221,13 +221,13 @@ impl User {
             "select
                 id,
                 pid,
-                login,
+                name,
                 email,
                 email_verified,
                 totp_enabled,
                 has_webauthn,
                 flags,
-                login_updated_at,
+                name_updated_at,
                 created_at,
                 updated_at
              from users where ($1::uuid is null or id::uuid > $1) order by created_at asc limit 20+1",

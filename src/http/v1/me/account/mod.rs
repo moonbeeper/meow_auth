@@ -1,5 +1,5 @@
 mod email;
-mod login;
+mod name;
 
 use std::sync::Arc;
 
@@ -23,7 +23,7 @@ use crate::{
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .merge(email::routes())
-        .merge(login::routes())
+        .merge(name::routes())
         .routes(routes!(current_user_audit_log))
 }
 

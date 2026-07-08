@@ -29,7 +29,7 @@ impl From<database::models::user::User> for User {
     fn from(value: database::models::user::User) -> Self {
         Self {
             id: value.id,
-            login: value.login,
+            login: value.name,
             email: value.email,
             flags: value.flags,
             created_at: value.created_at,
@@ -192,9 +192,9 @@ impl From<database::models::audit_log::AuditLogLogin> for AuditLog {
             id: value.id,
             action: value.action,
             user_id: value.user_id,
-            user_login: Some(value.user_login),
+            user_login: Some(value.user_name),
             actor_id: Some(value.actor_id),
-            actor_login: Some(value.actor_login),
+            actor_login: Some(value.actor_name),
             was_self: value.user_id == value.actor_id,
             metadata: value.metadata,
             created_at: value.created_at,

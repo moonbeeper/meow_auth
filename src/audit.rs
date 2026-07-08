@@ -11,7 +11,7 @@ pub enum AuditAction {
     SessionsRevoked, // close all sessions
     EmailChangeRequested,
     EmailChanged,
-    LoginChanged,
+    NameChanged,
     AccountCreated,
     AccountDeleted, // TODO: THE HANDLER AAAGH GOD please dont incinerate me
     TotpEnabled,
@@ -44,7 +44,7 @@ impl Display for AuditAction {
             AuditAction::SessionsRevoked => write!(f, "sessions_deleted"),
             AuditAction::EmailChangeRequested => write!(f, "email_change_requested"),
             AuditAction::EmailChanged => write!(f, "email_changed"),
-            AuditAction::LoginChanged => write!(f, "login_changed"),
+            AuditAction::NameChanged => write!(f, "login_changed"),
             AuditAction::AccountCreated => write!(f, "account_created"),
             AuditAction::AccountDeleted => write!(f, "account_deleted"),
             AuditAction::TotpEnabled => write!(f, "totp_enabled"),

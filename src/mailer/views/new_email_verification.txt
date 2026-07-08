@@ -1,4 +1,4 @@
-{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{{ globals.greeting ~ " " ~ user.name ~ "!" }}
 {% if kind == "current" %}
     You requested to change your account's email address. You can use the button below to verify the request:
 {% elif kind == "new" %}

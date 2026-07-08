@@ -1,7 +1,7 @@
 {% extends "partials/base.html" %}
 
 {% block content %}
-    {{<ui.heading text={globals.greeting ~ " " ~ user.login ~ "!"} />}}
+    {{<ui.heading text={globals.greeting ~ " " ~ user.name ~ "!"} />}}
     {{<ui.spacer px={16} />}}
     {% if kind == "current" %}
         {{<ui.text text={"You requested to change your account's email address to " ~ user.new_address ~". You can use the button below to verify the request:"} />}}

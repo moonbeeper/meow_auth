@@ -73,7 +73,7 @@ pub async fn create_totp_options(
             ApiErrorCodes::InternalServerError
         })?;
 
-    let totp_client = get_totp(user.login, totp.secret.clone(), &global.settings).map_err(|e| {
+    let totp_client = get_totp(user.name, totp.secret.clone(), &global.settings).map_err(|e| {
         tracing::error!("something went wrong while creating the totp client: {e}");
         ApiErrorCodes::InternalServerError
     })?;
@@ -134,7 +134,7 @@ pub async fn exchange_totp_creation(
         tracing::error!("something went wrong while decrypting totp secrets: {e}");
         ApiErrorCodes::InternalServerError
     })?;
-    let totp_client = get_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
+    let totp_client = get_totp(user.name.clone(), totp.secret, &global.settings).map_err(|e| {
         tracing::error!("something went wrong while creating the totp client: {e}");
         ApiErrorCodes::InternalServerError
     })?;
@@ -157,7 +157,7 @@ pub async fn exchange_totp_creation(
     .await?;
     tx.commit().await?;
 
-    AuthMailer::totp_enabled(user.login, user.email, &global.database).await?;
+    AuthMailer::totp_enabled(user.name, user.email, &global.database).await?;
 
     Ok(Json(AlrightResponse::default()))
 }
@@ -202,7 +202,7 @@ pub async fn disable_totp(
         tracing::error!("something went wrong while decrypting totp secrets: {e}");
         ApiErrorCodes::InternalServerError
     })?;
-    let totp_client = get_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
+    let totp_client = get_totp(user.name.clone(), totp.secret, &global.settings).map_err(|e| {
         tracing::error!("something went wrong while creating the totp client: {e}");
         ApiErrorCodes::InternalServerError
     })?;
@@ -225,7 +225,7 @@ pub async fn disable_totp(
     .await?;
     tx.commit().await?;
 
-    AuthMailer::totp_disabled(user.login, user.email, &global.database).await?;
+    AuthMailer::totp_disabled(user.name, user.email, &global.database).await?;
 
     Ok(Json(AlrightResponse::default()))
 }
@@ -275,7 +275,7 @@ pub async fn see_recovery_codes(
         tracing::error!("something went wrong while decrypting totp secrets: {e}");
         ApiErrorCodes::InternalServerError
     })?;
-    let totp_client = get_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
+    let totp_client = get_totp(user.name.clone(), totp.secret, &global.settings).map_err(|e| {
         tracing::error!("something went wrong while creating the totp client: {e}");
         ApiErrorCodes::InternalServerError
     })?;
@@ -298,7 +298,7 @@ pub async fn see_recovery_codes(
     .await?;
     tx.commit().await?;
 
-    AuthMailer::totp_recovery_codes_seen(user.login, user.email, &global.database).await?;
+    AuthMailer::totp_recovery_codes_seen(user.name, user.email, &global.database).await?;
 
     Ok(Json(RecoveryCodesTotpResponse { recovery_codes }))
 }

@@ -1,4 +1,4 @@
-{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{{ globals.greeting ~ " " ~ user.name ~ "!" }}
 {{ "A passkey (" ~ passkey.name ~ ") was removed from your account." }}
 
 If this was you, no action is needed.

@@ -11,25 +11,30 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
     audit::{self, AuditAction},
+    auth::flags::UserFlag,
     database::models::{user::User as DbUser, user_session::UserSession},
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, require_auth::RequireAuthenticationLayer},
+        middleware::{
+            auth_manager::AuthContext, require_auth::RequireAuthenticationLayer,
+            require_user_flag::RequireUserFlagLayer,
+        },
         v1::types::{AlrightResponse, User},
     },
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(current_user_info))
-        .routes(routes!(logout))
-        .nest("/account", account::routes())
         .nest("/oauth", oauth::routes())
         .nest("/session", session::routes())
         .nest("/totp", totp::routes())
         .nest("/webauthn", webauthn::routes())
+        .layer(RequireUserFlagLayer::new().require(UserFlag::HasSetName))
+        .routes(routes!(current_user_info))
+        .routes(routes!(logout))
+        .nest("/account", account::routes())
         .layer(RequireAuthenticationLayer::new())
 }
 

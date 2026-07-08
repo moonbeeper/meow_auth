@@ -1,7 +1,0 @@
-{{ globals.greeting ~ " " ~ user.login ~ "!" }}
-Your account's email address has been successfully updated!
-You may now login with: {{ user.login }}
-
-If this wasn't you... logout from all your session and swap it back ig.
---
-:3 - MeowAuth

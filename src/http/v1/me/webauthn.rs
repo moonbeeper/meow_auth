@@ -72,7 +72,7 @@ pub async fn register_passkey_options(
     let (client_challenge, data) = global.webauthn.start_passkey_registration(
         user.id.into(),
         &user.email,
-        &user.login,
+        &user.name,
         Some(credential_ids),
     )?;
 
@@ -181,7 +181,7 @@ pub async fn register_passkey_exchange(
     .await?;
     tx.commit().await?;
 
-    AuthMailer::webauthn_registered(user.login, passkey_name, user.email, &global.database).await?;
+    AuthMailer::webauthn_registered(user.name, passkey_name, user.email, &global.database).await?;
 
     Ok(Json(AlrightResponse::default()))
 }

@@ -83,7 +83,7 @@ pub enum ApiErrorCodes {
     #[error("this action's flow was not found")]
     FlowNotFound,
     #[error("you cannot change your login so soon after the last change")]
-    LoginChangeTooSoon,
+    NameChangeTooSoon,
     // lord moon has ripped a feather from my wings to make your desires true.
     // Merged some "*NotFound" errors into this one.
     #[error("the requested {0} was not found")]
@@ -151,7 +151,7 @@ impl ApiErrorCodes {
             ApiErrorCodes::ValidationError(..) => StatusCode::UNPROCESSABLE_ENTITY,
             ApiErrorCodes::AlreadyVerified => StatusCode::BAD_REQUEST,
             ApiErrorCodes::FlowNotFound => StatusCode::NOT_FOUND,
-            ApiErrorCodes::LoginChangeTooSoon => StatusCode::FORBIDDEN,
+            ApiErrorCodes::NameChangeTooSoon => StatusCode::FORBIDDEN,
             ApiErrorCodes::DataNotFound(_) => StatusCode::NOT_FOUND,
             ApiErrorCodes::ActionBlocked => StatusCode::FORBIDDEN,
             ApiErrorCodes::RatelimitExceeded => StatusCode::TOO_MANY_REQUESTS,

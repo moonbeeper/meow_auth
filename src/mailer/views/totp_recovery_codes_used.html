@@ -1,7 +1,7 @@
 {% extends "partials/base.html" %}
 
 {% block content %}
-    {{<ui.heading text={globals.greeting ~ " " ~ user.login ~ "!"} />}}
+    {{<ui.heading text={globals.greeting ~ " " ~ user.name ~ "!"} />}}
     {{<ui.spacer px={16} />}}
     {{<ui.text text="A recovery code was used to verify into your account." />}}
     {{<ui.text text="If this was you, you're all set." />}}

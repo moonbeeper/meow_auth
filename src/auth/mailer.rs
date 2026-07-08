@@ -42,7 +42,7 @@ pub struct AuthMailer;
 impl MailerTemplate for AuthMailer {}
 
 impl AuthMailer {
-    pub async fn new_session(login: String, to: String, db: &PgPool) -> MailerResult<()> {
+    pub async fn new_session(name: String, to: String, db: &PgPool) -> MailerResult<()> {
         Self::mail_template(
             "A new session has been created".to_string(),
             to,
@@ -50,7 +50,7 @@ impl AuthMailer {
                 base: "new_session",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                   }
                 }),
             },
@@ -59,7 +59,7 @@ impl AuthMailer {
         .await
     }
 
-    pub async fn new_account(login: String, to: String, db: &PgPool) -> MailerResult<()> {
+    pub async fn new_account(name: String, to: String, db: &PgPool) -> MailerResult<()> {
         Self::mail_template(
             "Your account has been created".to_string(),
             to,
@@ -67,7 +67,7 @@ impl AuthMailer {
                 base: "new_account",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                   }
                 }),
             },
@@ -79,7 +79,7 @@ impl AuthMailer {
     pub async fn verification_code(
         code: String,
         kind: EmailVerificationCodeKind,
-        login: String,
+        name: String,
         to: String,
         db: &PgPool,
     ) -> MailerResult<()> {
@@ -103,7 +103,7 @@ impl AuthMailer {
                 base: template,
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                   },
                   "code": code,
                   "kind": kind.to_str(),
@@ -114,7 +114,7 @@ impl AuthMailer {
         .await
     }
 
-    pub async fn totp_enabled(login: String, to: String, db: &PgPool) -> MailerResult<()> {
+    pub async fn totp_enabled(name: String, to: String, db: &PgPool) -> MailerResult<()> {
         Self::mail_template(
             "Two factor authentication enabled".to_string(),
             to,
@@ -122,7 +122,7 @@ impl AuthMailer {
                 base: "totp_enabled",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                   }
                 }),
             },
@@ -131,7 +131,7 @@ impl AuthMailer {
         .await
     }
 
-    pub async fn totp_disabled(login: String, to: String, db: &PgPool) -> MailerResult<()> {
+    pub async fn totp_disabled(name: String, to: String, db: &PgPool) -> MailerResult<()> {
         Self::mail_template(
             "Two factor authentication disabled".to_string(),
             to,
@@ -139,7 +139,7 @@ impl AuthMailer {
                 base: "totp_disabled",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                   }
                 }),
             },
@@ -149,7 +149,7 @@ impl AuthMailer {
     }
 
     pub async fn totp_recovery_codes_seen(
-        login: String,
+        name: String,
         to: String,
         db: &PgPool,
     ) -> MailerResult<()> {
@@ -160,7 +160,7 @@ impl AuthMailer {
                 base: "totp_recovery_codes_seen",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                   }
                 }),
             },
@@ -170,7 +170,7 @@ impl AuthMailer {
     }
 
     pub async fn totp_recovery_code_used(
-        login: String,
+        name: String,
         to: String,
         db: &PgPool,
     ) -> MailerResult<()> {
@@ -181,7 +181,7 @@ impl AuthMailer {
                 base: "totp_recovery_code_used",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                   }
                 }),
             },
@@ -191,7 +191,7 @@ impl AuthMailer {
     }
 
     pub async fn webauthn_registered(
-        login: String,
+        name: String,
         passkey_name: String,
         to: String,
         db: &PgPool,
@@ -203,7 +203,7 @@ impl AuthMailer {
                 base: "webauthn_registered",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                   },
                   "passkey": {
                       "name": passkey_name
@@ -216,7 +216,7 @@ impl AuthMailer {
     }
 
     pub async fn webauthn_removed(
-        login: String,
+        name: String,
         passkey_name: String,
         to: String,
         db: &PgPool,
@@ -228,7 +228,7 @@ impl AuthMailer {
                 base: "webauthn_removed",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                   },
                   "passkey": {
                       "name": passkey_name
@@ -241,7 +241,7 @@ impl AuthMailer {
     }
 
     pub async fn webauthn_compromised(
-        login: String,
+        name: String,
         passkey_name: String,
         to: String,
         db: &PgPool,
@@ -253,7 +253,7 @@ impl AuthMailer {
                 base: "webauthn_compromised",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                   },
                   "passkey": {
                       "name": passkey_name
@@ -270,7 +270,7 @@ impl AuthMailer {
         kind: NewEmailVerificationCodeKind,
         token: String,
         new_address: String,
-        login: String,
+        name: String,
         to: String,
         db: &PgPool,
     ) -> MailerResult<()> {
@@ -286,7 +286,7 @@ impl AuthMailer {
                 base: "new_email_verification",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                       "new_address": new_address,
                       "token": token,
                   },
@@ -301,7 +301,7 @@ impl AuthMailer {
     pub async fn email_updated(
         kind: NewEmailVerificationCodeKind,
         new_address: String,
-        login: String,
+        name: String,
         to: String,
         db: &PgPool,
     ) -> MailerResult<()> {
@@ -312,27 +312,10 @@ impl AuthMailer {
                 base: "email_updated",
                 data: json!({
                   "user": {
-                      "login": login,
+                      "name": name,
                       "new_address": new_address,
                   },
                   "kind": kind.to_str(),
-                }),
-            },
-            db,
-        )
-        .await
-    }
-
-    pub async fn login_updated(login: String, to: String, db: &PgPool) -> MailerResult<()> {
-        Self::mail_template(
-            "Your account's login was updated".to_string(),
-            to,
-            EmailTemplate {
-                base: "login_updated",
-                data: json!({
-                  "user": {
-                      "login": login,
-                  },
                 }),
             },
             db,

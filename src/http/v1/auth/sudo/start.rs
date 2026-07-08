@@ -77,7 +77,7 @@ pub async fn otp_option(
     AuthMailer::verification_code(
         otp.code,
         EmailVerificationCodeKind::Verification,
-        user.login,
+        user.name,
         user.email,
         &global.database,
     )

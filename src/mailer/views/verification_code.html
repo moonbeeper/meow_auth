@@ -6,7 +6,7 @@
 {% endif %}
 
 {% block content %}
-    {{<ui.heading text={globals.greeting ~ " " ~ user.login ~ "!"} />}}
+    {{<ui.heading text={globals.greeting ~ " " ~ user.name ~ "!"} />}}
     {{<ui.spacer px={16} />}}
     {% if kind == "register" %}
         {{<ui.text text="Use this code to finish creating your account:" />}}

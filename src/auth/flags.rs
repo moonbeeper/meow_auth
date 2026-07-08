@@ -10,8 +10,10 @@ flags! {
         // Admin, I frankly dont see the point of having a lesser admin role. for now at least.
         CannotManageOauthApplications,
         CannotAuthorizeOauthApplications,
-        CannotModifyLogin,
+        CannotModifyName,
         CannotModifyEmail,
+        // If this is set, the user has completed their setup process. If not, access not granted :(
+        HasSetName,
     }
 }
 
@@ -21,8 +23,9 @@ impl UserFlag {
             UserFlag::SuperAdmin => "super_admin",
             UserFlag::CannotManageOauthApplications => "cannot_manage_oauth_applications",
             UserFlag::CannotAuthorizeOauthApplications => "cannot_authorize_oauth_applications",
-            UserFlag::CannotModifyLogin => "cannot_modify_login",
+            UserFlag::CannotModifyName => "cannot_modify_name",
             UserFlag::CannotModifyEmail => "cannot_modify_email",
+            UserFlag::HasSetName => "has_set_name",
         }
     }
 }

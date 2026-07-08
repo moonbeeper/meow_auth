@@ -1,5 +1,4 @@
 mod exchange;
-mod info;
 mod start;
 
 use std::sync::Arc;
@@ -27,24 +26,27 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(flow_options))
         .nest("/start", start::routes())
         .nest("/exchange", exchange::routes())
-        .nest("/info", info::routes())
         .layer(RequireAuthenticationLayer::new().need_auth(false))
         .layer(RatelimitLayer::new(20, chrono::Duration::seconds(60)))
 }
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema)]
 pub struct FlowRequest {
-    login: String,
+    /// The email address of the user that is trying to authenticate
+    email: String,
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct FlowResponse {
+    /// The flow ID used to identify and track this authentication flow
     pub flow_id: UlidId,
+    /// The next authentication method that can be used to finalize the authentication flow
     pub next_method: Vec<AuthMethod>,
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct FlowOptionResponse {
+    /// The available authentication methods that an user can use to authenticate
     pub methods: Vec<AuthMethod>,
 }
 
@@ -67,7 +69,7 @@ pub async fn flow_options(
 ) -> Result<Json<FlowOptionResponse>, ApiErrorCodes> {
     let mut methods = vec![AuthMethod::Otp];
 
-    let Ok(Some(user)) = User::find_by_login(request.login, &global.database).await else {
+    let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
         return Ok(Json(FlowOptionResponse { methods }));
     };
 

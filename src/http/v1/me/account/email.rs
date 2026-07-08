@@ -25,7 +25,11 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(change_user_email))
         .routes(routes!(exchange_change_user_email))
-        .layer(RequireUserFlagLayer::new().forbid(UserFlag::CannotModifyEmail))
+        .layer(
+            RequireUserFlagLayer::new()
+                .forbid(UserFlag::CannotModifyEmail)
+                .require(UserFlag::HasSetName),
+        )
 }
 
 #[derive(Debug, serde::Deserialize, validator::Validate, utoipa::ToSchema)]
@@ -93,7 +97,7 @@ pub async fn change_user_email(
         NewEmailVerificationCodeKind::Current,
         current_email.token,
         request.email.clone(),
-        user.login.clone(),
+        user.name.clone(),
         user.email,
         &global.database,
     )
@@ -103,7 +107,7 @@ pub async fn change_user_email(
         NewEmailVerificationCodeKind::New,
         new_email.token,
         request.email.clone(),
-        user.login,
+        user.name,
         request.email,
         &global.database,
     )
@@ -186,7 +190,7 @@ pub async fn exchange_change_user_email(
         AuthMailer::email_updated(
             NewEmailVerificationCodeKind::Current,
             email_request.new_email.clone(),
-            user.login.clone(),
+            user.name.clone(),
             email_request.current_email,
             &global.database,
         )
@@ -195,7 +199,7 @@ pub async fn exchange_change_user_email(
         AuthMailer::email_updated(
             NewEmailVerificationCodeKind::New,
             email_request.new_email.clone(),
-            user.login,
+            user.name,
             email_request.new_email,
             &global.database,
         )

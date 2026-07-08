@@ -1,7 +1,7 @@
 {% extends "partials/base.html" %}
 
 {% block content %}
-    {{<ui.heading text={globals.greeting ~ " " ~ user.login ~ "!"} />}}
+    {{<ui.heading text={globals.greeting ~ " " ~ user.name ~ "!"} />}}
     {{<ui.spacer px={16} />}}
     {{<ui.text text={"A new passkey (" ~ passkey.name ~ ") was added to your account."} />}}
     {{<ui.text text="If this was you, no action is needed." />}}

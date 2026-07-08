@@ -49,6 +49,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 
 #[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
 pub struct ExchangeRequest {
+    /// The flow ID used to identify and track a authentication flow
     flow_id: UlidId,
     #[validate(length(min = 6, max = 11))]
     code: String,
@@ -106,18 +107,18 @@ pub async fn flow_otp_exchange(
     if flow.purpose == AuthChallengePurpose::Signup {
         let mut tx = global.database.begin().await?;
 
-        let Ok(Some(db_user)) = UserSignup::take_by_id(flow.user_signup_id.unwrap(), &mut tx).await
+        let Ok(Some(signup)) = UserSignup::take_by_id(flow.user_signup_id.unwrap(), &mut tx).await
         else {
             return Err(ApiErrorCodes::InvalidCode);
         };
 
         let user = User::builder()
-            .login(db_user.login.clone())
-            .email(db_user.email.clone())
+            .name(signup.email.clone())
+            .email(signup.email.clone())
             .email_verified(true)
             .build();
 
-        db_user.delete_all_by_email_and_login(&mut tx).await?;
+        signup.delete_all_by_email(&mut tx).await?;
         user.insert(&mut tx).await?;
         audit::log(user.id, user.id, AuditAction::AccountCreated, None, &mut tx).await?;
         tx.commit().await?;
@@ -158,10 +159,10 @@ pub async fn flow_otp_exchange(
     create_session_cookie(session_id, &cookies, &global.settings);
 
     if flow.purpose == AuthChallengePurpose::Signup {
-        AuthMailer::new_account(user.login.clone(), user.email.clone(), &global.database).await?;
+        AuthMailer::new_account(user.name.clone(), user.email.clone(), &global.database).await?;
     }
 
-    AuthMailer::new_session(user.login, user.email, &global.database).await?;
+    AuthMailer::new_session(user.name, user.email, &global.database).await?;
 
     Ok(RouteEither::Right(Json(AlrightResponse::default())))
 }
@@ -224,7 +225,7 @@ pub async fn flow_webauthn_exchange(
         passkey.update(&mut tx).await?;
         tx.commit().await?;
         AuthMailer::webauthn_compromised(
-            user.login,
+            user.name,
             passkey.display_name,
             user.email,
             &global.database,
@@ -253,7 +254,7 @@ pub async fn flow_webauthn_exchange(
         })?;
     create_session_cookie(session_id, &cookies, &global.settings);
 
-    AuthMailer::new_session(user.login, user.email, &global.database).await?;
+    AuthMailer::new_session(user.name, user.email, &global.database).await?;
 
     Ok(Json(AlrightResponse::default()))
 }
@@ -306,10 +307,9 @@ pub async fn flow_totp_exchange(
         ApiErrorCodes::InternalServerError
     })?;
 
-    // TODO: regex for recovery codes
     if request.code.len() == 6 {
         let totp_client =
-            get_totp(user.login.clone(), totp.secret, &global.settings).map_err(|e| {
+            get_totp(user.name.clone(), totp.secret, &global.settings).map_err(|e| {
                 tracing::error!("something went wrong while creating the totp client: {e}");
                 ApiErrorCodes::InternalServerError
             })?;
@@ -338,7 +338,7 @@ pub async fn flow_totp_exchange(
             })?;
 
         AuthMailer::totp_recovery_code_used(
-            user.login.clone(),
+            user.name.clone(),
             user.email.clone(),
             &global.database,
         )
@@ -358,7 +358,7 @@ pub async fn flow_totp_exchange(
         })?;
     create_session_cookie(session_id, &cookies, &global.settings);
 
-    AuthMailer::new_session(user.login, user.email, &global.database).await?;
+    AuthMailer::new_session(user.name, user.email, &global.database).await?;
 
     Ok(Json(AlrightResponse::default()))
 }

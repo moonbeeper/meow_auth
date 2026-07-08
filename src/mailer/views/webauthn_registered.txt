@@ -1,4 +1,4 @@
-{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{{ globals.greeting ~ " " ~ user.name ~ "!" }}
 {{ "A new passkey (" ~ passkey.name ~ ") was added to your account." }}
 
 If this was you, no action is needed.

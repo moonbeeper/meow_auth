@@ -1,4 +1,4 @@
-{{ globals.greeting ~ " " ~ user.login ~ "!" }}
+{{ globals.greeting ~ " " ~ user.name ~ "!" }}
 {% if kind == "current" %}
 Your account's email address has been updated to {{ user.new_address }}.
 {% elif kind == "new" %}
