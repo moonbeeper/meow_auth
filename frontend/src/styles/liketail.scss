@@ -1,0 +1,79 @@
+@layer liketail {
+    .flex {
+        display: flex;
+    }
+
+    .flex-col {
+        flex-direction: column;
+    }
+
+    .justify-center {
+        justify-content: center;
+    }
+
+    .justify-between {
+        justify-content: space-between;
+    }
+
+    .justify-end {
+        justify-content: flex-end;
+    }
+
+    .align-center {
+        align-items: center;
+    }
+
+    .font-x-small {
+        font-size: var(--text-x-small);
+    }
+
+    .font-small {
+        font-size: var(--text-small);
+    }
+
+    .font-normal {
+        font-size: var(--text-normal);
+    }
+
+    .font-medium {
+        font-size: var(--text-medium);
+    }
+
+    .font-large {
+        font-size: var(--text-large);
+    }
+
+    .font-x-large {
+        font-size: var(--text-x-large);
+    }
+
+    .font-xx-large {
+        font-size: var(--text-xx-large);
+    }
+
+    .grid {
+        display: grid;
+    }
+
+    .margin-auto {
+        margin: auto;
+    }
+
+    .margin-block-start {
+        margin-block-start: calc(var(--spacing) * 4);
+    }
+
+    .margin-block-end {
+        margin-block-end: calc(var(--spacing) * 4);
+    }
+
+    @for $i from 1 through 6 {
+        .gap-#{$i} {
+            gap: calc(var(--spacing) * #{$i});
+        }
+    }
+
+    .margin-center {
+        margin-inline: auto;
+    }
+}

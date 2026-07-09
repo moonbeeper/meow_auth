@@ -1,0 +1,209 @@
+@use "reset.scss";
+@use "base.scss";
+@use "input.scss";
+@use "button.scss";
+@use "header.scss";
+@use "liketail.scss"; /* order matters!!!!*/
+@layer reset, base, components, liketail;
+
+:root {
+    --font-sans:
+        "Inter Variable", -apple-system, BlinkMacSystemFont, "Adwaita Sans",
+        "Segoe UI", "Noto Sans", Ubuntu, Roboto, "Helvetica Neue", Arial,
+        sans-serif;
+
+    /* tailwind's stuffies :) */
+    --text-x-small: 0.75rem;
+    --text-small: 0.875rem;
+    --text-normal: 1rem;
+    --text-medium: 1.25rem;
+    --text-large: 1.5rem;
+    --text-x-large: 1.875rem;
+    --text-xx-large: 2.25rem;
+
+    --spacing: 0.25rem;
+
+    --main-padding: calc(var(--spacing) * 6);
+    --typical-radius: 0.75rem;
+
+    /* LCH colors */
+    /* for making the color stacks -> https://harmonizer.evilmartians.com/ */
+    --lch-black: 0% 0 0;
+    --lch-white: 100% 0 0;
+
+    /* 103 90 80 60 40 20 8 APCA*/
+    --lch-iron-darkest: 23.85% 0.025 260;
+    --lch-iron-darker: 41.16% 0.025 260;
+    --lch-iron-dark: 50% 0.015 260;
+    --lch-iron-medium: 64.75% 0.01 260;
+    --lch-iron-light: 77.25% 0.005 260;
+    --lch-iron-lighter: 88.43% 0.003 260;
+    --lch-iron-lightest: 94.63% 0.002 260;
+
+    --lch-iron-inverted: var(--lch-white);
+
+    --lch-lavander-darkest: 25.2% 0.06 286.2;
+    --lch-lavander-darker: 41.8% 0.1 286.2;
+    --lch-lavander-dark: 50.78% 0.12 286.2;
+    --lch-lavander-medium: 65.77% 0.15 286.2;
+    --lch-lavander-light: 78.03% 0.13 286.2;
+    --lch-lavander-lighter: 88.77% 0.06 286.2;
+    --lch-lavander-lightest: 94.82% 0.03 286.2;
+
+    --lch-fuchsia-darkest: 25.34% 0.06 316;
+    --lch-fuchsia-darker: 42.14% 0.1 316;
+    --lch-fuchsia-dark: 51.22% 0.12 316;
+    --lch-fuchsia-medium: 66.31% 0.15 316;
+    --lch-fuchsia-light: 78.61% 0.13 316;
+    --lch-fuchsia-lighter: 89.06% 0.06 316;
+    --lch-fuchsia-lightest: 94.97% 0.03 316;
+
+    --lch-coral-darkest: 25.1% 0.06 33;
+    --lch-coral-darker: 41.94% 0.1 33;
+    --lch-coral-dark: 50.98% 0.12 33;
+    --lch-coral-medium: 66.11% 0.15 33;
+    --lch-coral-light: 78.52% 0.13 33;
+    --lch-coral-lighter: 89.06% 0.06 33;
+    --lch-coral-lightest: 94.97% 0.03 33;
+
+    --lch-emerald-darkest: 24.9% 0.06 156.9;
+    --lch-emerald-darker: 39.79% 0.1 156.9;
+    --lch-emerald-dark: 48.39% 0.12 156.9;
+    --lch-emerald-medium: 62.7% 0.15 156.9;
+    --lch-emerald-light: 75.68% 0.13 156.9;
+    --lch-emerald-lighter: 87.7% 0.06 156.9;
+    --lch-emerald-lightest: 94.34% 0.03 156.9;
+
+    --lch-amber-darkest: 24.8% 0.06 78.3;
+    --lch-amber-darker: 41.31% 0.1 78.3;
+    --lch-amber-dark: 50.2% 0.12 78.3;
+    --lch-amber-medium: 65.09% 0.15 78.3;
+    --lch-amber-light: 77.59% 0.13 78.3;
+    --lch-amber-lighter: 88.57% 0.06 78.3;
+    --lch-amber-lightest: 94.73% 0.03 78.3;
+
+    /* Actual colors OKLCH */
+    --color-body: oklch(var(--lch-body, var(--lch-white)));
+
+    --color-iron-darkest: oklch(var(--lch-iron-darkest));
+    --color-iron-darker: oklch(var(--lch-iron-darker));
+    --color-iron-dark: oklch(var(--lch-iron-dark));
+    --color-iron-medium: oklch(var(--lch-iron-medium));
+    --color-iron-light: oklch(var(--lch-iron-light));
+    --color-iron-lighter: oklch(var(--lch-iron-lighter));
+    --color-iron-lightest: oklch(var(--lch-iron-lightest));
+
+    --color-iron-inverted: oklch(var(--lch-iron-inverted));
+
+    --color-lavander-darkest: oklch(var(--lch-lavander-darkest));
+    --color-lavander-darker: oklch(var(--lch-lavander-darker));
+    --color-lavander-dark: oklch(var(--lch-lavander-dark));
+    --color-lavander-medium: oklch(var(--lch-lavander-medium));
+    --color-lavander-light: oklch(var(--lch-lavander-light));
+    --color-lavander-lighter: oklch(var(--lch-lavander-lighter));
+    --color-lavander-lightest: oklch(var(--lch-lavander-lightest));
+
+    --color-fuchsia-darkest: oklch(var(--lch-fuchsia-darkest));
+    --color-fuchsia-darker: oklch(var(--lch-fuchsia-darker));
+    --color-fuchsia-dark: oklch(var(--lch-fuchsia-dark));
+    --color-fuchsia-medium: oklch(var(--lch-fuchsia-medium));
+    --color-fuchsia-light: oklch(var(--lch-fuchsia-light));
+    --color-fuchsia-lighter: oklch(var(--lch-fuchsia-lighter));
+    --color-fuchsia-lightest: oklch(var(--lch-fuchsia-lightest));
+
+    --color-coral-darkest: oklch(var(--lch-coral-darkest));
+    --color-coral-darker: oklch(var(--lch-coral-darker));
+    --color-coral-dark: oklch(var(--lch-coral-dark));
+    --color-coral-medium: oklch(var(--lch-coral-medium));
+    --color-coral-light: oklch(var(--lch-coral-light));
+    --color-coral-lighter: oklch(var(--lch-coral-lighter));
+    --color-coral-lightest: oklch(var(--lch-coral-lightest));
+
+    --color-emerald-darkest: oklch(var(--lch-emerald-darkest));
+    --color-emerald-darker: oklch(var(--lch-emerald-darker));
+    --color-emerald-dark: oklch(var(--lch-emerald-dark));
+    --color-emerald-medium: oklch(var(--lch-emerald-medium));
+    --color-emerald-light: oklch(var(--lch-emerald-light));
+    --color-emerald-lighter: oklch(var(--lch-emerald-lighter));
+    --color-emerald-lightest: oklch(var(--lch-emerald-lightest));
+
+    --color-amber-darkest: oklch(var(--lch-amber-darkest));
+    --color-amber-darker: oklch(var(--lch-amber-darker));
+    --color-amber-dark: oklch(var(--lch-amber-dark));
+    --color-amber-medium: oklch(var(--lch-amber-medium));
+    --color-amber-light: oklch(var(--lch-amber-light));
+    --color-amber-lighter: oklch(var(--lch-amber-lighter));
+    --color-amber-lightest: oklch(var(--lch-amber-lightest));
+
+    --color-accent-darkest: oklch(var(--lch-lavander-darkest));
+    --color-accent-darker: oklch(var(--lch-lavander-darker));
+    --color-accent-dark: oklch(var(--lch-lavander-dark));
+    --color-accent-medium: oklch(var(--lch-lavander-medium));
+    --color-accent-light: oklch(var(--lch-lavander-light));
+    --color-accent-lighter: oklch(var(--lch-lavander-lighter));
+    --color-accent-lightest: oklch(var(--lch-lavander-lightest));
+
+    @media (prefers-color-scheme: dark) {
+        /* LCH colors */
+        --lch-body: 17.63% 0.014 258.36;
+        --lch-iron-inverted: var(--lch-black);
+
+        /* 7 10 20 40 60 80 92 APCA (its backwards to be able to overwrite the light ones) */
+        --lch-iron-darkest: 92.92% 0.002 260;
+        --lch-iron-darker: 87.01% 0.003 260;
+        --lch-iron-dark: 76.27% 0.005 260;
+        --lch-iron-medium: 63.96% 0.01 260;
+        --lch-iron-light: 48.88% 0.015 260;
+        --lch-iron-lighter: 39.39% 0.025 260;
+        --lch-iron-lightest: 17.63% 0.025 260;
+
+        --lch-lavander-darkest: 17.63% 0.04 286.2;
+        --lch-lavander-darker: 39.99% 0.09 286.2;
+        --lch-lavander-dark: 49.64% 0.12 286.2;
+        --lch-lavander-medium: 65.01% 0.15 286.2;
+        --lch-lavander-light: 77.11% 0.13 286.2;
+        --lch-lavander-lighter: 87.41% 0.07 286.2;
+        --lch-lavander-lightest: 93.16% 0.04 286.2;
+
+        --lch-fuchsia-darkest: 17.63% 0.04 316;
+        --lch-fuchsia-darker: 40.31% 0.09 316;
+        --lch-fuchsia-dark: 50.13% 0.12 316;
+        --lch-fuchsia-medium: 65.57% 0.15 316;
+        --lch-fuchsia-light: 77.72% 0.13 316;
+        --lch-fuchsia-lighter: 87.77% 0.07 316;
+        --lch-fuchsia-lightest: 93.28% 0.04 316;
+
+        --lch-coral-darkest: 17.63% 0.04 33;
+        --lch-coral-darker: 40.07% 0.09 33;
+        --lch-coral-dark: 49.85% 0.12 33;
+        --lch-coral-medium: 65.37% 0.15 33;
+        --lch-coral-light: 77.56% 0.13 33;
+        --lch-coral-lighter: 87.89% 0.07 33;
+        --lch-coral-lightest: 93.28% 0.04 33;
+
+        --lch-emerald-darkest: 17.63% 0.04 156.9;
+        --lch-emerald-darker: 38.06% 0.09 156.9;
+        --lch-emerald-dark: 47.31% 0.12 156.9;
+        --lch-emerald-medium: 62.03% 0.15 156.9;
+        --lch-emerald-light: 74.62% 0.13 156.9;
+        --lch-emerald-lighter: 86.16% 0.07 156.9;
+        --lch-emerald-lightest: 92.44% 0.04 156.9;
+
+        --lch-amber-darkest: 17.63% 0.04 78.3;
+        --lch-amber-darker: 39.47% 0.09 78.3;
+        --lch-amber-dark: 49.08% 0.12 78.3;
+        --lch-amber-medium: 64.33% 0.15 78.3;
+        --lch-amber-light: 76.67% 0.13 78.3;
+        --lch-amber-lighter: 87.21% 0.07 78.3;
+        --lch-amber-lightest: 93% 0.04 78.3;
+
+        /* Actual colors OKLCH */
+        --color-accent-darkest: oklch(var(--lch-fuchsia-darkest));
+        --color-accent-darker: oklch(var(--lch-fuchsia-darker));
+        --color-accent-dark: oklch(var(--lch-fuchsia-dark));
+        --color-accent-medium: oklch(var(--lch-fuchsia-medium));
+        --color-accent-light: oklch(var(--lch-fuchsia-light));
+        --color-accent-lighter: oklch(var(--lch-fuchsia-lighter));
+        --color-accent-lightest: oklch(var(--lch-fuchsia-lightest));
+    }
+}

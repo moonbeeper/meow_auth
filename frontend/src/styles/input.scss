@@ -1,0 +1,32 @@
+@layer components {
+    .input {
+        border-radius: var(--typical-radius);
+        border: 1px solid var(--input-border-color, var(--color-iron-medium));
+        padding-inline-end: 0.5rem;
+        padding-inline-start: 0.75rem;
+        padding-block: 0.75rem;
+        accent-color: var(--color-accent-light);
+        color: var(--color-iron-darkest);
+        font-size: var(--text-normal);
+        background: transparent;
+        // if the transition for the outline is out of order, it makes so a random
+        // goofy black border come up first AND then, when finalized the animation, the right color.
+        transition:
+            background-color,
+            outline,
+            border-color,
+            color 0.1s ease-out;
+        // omg THIS HECKING THIGN WAS MAKING THE phone VIEW GO WONK AND TRY TO FILL ALLL
+        // the fricking screen instead of being constarint to the hecking padding it already had
+        inline-size: 100%;
+
+        &:focus-visible {
+            --input-border-color: var(--color-accent-light);
+            --focus-outline-offset: -1px;
+        }
+
+        &::placeholder {
+            color: var(--color-iron-dark);
+        }
+    }
+}

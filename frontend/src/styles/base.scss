@@ -1,0 +1,56 @@
+@layer base {
+    html {
+        font-size: 100%;
+    }
+
+    body {
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-font-smoothing: antialiased;
+        -webkit-text-size-adjust: none;
+        text-rendering: optimizeLegibility;
+        max-inline-size: 100vw;
+        scroll-behavior: auto;
+        text-size-adjust: none;
+        font-family: var(--font-sans);
+        color: var(--color-iron-darkest);
+        background: var(--color-body);
+        line-height: 1.428;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+    }
+
+    #main {
+        margin-inline: auto;
+        inline-size: 100%;
+        max-inline-size: 100dvw;
+        padding-inline: var(--main-padding);
+        text-align: center;
+    }
+
+    :is(.button, .input, a) {
+        &:focus-visible {
+            outline: 2px solid
+                var(--focus-outline-color, var(--color-accent-light));
+            outline-offset: var(--focus-outline-offset, 1px);
+        }
+    }
+
+    .footer {
+        text-align: center;
+        font-size: var(--text-small);
+        color: var(--color-iron-medium);
+    }
+
+    .footer--content {
+        margin-inline: auto;
+        padding-inline: var(--main-padding);
+        padding-block: calc(var(--spacing) * 3);
+    }
+
+    a {
+        color: var(--a-color, var(--color-accent-medium));
+        @media (prefers-color-scheme: dark) {
+            --a-color: var(--color-accent-light);
+        }
+    }
+}

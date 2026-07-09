@@ -1,0 +1,40 @@
+@layer components {
+    .header {
+        position: relative;
+        z-index: 10;
+        padding-inline: var(--main-padding);
+        padding-block: calc(var(--spacing) * 3);
+    }
+
+    .header--to-content {
+        position: absolute;
+        inset-block-start: 4rem;
+        inset-inline-start: -99999px;
+
+        &:focus-visible {
+            inset-inline-start: calc(var(--spacing) * 2);
+        }
+    }
+
+    .header--nav {
+        display: grid;
+        grid-template-columns: auto 1fr;
+    }
+
+    .header--logo {
+        /* padding-inline: 4px;
+        padding-block: 4px; */
+        --focus-outline-offset: 4px; // better than using padding :]
+        border-radius: 6px; // makes the focus ring rounded as the email logo
+    }
+    @media (max-width: 768px) {
+        .header--nav {
+            display: block;
+        }
+
+        .header--logo {
+            display: flex;
+            justify-content: center;
+        }
+    }
+}
