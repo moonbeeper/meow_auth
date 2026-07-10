@@ -29,8 +29,7 @@
 
     :is(.button, .input, a) {
         &:focus-visible {
-            outline: 2px solid
-                var(--focus-outline-color, var(--color-accent-light));
+            outline: 2px solid var(--focus-outline-color, var(--color-accent-light));
             outline-offset: var(--focus-outline-offset, 1px);
         }
     }

@@ -1,61 +1,53 @@
 {
-	"lsp": {
-		"biome": {
-			"settings": {
-				"config_path": "frontend/biome.json",
-				"require_config_file": true
-			}
-		}
-	},
-	"languages": {
-		"JavaScript": {
-			"formatter": { "language_server": { "name": "biome" } },
-			"code_actions_on_format": {
-				"source.fixAll.biome": true,
-				"source.organizeImports.biome": true
-			},
-			"format_on_save": "on"
-		},
-		"TypeScript": {
-			"formatter": { "language_server": { "name": "biome" } },
-			"code_actions_on_format": {
-				"source.fixAll.biome": true,
-				"source.organizeImports.biome": true
-			},
-			"format_on_save": "on"
-		},
-		"TSX": {
-			"formatter": { "language_server": { "name": "biome" } },
-			"code_actions_on_format": {
-				"source.fixAll.biome": true,
-				"source.organizeImports.biome": true
-			},
-			"format_on_save": "on"
-		},
-		"Svelte": {
-			"formatter": { "language_server": { "name": "biome" } },
-			"code_actions_on_format": {
-				"source.fixAll.biome": true,
-				"source.organizeImports.biome": true
-			},
-			"format_on_save": "on"
-		},
-		"JSON": {
-			"formatter": { "language_server": { "name": "biome" } },
-			"code_actions_on_format": {
-				"source.fixAll.biome": true
-			},
-			"format_on_save": "on"
-		},
-		"JSONC": {
-			"formatter": { "language_server": { "name": "biome" } },
-			"code_actions_on_format": {
-				"source.fixAll.biome": true
-			},
-			"format_on_save": "on"
-		},
-		"SCSS": {
-			"format_on_save": "on"
-		}
-	}
+    "languages": {
+        "JavaScript": {
+            "formatter": { "language_server": { "name": "oxfmt" } },
+            "prettier": {
+                "allowed": false
+            },
+            "format_on_save": "on"
+        },
+        "TypeScript": {
+            "formatter": { "language_server": { "name": "oxfmt" } },
+            "prettier": {
+                "allowed": false
+            },
+            "format_on_save": "on"
+        },
+        "Svelte": {
+            // "formatter": {
+            //     "external": {
+            //         "command": "frontend/node_modules/.bin/oxfmt",
+            //         "arguments": ["--stdin-filepath", "{buffer_path}"]
+            //     }
+            // },
+            "formatter": { "language_server": { "name": "oxfmt" } },
+
+            "prettier": {
+                "allowed": false
+            },
+            "format_on_save": "on"
+        },
+        "JSON": {
+            "formatter": { "language_server": { "name": "oxfmt" } },
+            "prettier": {
+                "allowed": false
+            },
+            "format_on_save": "on"
+        },
+        "JSONC": {
+            "formatter": { "language_server": { "name": "oxfmt" } },
+            "prettier": {
+                "allowed": false
+            },
+            "format_on_save": "on"
+        },
+        "SCSS": {
+            "formatter": { "language_server": { "name": "oxfmt" } },
+            "prettier": {
+                "allowed": false
+            },
+            "format_on_save": "on"
+        }
+    }
 }

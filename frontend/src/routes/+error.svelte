@@ -1,14 +1,14 @@
 <script lang="ts">
-import { page } from "$app/state";
+    import { page } from "$app/state";
 
-const errors: Record<number, string> = {
-	500: "Oh god. Something made the server implode :(",
-	404: "Lost? same. This page doesn't exist!1!",
-};
+    const errors: Record<number, string> = {
+        500: "Oh god. Something made the server implode :(",
+        404: "Lost? same. This page doesn't exist!1!"
+    };
 
-let message = $derived(page.error?.message ?? "An unexpected error occurred");
-let status = $derived(page.status ?? 500);
-let header = $derived(errors[status] ?? "Something weird happened1!!");
+    let message = $derived(page.error?.message ?? "An unexpected error occurred");
+    let status = $derived(page.status ?? 500);
+    let header = $derived(errors[status] ?? "Something weird happened1!!");
 </script>
 
 <svelte:head>

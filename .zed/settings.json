@@ -1,0 +1,17 @@
+// Folder-specific settings
+//
+// For a full list of overridable settings, and general information on folder-specific settings,
+// see the documentation: https://zed.dev/docs/configuring-zed#settings-files
+{
+  // goddamit this is so hecking stupid. oxfmt only searches for settings in the root
+  // of the workspace instead of ALLLL the fricking folders. Like "i see no node_modules",
+  // GODDAMIT SEARCH AAAGH ITS THERE ON the frontend folder.
+  "lsp": {
+    "oxfmt": {
+      "binary": {
+        "path": "node",
+        "arguments": ["frontend/node_modules/oxfmt/bin/oxfmt", "--lsp"],
+      },
+    },
+  },
+}

@@ -4,4023 +4,4023 @@
  */
 
 export interface paths {
-  '/': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Info about the application */
-    get: operations['application_info']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/.well-known/oauth-authorization-server': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get the oauth server's metadata */
-    get: operations['wellknown_oauth']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/.well-known/openid-configuration': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get the openid server's metadata */
-    get: operations['wellknown_openid']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/ok': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Health endpoint, returns always OK */
-    get: operations['health']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/admin/users/list': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List registered users */
-    get: operations['admin_list_users']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/admin/users/{id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get info about a user */
-    get: operations['admin_info_user']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    /** Update an existing user */
-    patch: operations['admin_edit_user']
-    trace?: never
-  }
-  '/v1/admin/users/{id}/audit': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get a user's audit log */
-    get: operations['admin_user_audit_log']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/admin/users/{id}/oauth/application/list': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List oauth applications of a user */
-    get: operations['admin_list_user_applications']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/admin/users/{id}/oauth/application/{cid}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    /** Delete an existing oauth application */
-    delete: operations['admin_delete_user_application']
-    options?: never
-    head?: never
-    /** Update an existing oauth application */
-    patch: operations['admin_edit_user_application']
-    trace?: never
-  }
-  '/v1/admin/users/{id}/oauth/application/{cid}/revoke_authorizations': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Revoke all authorizations of an existing oauth application */
-    post: operations['admin_revoke_all_auth_user_application']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/admin/users/{id}/oauth/application/{cid}/rotate_keys': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    /** Rotate the secret of an existing oauth application */
-    patch: operations['admin_rotate_secret_user_application']
-    trace?: never
-  }
-  '/v1/admin/users/{id}/oauth/authorization/list': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List oauth authorizations of a user */
-    get: operations['admin_list_user_oauth_authorizations']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/admin/users/{id}/oauth/authorization/{cid}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    /** Revoke an oauth authorization */
-    delete: operations['admin_delete_user_oauth_authorization']
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/admin/users/{id}/session': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    /** Revoke all user sessions */
-    delete: operations['admin_revoke_all_user_sessions']
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/admin/users/{id}/session/list': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List sessions of a user */
-    get: operations['admin_list_user_sessions']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/admin/users/{id}/session/{cid}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    /** Revoke a user session */
-    delete: operations['admin_revoke_user_session']
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/flow': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Get the Authentication options
-     * @description Requests what authentications methods you can use to authenticate with the given login.
-     *     This is useful for determining if a user has a passkey or not
-     */
-    post: operations['flow_options']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/flow/exchange': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Exchange the Authentication Flow ID made by an OTP code
-     * @description This can be also requested by a user registering a new account.
-     *     The response can return a `next_method: ["totp"]` if the user has TOTP enabled.
-     */
-    post: operations['flow_otp_exchange']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/flow/exchange/totp': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Exchange the Authentication Flow ID made by an enabled TOTP */
-    post: operations['flow_totp_exchange']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/flow/exchange/webauthn': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Exchange the Authentication Flow made by a Passkey browser challenge */
-    post: operations['flow_webauthn_exchange']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/flow/info/email': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Fetch if an email is available for registration */
-    post: operations['email_available']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/flow/info/login': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Fetch if a user login is available for registration */
-    post: operations['login_available']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/flow/start': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Authenticate via an OTP code
-     * @description Starts the flow to authenticate via an OTP sent to the user's email
-     */
-    post: operations['otp_login']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/flow/start/register': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Register a new account via an OTP code
-     * @description Starts the flow to register a new account via an OTP sent to the user's email.
-     *     Used on the same exchange endpoint as the authentication OTP code flow.
-     */
-    post: operations['otp_register']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/flow/start/webauthn': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Authenticate via a Passkey
-     * @description Returns the challenge for the user's browser to use to authenticate.
-     */
-    post: operations['webauthn_options']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/sudo': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get the Sudo Re-Authentication options
-     * @description Requests what authentications methods you can use to re-authenticate with the current user.
-     */
-    get: operations['get_enable_options']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/sudo/exchange': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Exchange the Re-Authentication Flow ID made by an OTP code */
-    post: operations['sudo_otp_exchange']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/sudo/exchange/totp': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Exchange the Re-Authentication Flow ID made by an enabled TOTP */
-    post: operations['sudo_totp_exchange']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/sudo/exchange/webauthn': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Exchange the Re-Authentication Flow made by a Passkey browser challenge */
-    post: operations['sudo_webauthn_exchange']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/sudo/start': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Re-Authenticate via an OTP code */
-    post: operations['otp_option']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/sudo/start/totp': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Re-Authenticate via a TOTP code (if enabled) */
-    post: operations['totp_option']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/auth/sudo/start/webauthn': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Re-Authenticate via a Passkey
-     * @description Returns the challenge for the user's browser to use to re-authenticate.
-     */
-    post: operations['webauthn_options']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get your current user information */
-    get: operations['current_user_info']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/account/audit': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get your current user audit log */
-    get: operations['current_user_audit_log']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/account/email': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Exchange the Email Change Token */
-    post: operations['exchange_change_user_email']
-    delete?: never
-    options?: never
-    head?: never
-    /**
-     * Change your current email address
-     * @description This will send a verification email to both your current and new email addresses. You must verify both emails to complete the change.
-     */
-    patch: operations['change_user_email']
-    trace?: never
-  }
-  '/v1/me/account/login': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    /** Change your current login (username) */
-    patch: operations['change_user_login']
-    trace?: never
-  }
-  '/v1/me/logout': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Log out of this session */
-    post: operations['logout']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/oauth/application/create': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Create a new oauth application */
-    post: operations['create_application']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/oauth/application/list': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List your oauth applications */
-    get: operations['list_applications']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/oauth/application/{id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get info about a specific oauth application */
-    get: operations['get_info_application']
-    put?: never
-    post?: never
-    /** Delete an existing oauth application */
-    delete: operations['delete_application']
-    options?: never
-    head?: never
-    /** Update an existing oauth application */
-    patch: operations['edit_application']
-    trace?: never
-  }
-  '/v1/me/oauth/application/{id}/rotate_keys': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    /** Rotate the secret of an existing oauth application */
-    patch: operations['rotate_secret_application']
-    trace?: never
-  }
-  '/v1/me/oauth/authorization/list': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List your oauth authorizations */
-    get: operations['list_oauth_authorizations']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/oauth/authorization/{id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    /** Revoke an oauth authorization */
-    delete: operations['delete_oauth_authorization']
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/session': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Current session info */
-    get: operations['current_session_info']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/session/all': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    /**
-     * Close all your open sessions
-     * @description This includes your current one
-     */
-    delete: operations['revoke_all_sessions']
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/session/list': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List all your open sessions */
-    get: operations['list_sessions']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/session/{id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    /** Close one of your sessions */
-    delete: operations['revoke_session']
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/totp': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Get the TOTP enrollment necessary data */
-    post: operations['create_totp_options']
-    /** Disable TOTP */
-    delete: operations['disable_totp']
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/totp/exchange': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Exchange the TOTP enrollment with a generated code
-     * @description This will enable TOTP for your account
-     */
-    post: operations['exchange_totp_creation']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/totp/recovery': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Get your TOTP recovery codes */
-    post: operations['see_recovery_codes']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/webauthn': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Get the passkey creation options */
-    post: operations['register_passkey_options']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/webauthn/exchange': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Exchange the passkey register result created on the browser */
-    post: operations['register_passkey_exchange']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/webauthn/list': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List all your created passkeys */
-    get: operations['list_passkeys']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/me/webauthn/{id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    /**
-     * Delete one of your passkeys
-     * @description You use the ID of one of your passkeys.
-     */
-    delete: operations['delete_passkey']
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/oauth2/authorize': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Authorize an oauth application.
-     * @description This endpoint is used to authorize an oauth application.
-     *     It will redirect to the consent screen if the current user has not authorized this application
-     *     else it will redirect to the application's redirect_uri with typical oauth stuff.
-     */
-    get: operations['authorize']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/oauth2/consent': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get the pending oauth authorization metadata */
-    get: operations['oauth_consent_info']
-    put?: never
-    /** Give consent to a pending oauth authorization. */
-    post: operations['finish_authorization']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/oauth2/discovery/keys': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get the oauth server's public keys (JWKs) */
-    get: operations['oauth_discovery_jwks']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/oauth2/token': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Exchange an authorization code for an access token */
-    post: operations['token']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/v1/oauth2/userinfo': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get the openid userinfo for the token's user.
-     * @description This handler requires that the token has the `openid` scope.
-     */
-    get: operations['openid_userinfo']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
+    "/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Info about the application */
+        get: operations["application_info"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/.well-known/oauth-authorization-server": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the oauth server's metadata */
+        get: operations["wellknown_oauth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/.well-known/openid-configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the openid server's metadata */
+        get: operations["wellknown_openid"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ok": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health endpoint, returns always OK */
+        get: operations["health"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List registered users */
+        get: operations["admin_list_users"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get info about a user */
+        get: operations["admin_info_user"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update an existing user */
+        patch: operations["admin_edit_user"];
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a user's audit log */
+        get: operations["admin_user_audit_log"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/oauth/application/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List oauth applications of a user */
+        get: operations["admin_list_user_applications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/oauth/application/{cid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an existing oauth application */
+        delete: operations["admin_delete_user_application"];
+        options?: never;
+        head?: never;
+        /** Update an existing oauth application */
+        patch: operations["admin_edit_user_application"];
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/oauth/application/{cid}/revoke_authorizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke all authorizations of an existing oauth application */
+        post: operations["admin_revoke_all_auth_user_application"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/oauth/application/{cid}/rotate_keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rotate the secret of an existing oauth application */
+        patch: operations["admin_rotate_secret_user_application"];
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/oauth/authorization/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List oauth authorizations of a user */
+        get: operations["admin_list_user_oauth_authorizations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/oauth/authorization/{cid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke an oauth authorization */
+        delete: operations["admin_delete_user_oauth_authorization"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke all user sessions */
+        delete: operations["admin_revoke_all_user_sessions"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/session/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List sessions of a user */
+        get: operations["admin_list_user_sessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/users/{id}/session/{cid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke a user session */
+        delete: operations["admin_revoke_user_session"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/flow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get the Authentication options
+         * @description Requests what authentications methods you can use to authenticate with the given login.
+         *     This is useful for determining if a user has a passkey or not
+         */
+        post: operations["flow_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/flow/exchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchange the Authentication Flow ID made by an OTP code
+         * @description This can be also requested by a user registering a new account.
+         *     The response can return a `next_method: ["totp"]` if the user has TOTP enabled.
+         */
+        post: operations["flow_otp_exchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/flow/exchange/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange the Authentication Flow ID made by an enabled TOTP */
+        post: operations["flow_totp_exchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/flow/exchange/webauthn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange the Authentication Flow made by a Passkey browser challenge */
+        post: operations["flow_webauthn_exchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/flow/info/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fetch if an email is available for registration */
+        post: operations["email_available"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/flow/info/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Fetch if a user login is available for registration */
+        post: operations["login_available"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/flow/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Authenticate via an OTP code
+         * @description Starts the flow to authenticate via an OTP sent to the user's email
+         */
+        post: operations["otp_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/flow/start/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register a new account via an OTP code
+         * @description Starts the flow to register a new account via an OTP sent to the user's email.
+         *     Used on the same exchange endpoint as the authentication OTP code flow.
+         */
+        post: operations["otp_register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/flow/start/webauthn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Authenticate via a Passkey
+         * @description Returns the challenge for the user's browser to use to authenticate.
+         */
+        post: operations["webauthn_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/sudo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the Sudo Re-Authentication options
+         * @description Requests what authentications methods you can use to re-authenticate with the current user.
+         */
+        get: operations["get_enable_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/sudo/exchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange the Re-Authentication Flow ID made by an OTP code */
+        post: operations["sudo_otp_exchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/sudo/exchange/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange the Re-Authentication Flow ID made by an enabled TOTP */
+        post: operations["sudo_totp_exchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/sudo/exchange/webauthn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange the Re-Authentication Flow made by a Passkey browser challenge */
+        post: operations["sudo_webauthn_exchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/sudo/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-Authenticate via an OTP code */
+        post: operations["otp_option"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/sudo/start/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-Authenticate via a TOTP code (if enabled) */
+        post: operations["totp_option"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/sudo/start/webauthn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Re-Authenticate via a Passkey
+         * @description Returns the challenge for the user's browser to use to re-authenticate.
+         */
+        post: operations["webauthn_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get your current user information */
+        get: operations["current_user_info"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/account/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get your current user audit log */
+        get: operations["current_user_audit_log"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/account/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange the Email Change Token */
+        post: operations["exchange_change_user_email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change your current email address
+         * @description This will send a verification email to both your current and new email addresses. You must verify both emails to complete the change.
+         */
+        patch: operations["change_user_email"];
+        trace?: never;
+    };
+    "/v1/me/account/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change your current login (username) */
+        patch: operations["change_user_login"];
+        trace?: never;
+    };
+    "/v1/me/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Log out of this session */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/oauth/application/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a new oauth application */
+        post: operations["create_application"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/oauth/application/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List your oauth applications */
+        get: operations["list_applications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/oauth/application/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get info about a specific oauth application */
+        get: operations["get_info_application"];
+        put?: never;
+        post?: never;
+        /** Delete an existing oauth application */
+        delete: operations["delete_application"];
+        options?: never;
+        head?: never;
+        /** Update an existing oauth application */
+        patch: operations["edit_application"];
+        trace?: never;
+    };
+    "/v1/me/oauth/application/{id}/rotate_keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rotate the secret of an existing oauth application */
+        patch: operations["rotate_secret_application"];
+        trace?: never;
+    };
+    "/v1/me/oauth/authorization/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List your oauth authorizations */
+        get: operations["list_oauth_authorizations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/oauth/authorization/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke an oauth authorization */
+        delete: operations["delete_oauth_authorization"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current session info */
+        get: operations["current_session_info"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/session/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Close all your open sessions
+         * @description This includes your current one
+         */
+        delete: operations["revoke_all_sessions"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/session/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all your open sessions */
+        get: operations["list_sessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/session/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Close one of your sessions */
+        delete: operations["revoke_session"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get the TOTP enrollment necessary data */
+        post: operations["create_totp_options"];
+        /** Disable TOTP */
+        delete: operations["disable_totp"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/totp/exchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchange the TOTP enrollment with a generated code
+         * @description This will enable TOTP for your account
+         */
+        post: operations["exchange_totp_creation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/totp/recovery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get your TOTP recovery codes */
+        post: operations["see_recovery_codes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/webauthn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get the passkey creation options */
+        post: operations["register_passkey_options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/webauthn/exchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange the passkey register result created on the browser */
+        post: operations["register_passkey_exchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/webauthn/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all your created passkeys */
+        get: operations["list_passkeys"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/webauthn/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete one of your passkeys
+         * @description You use the ID of one of your passkeys.
+         */
+        delete: operations["delete_passkey"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/oauth2/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Authorize an oauth application.
+         * @description This endpoint is used to authorize an oauth application.
+         *     It will redirect to the consent screen if the current user has not authorized this application
+         *     else it will redirect to the application's redirect_uri with typical oauth stuff.
+         */
+        get: operations["authorize"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/oauth2/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the pending oauth authorization metadata */
+        get: operations["oauth_consent_info"];
+        put?: never;
+        /** Give consent to a pending oauth authorization. */
+        post: operations["finish_authorization"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/oauth2/discovery/keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the oauth server's public keys (JWKs) */
+        get: operations["oauth_discovery_jwks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/oauth2/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchange an authorization code for an access token */
+        post: operations["token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/oauth2/userinfo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the openid userinfo for the token's user.
+         * @description This handler requires that the token has the `openid` scope.
+         */
+        get: operations["openid_userinfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
-export type webhooks = Record<string, never>
+export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    AlrightResponse: {
-      ok: boolean
-    }
-    ApiError: {
-      code: string
-      message: string
-      ok: boolean
-    }
-    ApplicationBuildInfo: {
-      build_time: string
-      git_hash: string
-      profile: components['schemas']['ApplicationBuildProfile']
-    }
-    /** @enum {string} */
-    ApplicationBuildProfile: 'debug' | 'release'
-    ApplicationInfoResponse: {
-      build: components['schemas']['ApplicationBuildInfo']
-      info: string
-      name: string
-      version: string
-    }
-    AuditLog: {
-      action: string
-      actor_id?: null | components['schemas']['UlidId']
-      actor_login?: string | null
-      /** Format: date-time */
-      created_at: string
-      id: components['schemas']['UlidId']
-      metadata: unknown
-      user_id: components['schemas']['UlidId']
-      user_login?: string | null
-      was_self: boolean
-    }
-    /** @enum {string} */
-    AuthMethod: 'otp' | 'totp' | 'passkey'
-    AuthenticationPasskeyRequest: {
-      /** @description Unsigned Client processed extensions. */
-      extensions?: unknown
-      /** @description The credential Id, likely base64 */
-      id: string
-      /** @description The binary of the credential id. */
-      rawId: unknown
-      /** @description The authenticator response. */
-      response: unknown
-      /** @description The authenticator type. */
-      type: string
-    }
-    AuthorizationDecisionRequest: {
-      client_id: components['schemas']['UlidId']
-      consent: boolean
-    }
-    AuthorizationRequest: {
-      client_id: components['schemas']['UlidId']
-      code_challenge: string
-      code_challenge_method: components['schemas']['CodeChallengeMethod']
-      nonce?: string | null
-      prompt?: null | components['schemas']['PromptType']
-      redirect_uri?: string | null
-      response_type: components['schemas']['ResponseType']
-      scope?: string | null
-      state?: string | null
-    }
-    ChangeEmailRequest: {
-      email: string
-    }
-    ChangeLoginRequest: {
-      login: string
-    }
-    /** @enum {string} */
-    CodeChallengeMethod: 'plain' | 'S256'
-    ConsentMetadata: {
-      /** Format: date-time */
-      created_at: string
-      id: components['schemas']['UlidId']
-      name: string
-      /** Format: int64 */
-      old_scopes: number
-      redirect_url: string
-      /** Format: int64 */
-      scopes: number
-    }
-    CreateTotpResponse: {
-      recovery_codes: string[]
-      secret: string
-      uri: string
-    }
-    ExchangeChangeEmailRequest: {
-      token: string
-    }
-    ExchangeRequest: {
-      code: string
-      flow_id: components['schemas']['UlidId']
-    }
-    FlowRequest: {
-      login: string
-    }
-    FlowResponse: {
-      flow_id: components['schemas']['UlidId']
-      next_method: components['schemas']['AuthMethod'][]
-    }
-    /** @enum {string} */
-    GrantType: 'authorization_code' | 'refresh_token' | 'client_credentials'
-    /** @enum {string} */
-    IdTokenSigningAlg: 'ES256' | 'RS256'
-    InfoAvailableRequest: {
-      who: string
-    }
-    InfoAvailableResponse: {
-      available: boolean
-    }
-    JwkKey: {
-      alg: string
-      crv: string
-      kid: string
-      kty: string
-      use: string
-      x: string
-      y: string
-    }
-    JwkKeySet: {
-      keys: components['schemas']['JwkKey'][]
-    }
-    ListDataResponse_OauthApplication: {
-      data: {
-        /** Format: date-time */
-        created_at: string
-        id: components['schemas']['UlidId']
-        name: string
-        public: boolean
-        redirect_uri: string
-        /** Format: int64 */
-        scopes: number
-        /** Format: date-time */
-        updated_at: string
-      }[]
-      /** Format: ulid */
-      next?: string | null
-      /** Format: int64 */
-      total?: number | null
-    }
-    ListDataResponse_Session: {
-      data: {
-        /** Format: date-time */
-        active_expires_at: string
-        /** Format: date-time */
-        created_at: string
-        /** Format: date-time */
-        expires_at: string
-        id: components['schemas']['UlidId']
-        /** Format: date-time */
-        updated_at: string
-      }[]
-      /** Format: ulid */
-      next?: string | null
-      /** Format: int64 */
-      total?: number | null
-    }
-    ListDataResponse_User: {
-      data: {
-        /** Format: date-time */
-        created_at: string
-        email: string
-        /** Format: int64 */
-        flags: number
-        id: components['schemas']['UlidId']
-        login: string
-        /** Format: date-time */
-        updated_at: string
-      }[]
-      /** Format: ulid */
-      next?: string | null
-      /** Format: int64 */
-      total?: number | null
-    }
-    OauthApplication: {
-      /** Format: date-time */
-      created_at: string
-      id: components['schemas']['UlidId']
-      name: string
-      public: boolean
-      redirect_uri: string
-      /** Format: int64 */
-      scopes: number
-      /** Format: date-time */
-      updated_at: string
-    }
-    OauthApplicationData: {
-      name: string
-      public: boolean
-      redirect_uri: string
-      /** Format: int64 */
-      scopes: number
-    }
-    OauthApplicationDataResponse: {
-      id: components['schemas']['UlidId']
-      secret: string
-    }
-    OauthMetadata: {
-      authorization_endpoint: string
-      code_challenge_methods_supported: components['schemas']['CodeChallengeMethod'][]
-      grant_types_supported: components['schemas']['GrantType'][]
-      issuer: string
-      jwks_uri: string
-      /** @description The way the client can send the response to related endpoints */
-      response_modes_supported: components['schemas']['ResponseModes'][]
-      response_types_supported: components['schemas']['ResponseType'][]
-      scopes_supported: string[]
-      token_endpoint: string
-    }
-    OpenIdMetadata: {
-      authorization_endpoint: string
-      code_challenge_methods_supported: components['schemas']['CodeChallengeMethod'][]
-      grant_types_supported: components['schemas']['GrantType'][]
-      /** @description The signing algorithms supported (JWKs) for the Id token to be signed with */
-      id_token_signing_alg_values_supported: components['schemas']['IdTokenSigningAlg'][]
-      issuer: string
-      jwks_uri: string
-      /** @description The way the client can send the response to related endpoints */
-      response_modes_supported: components['schemas']['ResponseModes'][]
-      response_types_supported: components['schemas']['ResponseType'][]
-      scopes_supported: string[]
-      subject_types_supported: components['schemas']['SubjectTypes'][]
-      token_endpoint: string
-      /** @description The way to get the token by the client */
-      token_endpoint_auth_methods_supported: components['schemas']['TokenAuthMethod'][]
-      userinfo_endpoint: string
-    }
-    OpenIdUserInfo: {
-      email?: string | null
-      email_verified?: boolean | null
-      name?: string | null
-      sub: string
-    }
-    Passkey: {
-      /**
-       * Format: uuid
-       * @description The Authenticator Attestation GUID. An identifier used to determine the type of authenticator.
-       */
-      aaguid?: string | null
-      /** Format: date-time */
-      created_at: string
-      /**
-       * Format: date-time
-       * @description The point in time that the passkey was permanently disabled.
-       */
-      disabled_at?: string | null
-      display_name: string
-      enabled: boolean
-      id: components['schemas']['UlidId']
-      /** Format: date-time */
-      last_used_at?: string | null
-    }
-    /** @enum {string} */
-    PromptType: 'none' | 'login' | 'consent' | 'select_account'
-    RegisterPasskeyRequest: {
-      /** @description Unsigned Client processed extensions. */
-      extensions?: unknown
-      /** @description The id of the PublicKey credential, likely in base64. */
-      id: string
-      /** @description The id of the credential, as binary. */
-      rawId: unknown
-      /** @description <https://w3c.github.io/webauthn/#dom-publickeycredential-response> */
-      response: unknown
-      /** @description The type of credential. */
-      type: string
-    }
-    RegisterRequest: {
-      email: string
-      login: string
-    }
-    /** @enum {string} */
-    ResponseModes: 'query' | 'fragment' | 'form_post'
-    /** @enum {string} */
-    ResponseType: 'code' | 'token'
-    Session: {
-      /** Format: date-time */
-      active_expires_at: string
-      /** Format: date-time */
-      created_at: string
-      /** Format: date-time */
-      expires_at: string
-      id: components['schemas']['UlidId']
-      /** Format: date-time */
-      updated_at: string
-    }
-    /** @enum {string} */
-    SubjectTypes: 'pairwise' | 'public'
-    /** @enum {string} */
-    SudoOption: 'otp' | 'totp' | 'passkey'
-    SudoOptionsResponse: {
-      options: components['schemas']['SudoOption'][]
-    }
-    /** @enum {string} */
-    TokenAuthMethod:
-      | 'client_secret_post'
-      | 'client_secret_basic'
-      | 'client_secret_jwt'
-      | 'private_key_jwt'
-    TokenRequest: {
-      client_id: components['schemas']['UlidId']
-      client_secret: string
-      code: string
-      code_verifier: string
-      grant_type: components['schemas']['GrantType']
-      redirect_uri: string
-    }
-    TokenResponse: {
-      access_token: string
-      /** Format: int64 */
-      expires_in: number
-      id_token?: string | null
-      scope: string
-      token_type: components['schemas']['TokenType']
-    }
-    /** @enum {string} */
-    TokenType: 'bearer' | 'mac'
-    /** Format: ulid */
-    UlidId: string
-    User: {
-      /** Format: date-time */
-      created_at: string
-      email: string
-      /** Format: int64 */
-      flags: number
-      id: components['schemas']['UlidId']
-      login: string
-      /** Format: date-time */
-      updated_at: string
-    }
-    UserUpdateRequest: {
-      email?: string | null
-      /** Format: int64 */
-      flags?: number | null
-      login?: string | null
-    }
-    VerifyTotpRequest: {
-      code: string
-    }
-  }
-  responses: never
-  parameters: never
-  requestBodies: never
-  headers: never
-  pathItems: never
+    schemas: {
+        AlrightResponse: {
+            ok: boolean;
+        };
+        ApiError: {
+            code: string;
+            message: string;
+            ok: boolean;
+        };
+        ApplicationBuildInfo: {
+            build_time: string;
+            git_hash: string;
+            profile: components["schemas"]["ApplicationBuildProfile"];
+        };
+        /** @enum {string} */
+        ApplicationBuildProfile: "debug" | "release";
+        ApplicationInfoResponse: {
+            build: components["schemas"]["ApplicationBuildInfo"];
+            info: string;
+            name: string;
+            version: string;
+        };
+        AuditLog: {
+            action: string;
+            actor_id?: null | components["schemas"]["UlidId"];
+            actor_login?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            id: components["schemas"]["UlidId"];
+            metadata: unknown;
+            user_id: components["schemas"]["UlidId"];
+            user_login?: string | null;
+            was_self: boolean;
+        };
+        /** @enum {string} */
+        AuthMethod: "otp" | "totp" | "passkey";
+        AuthenticationPasskeyRequest: {
+            /** @description Unsigned Client processed extensions. */
+            extensions?: unknown;
+            /** @description The credential Id, likely base64 */
+            id: string;
+            /** @description The binary of the credential id. */
+            rawId: unknown;
+            /** @description The authenticator response. */
+            response: unknown;
+            /** @description The authenticator type. */
+            type: string;
+        };
+        AuthorizationDecisionRequest: {
+            client_id: components["schemas"]["UlidId"];
+            consent: boolean;
+        };
+        AuthorizationRequest: {
+            client_id: components["schemas"]["UlidId"];
+            code_challenge: string;
+            code_challenge_method: components["schemas"]["CodeChallengeMethod"];
+            nonce?: string | null;
+            prompt?: null | components["schemas"]["PromptType"];
+            redirect_uri?: string | null;
+            response_type: components["schemas"]["ResponseType"];
+            scope?: string | null;
+            state?: string | null;
+        };
+        ChangeEmailRequest: {
+            email: string;
+        };
+        ChangeLoginRequest: {
+            login: string;
+        };
+        /** @enum {string} */
+        CodeChallengeMethod: "plain" | "S256";
+        ConsentMetadata: {
+            /** Format: date-time */
+            created_at: string;
+            id: components["schemas"]["UlidId"];
+            name: string;
+            /** Format: int64 */
+            old_scopes: number;
+            redirect_url: string;
+            /** Format: int64 */
+            scopes: number;
+        };
+        CreateTotpResponse: {
+            recovery_codes: string[];
+            secret: string;
+            uri: string;
+        };
+        ExchangeChangeEmailRequest: {
+            token: string;
+        };
+        ExchangeRequest: {
+            code: string;
+            flow_id: components["schemas"]["UlidId"];
+        };
+        FlowRequest: {
+            login: string;
+        };
+        FlowResponse: {
+            flow_id: components["schemas"]["UlidId"];
+            next_method: components["schemas"]["AuthMethod"][];
+        };
+        /** @enum {string} */
+        GrantType: "authorization_code" | "refresh_token" | "client_credentials";
+        /** @enum {string} */
+        IdTokenSigningAlg: "ES256" | "RS256";
+        InfoAvailableRequest: {
+            who: string;
+        };
+        InfoAvailableResponse: {
+            available: boolean;
+        };
+        JwkKey: {
+            alg: string;
+            crv: string;
+            kid: string;
+            kty: string;
+            use: string;
+            x: string;
+            y: string;
+        };
+        JwkKeySet: {
+            keys: components["schemas"]["JwkKey"][];
+        };
+        ListDataResponse_OauthApplication: {
+            data: {
+                /** Format: date-time */
+                created_at: string;
+                id: components["schemas"]["UlidId"];
+                name: string;
+                public: boolean;
+                redirect_uri: string;
+                /** Format: int64 */
+                scopes: number;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            /** Format: ulid */
+            next?: string | null;
+            /** Format: int64 */
+            total?: number | null;
+        };
+        ListDataResponse_Session: {
+            data: {
+                /** Format: date-time */
+                active_expires_at: string;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                expires_at: string;
+                id: components["schemas"]["UlidId"];
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            /** Format: ulid */
+            next?: string | null;
+            /** Format: int64 */
+            total?: number | null;
+        };
+        ListDataResponse_User: {
+            data: {
+                /** Format: date-time */
+                created_at: string;
+                email: string;
+                /** Format: int64 */
+                flags: number;
+                id: components["schemas"]["UlidId"];
+                login: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            /** Format: ulid */
+            next?: string | null;
+            /** Format: int64 */
+            total?: number | null;
+        };
+        OauthApplication: {
+            /** Format: date-time */
+            created_at: string;
+            id: components["schemas"]["UlidId"];
+            name: string;
+            public: boolean;
+            redirect_uri: string;
+            /** Format: int64 */
+            scopes: number;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        OauthApplicationData: {
+            name: string;
+            public: boolean;
+            redirect_uri: string;
+            /** Format: int64 */
+            scopes: number;
+        };
+        OauthApplicationDataResponse: {
+            id: components["schemas"]["UlidId"];
+            secret: string;
+        };
+        OauthMetadata: {
+            authorization_endpoint: string;
+            code_challenge_methods_supported: components["schemas"]["CodeChallengeMethod"][];
+            grant_types_supported: components["schemas"]["GrantType"][];
+            issuer: string;
+            jwks_uri: string;
+            /** @description The way the client can send the response to related endpoints */
+            response_modes_supported: components["schemas"]["ResponseModes"][];
+            response_types_supported: components["schemas"]["ResponseType"][];
+            scopes_supported: string[];
+            token_endpoint: string;
+        };
+        OpenIdMetadata: {
+            authorization_endpoint: string;
+            code_challenge_methods_supported: components["schemas"]["CodeChallengeMethod"][];
+            grant_types_supported: components["schemas"]["GrantType"][];
+            /** @description The signing algorithms supported (JWKs) for the Id token to be signed with */
+            id_token_signing_alg_values_supported: components["schemas"]["IdTokenSigningAlg"][];
+            issuer: string;
+            jwks_uri: string;
+            /** @description The way the client can send the response to related endpoints */
+            response_modes_supported: components["schemas"]["ResponseModes"][];
+            response_types_supported: components["schemas"]["ResponseType"][];
+            scopes_supported: string[];
+            subject_types_supported: components["schemas"]["SubjectTypes"][];
+            token_endpoint: string;
+            /** @description The way to get the token by the client */
+            token_endpoint_auth_methods_supported: components["schemas"]["TokenAuthMethod"][];
+            userinfo_endpoint: string;
+        };
+        OpenIdUserInfo: {
+            email?: string | null;
+            email_verified?: boolean | null;
+            name?: string | null;
+            sub: string;
+        };
+        Passkey: {
+            /**
+             * Format: uuid
+             * @description The Authenticator Attestation GUID. An identifier used to determine the type of authenticator.
+             */
+            aaguid?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /**
+             * Format: date-time
+             * @description The point in time that the passkey was permanently disabled.
+             */
+            disabled_at?: string | null;
+            display_name: string;
+            enabled: boolean;
+            id: components["schemas"]["UlidId"];
+            /** Format: date-time */
+            last_used_at?: string | null;
+        };
+        /** @enum {string} */
+        PromptType: "none" | "login" | "consent" | "select_account";
+        RegisterPasskeyRequest: {
+            /** @description Unsigned Client processed extensions. */
+            extensions?: unknown;
+            /** @description The id of the PublicKey credential, likely in base64. */
+            id: string;
+            /** @description The id of the credential, as binary. */
+            rawId: unknown;
+            /** @description <https://w3c.github.io/webauthn/#dom-publickeycredential-response> */
+            response: unknown;
+            /** @description The type of credential. */
+            type: string;
+        };
+        RegisterRequest: {
+            email: string;
+            login: string;
+        };
+        /** @enum {string} */
+        ResponseModes: "query" | "fragment" | "form_post";
+        /** @enum {string} */
+        ResponseType: "code" | "token";
+        Session: {
+            /** Format: date-time */
+            active_expires_at: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            expires_at: string;
+            id: components["schemas"]["UlidId"];
+            /** Format: date-time */
+            updated_at: string;
+        };
+        /** @enum {string} */
+        SubjectTypes: "pairwise" | "public";
+        /** @enum {string} */
+        SudoOption: "otp" | "totp" | "passkey";
+        SudoOptionsResponse: {
+            options: components["schemas"]["SudoOption"][];
+        };
+        /** @enum {string} */
+        TokenAuthMethod:
+            | "client_secret_post"
+            | "client_secret_basic"
+            | "client_secret_jwt"
+            | "private_key_jwt";
+        TokenRequest: {
+            client_id: components["schemas"]["UlidId"];
+            client_secret: string;
+            code: string;
+            code_verifier: string;
+            grant_type: components["schemas"]["GrantType"];
+            redirect_uri: string;
+        };
+        TokenResponse: {
+            access_token: string;
+            /** Format: int64 */
+            expires_in: number;
+            id_token?: string | null;
+            scope: string;
+            token_type: components["schemas"]["TokenType"];
+        };
+        /** @enum {string} */
+        TokenType: "bearer" | "mac";
+        /** Format: ulid */
+        UlidId: string;
+        User: {
+            /** Format: date-time */
+            created_at: string;
+            email: string;
+            /** Format: int64 */
+            flags: number;
+            id: components["schemas"]["UlidId"];
+            login: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        UserUpdateRequest: {
+            email?: string | null;
+            /** Format: int64 */
+            flags?: number | null;
+            login?: string | null;
+        };
+        VerifyTotpRequest: {
+            code: string;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
-export type $defs = Record<string, never>
+export type $defs = Record<string, never>;
 export interface operations {
-  application_info: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description application info */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApplicationInfoResponse']
-        }
-      }
-    }
-  }
-  wellknown_oauth: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description oauth authentication server metadata */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['OauthMetadata']
-        }
-      }
-    }
-  }
-  wellknown_openid: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description openid authentication server metadata */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['OpenIdMetadata']
-        }
-      }
-    }
-  }
-  health: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description simple ok */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-    }
-  }
-  admin_list_users: {
-    parameters: {
-      query?: {
-        /** @description The id of the last item from the previous page. Normally provided in the `next` field of the previous response. */
-        from?: null | components['schemas']['UlidId']
-        /** @description If the total number of items should be returned. */
-        want_total?: boolean | null
-      }
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description list of users */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ListDataResponse_User']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_info_user: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description info about an user */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['User']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description user not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_edit_user: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UserUpdateRequest']
-      }
-    }
-    responses: {
-      /** @description successfully updated the user */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description user not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_user_audit_log: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description current user audit log */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AuditLog']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_list_user_applications: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description list of oauth applications */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ListDataResponse_OauthApplication']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_delete_user_application: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-        /** @description the id of the oauth application */
-        cid: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully deleted the oauth application */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description oauth application not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_edit_user_application: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-        /** @description the id of the oauth application */
-        cid: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['OauthApplicationData']
-      }
-    }
-    responses: {
-      /** @description successfully updated the oauth application */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description oauth application not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_revoke_all_auth_user_application: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-        /** @description the id of the oauth application */
-        cid: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully revoked all oauth application authorizations */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['OauthApplicationDataResponse']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description oauth application not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_rotate_secret_user_application: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-        /** @description the id of the oauth application */
-        cid: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully rotated the oauth application secret */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['OauthApplicationDataResponse']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description oauth application not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_list_user_oauth_authorizations: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description list of oauth authorizations */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ListDataResponse_OauthApplication']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_delete_user_oauth_authorization: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-        /** @description the id of the oauth authorization */
-        cid: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully revoked the oauth authorization */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description oauth authorization not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_revoke_all_user_sessions: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully revoked all user sessions */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_list_user_sessions: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description list of user sessions */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ListDataResponse_Session']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  admin_revoke_user_session: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the user */
-        id: components['schemas']['UlidId']
-        /** @description the id of the user session */
-        cid: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully revoked the user session */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description current user not allowed to do action */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description user session not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  flow_options: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['FlowRequest']
-      }
-    }
-    responses: {
-      /** @description authentication options */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['FlowResponse']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  flow_otp_exchange: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExchangeRequest']
-      }
-    }
-    responses: {
-      /** @description authentication exchanged successfully */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description invalid code */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  flow_totp_exchange: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExchangeRequest']
-      }
-    }
-    responses: {
-      /** @description authentication exchanged successfully */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description totp recovery code already used */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description invalid code */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  flow_webauthn_exchange: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['AuthenticationPasskeyRequest']
-      }
-    }
-    responses: {
-      /** @description authentication exchanged successfully */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description webauthn compromised */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description webauthn challenge not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  email_available: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['InfoAvailableRequest']
-      }
-    }
-    responses: {
-      /** @description availability */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['InfoAvailableResponse']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  login_available: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['InfoAvailableRequest']
-      }
-    }
-    responses: {
-      /** @description availability */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['InfoAvailableResponse']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  otp_login: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['FlowRequest']
-      }
-    }
-    responses: {
-      /** @description authentication flow created */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['FlowResponse']
-        }
-      }
-      /** @description account not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  otp_register: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['RegisterRequest']
-      }
-    }
-    responses: {
-      /** @description registration flow created */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['FlowResponse']
-        }
-      }
-      /** @description email or login already associated */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  webauthn_options: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['FlowRequest']
-      }
-    }
-    responses: {
-      /** @description authentication flow created */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description webauthn not enabled */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description account not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  get_enable_options: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description sudo re-authentication options */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['SudoOptionsResponse']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  sudo_otp_exchange: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExchangeRequest']
-      }
-    }
-    responses: {
-      /** @description sudo enable exchanged successfully */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description already enabled or option not available */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description invalid code */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  sudo_totp_exchange: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExchangeRequest']
-      }
-    }
-    responses: {
-      /** @description sudo enable exchanged successfully */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description already enabled or totp recovery code already used */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description invalid code */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  sudo_webauthn_exchange: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['AuthenticationPasskeyRequest']
-      }
-    }
-    responses: {
-      /** @description sudo enable exchanged successfully */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description already enabled */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description webauthn compromised */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description webauthn challenge not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  otp_option: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description sudo re-authentication flow created */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['FlowResponse']
-        }
-      }
-      /** @description already enabled or option not available */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  totp_option: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description sudo re-authentication flow created */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['FlowResponse']
-        }
-      }
-      /** @description already enabled or option not available */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  webauthn_options: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description sudo re-authentication flow created */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description already enabled or option not available */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  current_user_info: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description current user info */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['User']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  current_user_audit_log: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description current user audit log */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AuditLog']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  exchange_change_user_email: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExchangeChangeEmailRequest']
-      }
-    }
-    responses: {
-      /** @description successfully verified email change request */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description email already verified */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description email change flow not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  change_user_email: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ChangeEmailRequest']
-      }
-    }
-    responses: {
-      /** @description successfully created the change request */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description new email is already associated */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description sudo not enabled */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  change_user_login: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ChangeLoginRequest']
-      }
-    }
-    responses: {
-      /** @description successfully created the change request */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description new login is already associated */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description sudo not enabled */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description tried to change login too soon after changing it */
-      403: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  logout: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully logged out */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  create_application: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['OauthApplicationData']
-      }
-    }
-    responses: {
-      /** @description successfully created oauth application */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['OauthApplicationDataResponse']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  list_applications: {
-    parameters: {
-      query?: {
-        /** @description The id of the last item from the previous page. Normally provided in the `next` field of the previous response. */
-        from?: null | components['schemas']['UlidId']
-        /** @description If the total number of items should be returned. */
-        want_total?: boolean | null
-      }
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description list of oauth applications */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ListDataResponse_OauthApplication']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  get_info_application: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description info about an oauth application */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['OauthApplication']
-        }
-      }
-      /** @description oauth application not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  delete_application: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully deleted the oauth application */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description oauth application not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  edit_application: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['OauthApplicationData']
-      }
-    }
-    responses: {
-      /** @description successfully updated the oauth application */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description oauth application not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  rotate_secret_application: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully rotated the oauth application secret */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['OauthApplicationDataResponse']
-        }
-      }
-      /** @description oauth application not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  list_oauth_authorizations: {
-    parameters: {
-      query?: {
-        /** @description The id of the last item from the previous page. Normally provided in the `next` field of the previous response. */
-        from?: null | components['schemas']['UlidId']
-        /** @description If the total number of items should be returned. */
-        want_total?: boolean | null
-      }
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description list of oauth authorizations */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ListDataResponse_OauthApplication']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  delete_oauth_authorization: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully revoked the oauth authorization */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AlrightResponse']
-        }
-      }
-      /** @description oauth authorization not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  current_session_info: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description current session info */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['Session']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  revoke_all_sessions: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully revoked all open sessions */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  list_sessions: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description list of open sessions */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ListDataResponse_Session']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  revoke_session: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the session to delete */
-        id: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully revoked the session */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description sudo not enabled */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description session not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  create_totp_options: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description totp relevant info */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['CreateTotpResponse']
-        }
-      }
-      /** @description totp already enrolled */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description sudo not enabled */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  disable_totp: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['VerifyTotpRequest']
-      }
-    }
-    responses: {
-      /** @description totp successfully disabled */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description totp not enabled */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description invalid code or sudo not enabled */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  exchange_totp_creation: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['VerifyTotpRequest']
-      }
-    }
-    responses: {
-      /** @description totp successfully enabled */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description totp already enrolled */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description invalid code or sudo not enabled */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description totp enrollment flow not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  see_recovery_codes: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['VerifyTotpRequest']
-      }
-    }
-    responses: {
-      /** @description usable totp recovery codes */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description totp not enabled */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description invalid code or sudo not enabled */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  register_passkey_options: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description passkey creation challenge options */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description sudo not enabled */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  register_passkey_exchange: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['RegisterPasskeyRequest']
-      }
-    }
-    responses: {
-      /** @description passkey creation successful */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description sudo not enabled */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description webauthn challenge not found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  list_passkeys: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description a list of passkeys */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['Passkey'][]
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  delete_passkey: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        /** @description the id of the passkey to delete */
-        id: components['schemas']['UlidId']
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description successfully deleted the passkey */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  authorize: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/x-www-form-urlencoded': components['schemas']['AuthorizationRequest']
-      }
-    }
-    responses: {
-      /** @description redirect to consent screen or redirect_uri with code */
-      303: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  oauth_consent_info: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description current oauth pending authorization consent info */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ConsentMetadata']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  finish_authorization: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['AuthorizationDecisionRequest']
-      }
-    }
-    responses: {
-      /** @description consent denied */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description consent given, redirected to client's redirect url */
-      303: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  oauth_discovery_jwks: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description oauth authentication server jwks */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['JwkKeySet']
-        }
-      }
-    }
-  }
-  token: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/x-www-form-urlencoded': components['schemas']['TokenRequest']
-      }
-    }
-    responses: {
-      /** @description oauth token data */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['TokenResponse']
-        }
-      }
-      /** @description internal server error */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ApiError']
-        }
-      }
-    }
-  }
-  openid_userinfo: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description openid userinfo handler */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['OpenIdUserInfo']
-        }
-      }
-    }
-  }
+    application_info: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description application info */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationInfoResponse"];
+                };
+            };
+        };
+    };
+    wellknown_oauth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description oauth authentication server metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OauthMetadata"];
+                };
+            };
+        };
+    };
+    wellknown_openid: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description openid authentication server metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenIdMetadata"];
+                };
+            };
+        };
+    };
+    health: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description simple ok */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+        };
+    };
+    admin_list_users: {
+        parameters: {
+            query?: {
+                /** @description The id of the last item from the previous page. Normally provided in the `next` field of the previous response. */
+                from?: null | components["schemas"]["UlidId"];
+                /** @description If the total number of items should be returned. */
+                want_total?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description list of users */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListDataResponse_User"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_info_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description info about an user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description user not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_edit_user: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description successfully updated the user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description user not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_user_audit_log: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description current user audit log */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLog"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_list_user_applications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description list of oauth applications */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListDataResponse_OauthApplication"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_delete_user_application: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+                /** @description the id of the oauth application */
+                cid: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully deleted the oauth application */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description oauth application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_edit_user_application: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+                /** @description the id of the oauth application */
+                cid: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OauthApplicationData"];
+            };
+        };
+        responses: {
+            /** @description successfully updated the oauth application */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description oauth application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_revoke_all_auth_user_application: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+                /** @description the id of the oauth application */
+                cid: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully revoked all oauth application authorizations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OauthApplicationDataResponse"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description oauth application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_rotate_secret_user_application: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+                /** @description the id of the oauth application */
+                cid: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully rotated the oauth application secret */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OauthApplicationDataResponse"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description oauth application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_list_user_oauth_authorizations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description list of oauth authorizations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListDataResponse_OauthApplication"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_delete_user_oauth_authorization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+                /** @description the id of the oauth authorization */
+                cid: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully revoked the oauth authorization */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description oauth authorization not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_revoke_all_user_sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully revoked all user sessions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_list_user_sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description list of user sessions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListDataResponse_Session"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    admin_revoke_user_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the user */
+                id: components["schemas"]["UlidId"];
+                /** @description the id of the user session */
+                cid: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully revoked the user session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description current user not allowed to do action */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description user session not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    flow_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FlowRequest"];
+            };
+        };
+        responses: {
+            /** @description authentication options */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlowResponse"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    flow_otp_exchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExchangeRequest"];
+            };
+        };
+        responses: {
+            /** @description authentication exchanged successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description invalid code */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    flow_totp_exchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExchangeRequest"];
+            };
+        };
+        responses: {
+            /** @description authentication exchanged successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description totp recovery code already used */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description invalid code */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    flow_webauthn_exchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuthenticationPasskeyRequest"];
+            };
+        };
+        responses: {
+            /** @description authentication exchanged successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description webauthn compromised */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description webauthn challenge not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    email_available: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InfoAvailableRequest"];
+            };
+        };
+        responses: {
+            /** @description availability */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InfoAvailableResponse"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    login_available: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InfoAvailableRequest"];
+            };
+        };
+        responses: {
+            /** @description availability */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InfoAvailableResponse"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    otp_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FlowRequest"];
+            };
+        };
+        responses: {
+            /** @description authentication flow created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlowResponse"];
+                };
+            };
+            /** @description account not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    otp_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description registration flow created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlowResponse"];
+                };
+            };
+            /** @description email or login already associated */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    webauthn_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FlowRequest"];
+            };
+        };
+        responses: {
+            /** @description authentication flow created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description webauthn not enabled */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description account not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    get_enable_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description sudo re-authentication options */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SudoOptionsResponse"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sudo_otp_exchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExchangeRequest"];
+            };
+        };
+        responses: {
+            /** @description sudo enable exchanged successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description already enabled or option not available */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description invalid code */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sudo_totp_exchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExchangeRequest"];
+            };
+        };
+        responses: {
+            /** @description sudo enable exchanged successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description already enabled or totp recovery code already used */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description invalid code */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    sudo_webauthn_exchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuthenticationPasskeyRequest"];
+            };
+        };
+        responses: {
+            /** @description sudo enable exchanged successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description already enabled */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description webauthn compromised */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description webauthn challenge not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    otp_option: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description sudo re-authentication flow created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlowResponse"];
+                };
+            };
+            /** @description already enabled or option not available */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    totp_option: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description sudo re-authentication flow created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlowResponse"];
+                };
+            };
+            /** @description already enabled or option not available */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    webauthn_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description sudo re-authentication flow created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description already enabled or option not available */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    current_user_info: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description current user info */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    current_user_audit_log: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description current user audit log */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLog"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    exchange_change_user_email: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExchangeChangeEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description successfully verified email change request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description email already verified */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description email change flow not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    change_user_email: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description successfully created the change request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description new email is already associated */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description sudo not enabled */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    change_user_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeLoginRequest"];
+            };
+        };
+        responses: {
+            /** @description successfully created the change request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description new login is already associated */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description sudo not enabled */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description tried to change login too soon after changing it */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully logged out */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    create_application: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OauthApplicationData"];
+            };
+        };
+        responses: {
+            /** @description successfully created oauth application */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OauthApplicationDataResponse"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    list_applications: {
+        parameters: {
+            query?: {
+                /** @description The id of the last item from the previous page. Normally provided in the `next` field of the previous response. */
+                from?: null | components["schemas"]["UlidId"];
+                /** @description If the total number of items should be returned. */
+                want_total?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description list of oauth applications */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListDataResponse_OauthApplication"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    get_info_application: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description info about an oauth application */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OauthApplication"];
+                };
+            };
+            /** @description oauth application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    delete_application: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully deleted the oauth application */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description oauth application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    edit_application: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OauthApplicationData"];
+            };
+        };
+        responses: {
+            /** @description successfully updated the oauth application */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description oauth application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    rotate_secret_application: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully rotated the oauth application secret */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OauthApplicationDataResponse"];
+                };
+            };
+            /** @description oauth application not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    list_oauth_authorizations: {
+        parameters: {
+            query?: {
+                /** @description The id of the last item from the previous page. Normally provided in the `next` field of the previous response. */
+                from?: null | components["schemas"]["UlidId"];
+                /** @description If the total number of items should be returned. */
+                want_total?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description list of oauth authorizations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListDataResponse_OauthApplication"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    delete_oauth_authorization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully revoked the oauth authorization */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlrightResponse"];
+                };
+            };
+            /** @description oauth authorization not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    current_session_info: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description current session info */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Session"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    revoke_all_sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully revoked all open sessions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    list_sessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description list of open sessions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListDataResponse_Session"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    revoke_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the session to delete */
+                id: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully revoked the session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description sudo not enabled */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description session not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    create_totp_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description totp relevant info */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateTotpResponse"];
+                };
+            };
+            /** @description totp already enrolled */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description sudo not enabled */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    disable_totp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyTotpRequest"];
+            };
+        };
+        responses: {
+            /** @description totp successfully disabled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description totp not enabled */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description invalid code or sudo not enabled */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    exchange_totp_creation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyTotpRequest"];
+            };
+        };
+        responses: {
+            /** @description totp successfully enabled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description totp already enrolled */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description invalid code or sudo not enabled */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description totp enrollment flow not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    see_recovery_codes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyTotpRequest"];
+            };
+        };
+        responses: {
+            /** @description usable totp recovery codes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description totp not enabled */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description invalid code or sudo not enabled */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    register_passkey_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description passkey creation challenge options */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description sudo not enabled */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    register_passkey_exchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPasskeyRequest"];
+            };
+        };
+        responses: {
+            /** @description passkey creation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description sudo not enabled */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description webauthn challenge not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    list_passkeys: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description a list of passkeys */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Passkey"][];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    delete_passkey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description the id of the passkey to delete */
+                id: components["schemas"]["UlidId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description successfully deleted the passkey */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    authorize: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["AuthorizationRequest"];
+            };
+        };
+        responses: {
+            /** @description redirect to consent screen or redirect_uri with code */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    oauth_consent_info: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description current oauth pending authorization consent info */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentMetadata"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    finish_authorization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuthorizationDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description consent denied */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description consent given, redirected to client's redirect url */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    oauth_discovery_jwks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description oauth authentication server jwks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JwkKeySet"];
+                };
+            };
+        };
+    };
+    token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["TokenRequest"];
+            };
+        };
+        responses: {
+            /** @description oauth token data */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    openid_userinfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description openid userinfo handler */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenIdUserInfo"];
+                };
+            };
+        };
+    };
 }
