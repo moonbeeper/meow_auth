@@ -49,7 +49,13 @@ impl Ratelimiter {
 
         let refill_count = refill_count.min(self.max_tickets); // DUMB BIRD. ITS BACKWARDS!!!! MIN = MAX ; MAX = MIN
         if refill_count > 0 {
-            entry.tickets = entry.tickets.saturating_add(refill_count);
+            entry.tickets = entry
+                .tickets
+                .saturating_add(refill_count)
+                // god DADMMIT FUCKING SHIT PROGRAMMER I AM GODDAMIT AGH. if an user has more than the max tickets.. we still add more.
+                // AND if we still add more, ANDDD this is STILL a u64 NOT to be confused with a I64. We underflow it lol in the sub step below.
+                // Practically, "left number small and right number small equals negative numbers which equals to poo poo in u64"
+                .min(self.max_tickets);
             entry.last_refill_at = now;
         }
 
