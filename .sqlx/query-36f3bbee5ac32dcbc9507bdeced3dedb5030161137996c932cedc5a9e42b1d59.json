@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                al.id,\n                al.user_id,\n                u.login as user_login,\n                al.actor_id,\n                a.login as actor_login,\n                al.action,\n                al.metadata,\n                al.created_at\n            from audit_logs al\n            join users u on u.id = al.user_id\n            join users a on a.id = al.actor_id\n            where al.user_id = $1 and ($2::uuid is null or al.id::uuid > $2) order by created_at asc limit 20+1\n            ",
+  "query": "select\n                al.id,\n                al.user_id,\n                u.name as user_name,\n                al.actor_id,\n                a.name as actor_name,\n                al.action,\n                al.metadata,\n                al.created_at\n            from audit_logs al\n            join users u on u.id = al.user_id\n            join users a on a.id = al.actor_id\n            where user_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -27,12 +27,12 @@
       },
       {
         "ordinal": 2,
-        "name": "user_login",
+        "name": "user_name",
         "type_info": "Varchar",
         "origin": {
           "Table": {
             "table": "users",
-            "name": "login"
+            "name": "name"
           }
         }
       },
@@ -49,12 +49,12 @@
       },
       {
         "ordinal": 4,
-        "name": "actor_login",
+        "name": "actor_name",
         "type_info": "Varchar",
         "origin": {
           "Table": {
             "table": "users",
-            "name": "login"
+            "name": "name"
           }
         }
       },
@@ -94,7 +94,6 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
         "Uuid"
       ]
     },
@@ -109,5 +108,5 @@
       false
     ]
   },
-  "hash": "44700de696ae1b64584d2b87f07cb336787749a0cbf34ff061b67c93e9da8143"
+  "hash": "36f3bbee5ac32dcbc9507bdeced3dedb5030161137996c932cedc5a9e42b1d59"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "insert into\n                user_signups (id, login, email, created_at, expires_at)\n            values\n                ($1, lower($2), lower($3), now(), $4)\n            on conflict (login) do update set\n                login = excluded.login,\n                email = excluded.email,\n                created_at = now(),\n                expires_at = $4\n            returning\n                id,\n                login,\n                email,\n                created_at,\n                expires_at\n            ",
+  "query": "insert into\n                user_signups (id, email, created_at, expires_at)\n            values\n                ($1, lower($2), now(), $3)\n            on conflict (email) do update set\n                email = excluded.email,\n                created_at = now(),\n                expires_at = $3\n            returning\n                id,\n                email,\n                created_at,\n                expires_at\n            ",
   "describe": {
     "columns": [
       {
@@ -16,17 +16,6 @@
       },
       {
         "ordinal": 1,
-        "name": "login",
-        "type_info": "Varchar",
-        "origin": {
-          "Table": {
-            "table": "user_signups",
-            "name": "login"
-          }
-        }
-      },
-      {
-        "ordinal": 2,
         "name": "email",
         "type_info": "Text",
         "origin": {
@@ -37,7 +26,7 @@
         }
       },
       {
-        "ordinal": 3,
+        "ordinal": 2,
         "name": "created_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -48,7 +37,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 3,
         "name": "expires_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -63,7 +52,6 @@
       "Left": [
         "Uuid",
         "Text",
-        "Text",
         "Timestamptz"
       ]
     },
@@ -71,9 +59,8 @@
       false,
       false,
       false,
-      false,
       false
     ]
   },
-  "hash": "16059daf36b21545ec4752dee5db8162337619bbc0eb4cfd239e30aef5c8ed8e"
+  "hash": "08f3d2d1ead3a26be630b795ae1e5e18d60b6094fb18e6e7831e6fecc035298e"
 }

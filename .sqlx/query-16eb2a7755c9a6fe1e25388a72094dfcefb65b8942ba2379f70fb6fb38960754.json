@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                id,\n                pid,\n                login,\n                email,\n                email_verified,\n                totp_enabled,\n                has_webauthn,\n                flags,\n                login_updated_at,\n                created_at,\n                updated_at\n             from users where pid = $1",
+  "query": "select\n                id,\n                pid,\n                name,\n                email,\n                email_verified,\n                totp_enabled,\n                has_webauthn,\n                flags,\n                name_updated_at,\n                created_at,\n                updated_at\n             from users where email = lower($1)",
   "describe": {
     "columns": [
       {
@@ -27,12 +27,12 @@
       },
       {
         "ordinal": 2,
-        "name": "login",
+        "name": "name",
         "type_info": "Varchar",
         "origin": {
           "Table": {
             "table": "users",
-            "name": "login"
+            "name": "name"
           }
         }
       },
@@ -93,12 +93,12 @@
       },
       {
         "ordinal": 8,
-        "name": "login_updated_at",
+        "name": "name_updated_at",
         "type_info": "Timestamptz",
         "origin": {
           "Table": {
             "table": "users",
-            "name": "login_updated_at"
+            "name": "name_updated_at"
           }
         }
       },
@@ -127,7 +127,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Text"
       ]
     },
     "nullable": [
@@ -144,5 +144,5 @@
       false
     ]
   },
-  "hash": "c11beec864af65368a092ba5099a097922c2c407d85035feabacefb1cbde4c1f"
+  "hash": "16eb2a7755c9a6fe1e25388a72094dfcefb65b8942ba2379f70fb6fb38960754"
 }

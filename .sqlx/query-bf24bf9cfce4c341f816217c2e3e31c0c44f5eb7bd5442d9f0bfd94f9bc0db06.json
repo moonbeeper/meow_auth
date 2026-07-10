@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                id,\n                pid,\n                login,\n                email,\n                email_verified,\n                totp_enabled,\n                has_webauthn,\n                flags,\n                login_updated_at,\n                created_at,\n                updated_at\n             from users where ($1::uuid is null or id::uuid > $1) order by created_at asc limit 20+1",
+  "query": "select\n                id,\n                pid,\n                name,\n                email,\n                email_verified,\n                totp_enabled,\n                has_webauthn,\n                flags,\n                name_updated_at,\n                created_at,\n                updated_at\n             from users where ($1::uuid is null or id::uuid > $1) order by created_at asc limit 20+1",
   "describe": {
     "columns": [
       {
@@ -27,12 +27,12 @@
       },
       {
         "ordinal": 2,
-        "name": "login",
+        "name": "name",
         "type_info": "Varchar",
         "origin": {
           "Table": {
             "table": "users",
-            "name": "login"
+            "name": "name"
           }
         }
       },
@@ -93,12 +93,12 @@
       },
       {
         "ordinal": 8,
-        "name": "login_updated_at",
+        "name": "name_updated_at",
         "type_info": "Timestamptz",
         "origin": {
           "Table": {
             "table": "users",
-            "name": "login_updated_at"
+            "name": "name_updated_at"
           }
         }
       },
@@ -144,5 +144,5 @@
       false
     ]
   },
-  "hash": "a172149fdd9720c9a8e7a538600144087f7d7476ad5c74caaf9092b349885b6b"
+  "hash": "bf24bf9cfce4c341f816217c2e3e31c0c44f5eb7bd5442d9f0bfd94f9bc0db06"
 }
