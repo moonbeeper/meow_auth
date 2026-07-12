@@ -5,13 +5,16 @@ mod root;
 mod v1;
 pub mod validator;
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr, sync::Arc, time::Duration};
 
 use anyhow::Context;
-use axum::routing::get;
+use axum::{
+    http::{HeaderValue, Method, header::CONTENT_TYPE},
+    routing::get,
+};
 use tokio::net::TcpSocket;
 use tower_cookies::CookieManagerLayer;
-use tower_http::services::ServeDir;
+use tower_http::{cors::CorsLayer, services::ServeDir};
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable};
@@ -58,6 +61,30 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
         .layer(CookieManagerLayer::new())
         .layer(RatelimitLayer::new(500, chrono::Duration::seconds(1)))
         .layer(IpManagerLayer::new(global.clone()))
+        .layer(
+            CorsLayer::new()
+                .allow_origin(
+                    global
+                        .settings
+                        .http
+                        .frontend
+                        .as_str()
+                        // url::Url forces trailing slashes. frontend Cors does not like it.
+                        .trim_end_matches('/')
+                        .parse::<HeaderValue>()
+                        .unwrap(),
+                )
+                .allow_credentials(true)
+                .allow_headers([CONTENT_TYPE])
+                .allow_methods([
+                    Method::GET,
+                    Method::POST,
+                    Method::PUT,
+                    Method::DELETE,
+                    Method::PATCH,
+                ])
+                .max_age(Duration::from_secs(7200)),
+        )
         // below the auth manager layer so we don't gotta check for auth (useless) on these static handlers
         .merge(root::routes())
         .with_state(global)
