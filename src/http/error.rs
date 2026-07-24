@@ -5,6 +5,7 @@ use crate::database::error::DatabaseError;
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct ApiError<'a> {
     ok: bool,
+    #[schema(value_type = ApiErrorCodesFlattened)]
     code: &'a str,
     message: String,
 }
