@@ -1,0 +1,29 @@
+@layer components {
+    .authbox {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: calc(var(--spacing) * 2);
+        max-inline-size: 35ch;
+    }
+
+    .authbox--header {
+        text-align: center;
+        margin-block-end: calc(var(--spacing) * 4);
+    }
+
+    .authbox--title {
+        font-size: var(--text-x-large);
+    }
+
+    .authbox--subtitle {
+        font-size: var(--text-medium);
+    }
+
+    .authbox--form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: calc(var(--spacing) * 3);
+    }
+}

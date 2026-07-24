@@ -1,0 +1,16 @@
+@layer components {
+    .avatar {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: var(--color-accent-lighter);
+        color: var(--color-accent-darkest);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--text-small);
+        font-weight: 600;
+        border: 1px solid var(--color-accent-lighter);
+    }
+}
+/* shitty crappy thing */

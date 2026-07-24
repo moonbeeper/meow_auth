@@ -4,7 +4,7 @@
         <form action="meow" class="gap-3 flex flex-col align-center" method="post">
             <input type="text" class="input font-large" placeholder="Your email address" />
             <p class="font-medium">Already have an account? <a href="/login">Log in</a>!</p>
-            <button class="button button--primary font-medium"><span>Continue</span></button>
+            <button class="button button--primary font-medium">Continue</button>
         </form>
     </div>
 </main>

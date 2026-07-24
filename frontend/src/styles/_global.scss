@@ -3,13 +3,18 @@
 @use "input.scss";
 @use "button.scss";
 @use "header.scss";
+@use "authbox.scss";
+@use "settings.scss";
+@use "avatar.scss";
 @use "liketail.scss"; /* order matters!!!!*/
+@use "mono-typeface.scss";
 @layer reset, base, components, liketail;
 
 :root {
     --font-sans:
         "Inter Variable", -apple-system, BlinkMacSystemFont, "Adwaita Sans", "Segoe UI",
         "Noto Sans", Ubuntu, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "Paper Mono", monospace;
 
     /* tailwind's stuffies :) */
     --text-x-small: 0.75rem;
@@ -24,6 +29,7 @@
 
     --main-padding: calc(var(--spacing) * 6);
     --typical-radius: 0.75rem;
+    --typical-outline-size: 2px;
 
     /* LCH colors */
     /* for making the color stacks -> https://harmonizer.evilmartians.com/ */

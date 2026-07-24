@@ -16,6 +16,8 @@
             outline,
             border,
             color 0.1s ease-out;
+        justify-content: center;
+        align-items: center;
 
         @media (any-hover: hover) {
             &:hover {

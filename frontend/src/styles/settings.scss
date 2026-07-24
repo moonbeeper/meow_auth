@@ -1,0 +1,69 @@
+@layer components {
+    .settings--panel {
+        display: grid;
+        padding-block: calc(var(--spacing) * 3);
+        gap: calc(var(--spacing) * 12);
+        // was 17.5rem the first column (header). Has a third column to make the middle column tinier
+        // but filling the whole space still
+        grid-template-columns: 0.6fr 1fr 0.4fr;
+        inline-size: 100%;
+        border-block-end: 2px dashed var(--color-iron-lighter);
+        padding-block: calc(var(--spacing) * 8);
+
+        &:first-child {
+            padding-block-start: calc(var(--spacing) * 5);
+        }
+
+        &:last-child {
+            border-block-end: 0;
+        }
+    }
+
+    .settings {
+        max-inline-size: 72rem; // 1152px
+        inline-size: 100%; // without this, it wont do anything the above.
+        margin-inline: auto;
+    }
+
+    .settings--header {
+        display: flex;
+        flex-direction: column;
+        text-align: start;
+
+        h2 {
+            font-size: var(--text-medium);
+        }
+
+        p {
+            font-size: var(--text-small);
+            color: var(--color-iron-dark);
+        }
+        ::highlight {
+            color: var(--color-accent-dark);
+        }
+    }
+
+    .settings--panel-content {
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--spacing) * 4);
+    }
+
+    @media (max-width: 768px) {
+        .settings--panel {
+            grid-template-columns: 1fr;
+        }
+
+        .settings--header {
+            text-align: center;
+            position: relative;
+            ::after {
+                content: "";
+                display: block;
+                inline-size: 100%;
+                height: 1px;
+                background: var(--color-iron-lighter);
+            }
+        }
+    }
+}

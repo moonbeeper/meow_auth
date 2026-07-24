@@ -2,7 +2,6 @@
     .header {
         position: relative;
         z-index: 10;
-        padding-inline: var(--main-padding);
         padding-block: calc(var(--spacing) * 3);
     }
 
@@ -19,22 +18,102 @@
     .header--nav {
         display: grid;
         grid-template-columns: auto 1fr;
+
+        &[data-session="true"] {
+            grid-template-areas: "logo user" "links links";
+        }
     }
 
     .header--logo {
-        /* padding-inline: 4px;
-        padding-block: 4px; */
         --focus-outline-offset: 4px; // better than using padding :]
         border-radius: 6px; // makes the focus ring rounded as the email logo
+        margin-inline-start: var(--main-padding);
+
+        .header--nav[data-session="true"] & {
+            grid-area: logo;
+        }
     }
+
+    .header--user {
+        grid-area: user;
+        justify-self: end;
+        margin-block: auto;
+        margin-inline-end: var(--main-padding);
+    }
+
+    .header--links {
+        grid-area: user;
+        display: flex;
+        gap: calc(var(--spacing) * 4);
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin-inline-start: calc(var(--spacing) * 6);
+        align-items: center;
+    }
+
+    .header--link {
+        --hover-brightness: 0.9;
+        position: relative;
+        padding-block: calc(var(--spacing) * 1);
+        color: var(--link-color, var(--color-iron-darkest));
+        font-size: var(--text-normal);
+        font-weight: 500;
+        white-space: nowrap;
+        text-decoration: none;
+
+        /* hover brightness from buttons */
+        @media (any-hover: hover) {
+            &:hover {
+                filter: brightness(var(--hover-brightness));
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            --hover-brightness: 1.1;
+        }
+
+        &[aria-current="page"] {
+            --link-color: var(--color-accent-dark);
+            font-weight: 600;
+
+            @media (prefers-color-scheme: dark) {
+                --link-color: var(--color-accent-light);
+            }
+
+            &::after {
+                position: absolute;
+                content: "";
+                inset-inline: 0;
+                bottom: 0;
+                height: 2px;
+                background: var(--link-color);
+            }
+        }
+    }
+
     @media (max-width: 768px) {
-        .header--nav {
-            display: block;
+        .header--nav[data-session="false"] {
+            grid-template-columns: auto;
+            justify-content: center;
         }
 
         .header--logo {
-            display: flex;
-            justify-content: center;
+            .header--nav[data-session="false"] & {
+                margin-inline-start: 0;
+            }
+        }
+
+        .header--links {
+            grid-area: links;
+            padding-inline: calc(var(--spacing) * 4);
+            margin-inline: 0;
+            margin-block-start: calc(var(--spacing) * 2);
+        }
+
+        .header--to-content {
+            &:focus-visible {
+                inset-inline-start: calc(var(--spacing) * 6);
+            }
         }
     }
 }

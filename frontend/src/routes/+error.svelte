@@ -3,7 +3,8 @@
 
     const errors: Record<number, string> = {
         500: "Oh god. Something made the server implode :(",
-        404: "Lost? same. This page doesn't exist!1!"
+        404: "Lost? same. This page doesn't exist!1!",
+        1001: "Oi! You are not authorized to access this page"
     };
 
     let message = $derived(page.error?.message ?? "An unexpected error occurred");

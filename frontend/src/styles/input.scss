@@ -1,10 +1,10 @@
 @layer components {
     .input {
-        border-radius: var(--typical-radius);
+        border-radius: var(--input-radius, var(--typical-radius));
         border: 1px solid var(--input-border-color, var(--color-iron-medium));
-        padding-inline-end: 0.5rem;
-        padding-inline-start: 0.75rem;
-        padding-block: 0.75rem;
+        padding-inline-start: var(--input-padding-inline-start, calc(var(--spacing) * 3));
+        padding-inline-end: var(--input-padding-inline-end, calc(var(--spacing) * 2));
+        padding-block: var(--input-padding-block, calc(var(--spacing) * 3));
         accent-color: var(--color-accent-light);
         color: var(--color-iron-darkest);
         font-size: var(--text-normal);
@@ -27,6 +27,48 @@
 
         &::placeholder {
             color: var(--color-iron-dark);
+        }
+
+        &[autocomplete="one-time-code"] {
+            text-align: center;
+            font-weight: 900;
+            font-size: var(--text-large);
+            font-family: var(--font-mono);
+            letter-spacing: 1ch; // new css stuff !!
+            text-transform: uppercase;
+        }
+    }
+
+    .input--proxy {
+        --input-padding-inline-end: calc(var(--spacing) * 3);
+        display: flex;
+        align-items: center;
+        transition:
+            background-color,
+            outline,
+            border-color,
+            color 0.1s ease-out;
+
+        .input {
+            --input-padding-inline-start: 0;
+            --input-padding-inline-end: 0;
+            --input-padding-block: 0;
+            --input-border-color: transparent;
+            --input-radius: 0;
+            outline: 0;
+        }
+
+        a {
+            // without this, the line height makes the input be 48.84 tall instead of the correct 43.59
+            // of a normal input that is not inside a proxy
+            line-height: 1;
+        }
+
+        &:focus-within {
+            --input-border-color: var(--color-accent-light);
+            outline: var(--typical-outline-size) solid
+                var(--focus-outline-color, var(--color-accent-light));
+            outline-offset: -1px;
         }
     }
 }

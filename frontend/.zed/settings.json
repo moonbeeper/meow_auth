@@ -2,6 +2,8 @@
     "languages": {
         "JavaScript": {
             "formatter": { "language_server": { "name": "oxfmt" } },
+            "language_servers": ["!eslint", "..."],
+
             "prettier": {
                 "allowed": false
             },
@@ -9,6 +11,8 @@
         },
         "TypeScript": {
             "formatter": { "language_server": { "name": "oxfmt" } },
+            "language_servers": ["!eslint", "..."],
+
             "prettier": {
                 "allowed": false
             },
@@ -22,6 +26,7 @@
             //     }
             // },
             "formatter": { "language_server": { "name": "oxfmt" } },
+            "language_servers": ["!tailwindcss-intellisense-css", "!eslint", "..."],
 
             "prettier": {
                 "allowed": false
@@ -44,6 +49,7 @@
         },
         "SCSS": {
             "formatter": { "language_server": { "name": "oxfmt" } },
+            "language_servers": ["!tailwindcss-intellisense-css", "..."],
             "prettier": {
                 "allowed": false
             },
