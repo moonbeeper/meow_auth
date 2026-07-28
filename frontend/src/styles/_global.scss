@@ -1,10 +1,10 @@
 @use "reset.scss";
 @use "base.scss";
 @use "input.scss";
-@use "button.scss";
-@use "header.scss";
+// @use "button.scss";
+// @use "header.scss";
 @use "authbox.scss";
-@use "settings.scss";
+// @use "settings.scss";
 @use "avatar.scss";
 @use "liketail.scss"; /* order matters!!!!*/
 @use "mono-typeface.scss";
@@ -17,13 +17,14 @@
     --font-mono: "Paper Mono", monospace;
 
     /* tailwind's stuffies :) */
-    --text-x-small: 0.75rem;
+    --text-smallest: 0.625rem;
+    --text-smaller: 0.75rem;
     --text-small: 0.875rem;
     --text-normal: 1rem;
     --text-medium: 1.25rem;
     --text-large: 1.5rem;
-    --text-x-large: 1.875rem;
-    --text-xx-large: 2.25rem;
+    --text-larger: 1.875rem;
+    --text-largest: 2.25rem;
 
     --spacing: 0.25rem;
 
@@ -63,13 +64,13 @@
     --lch-fuchsia-lighter: 89.06% 0.06 316;
     --lch-fuchsia-lightest: 94.97% 0.03 316;
 
-    --lch-coral-darkest: 25.1% 0.06 33;
-    --lch-coral-darker: 41.94% 0.1 33;
-    --lch-coral-dark: 50.98% 0.12 33;
-    --lch-coral-medium: 66.11% 0.15 33;
-    --lch-coral-light: 78.52% 0.13 33;
-    --lch-coral-lighter: 89.06% 0.06 33;
-    --lch-coral-lightest: 94.97% 0.03 33;
+    --lch-coral-darkest: 25.09% 0.059 25;
+    --lch-coral-darker: 41.99% 0.098 25;
+    --lch-coral-dark: 51.07% 0.119 25;
+    --lch-coral-medium: 66.26% 0.16 25;
+    --lch-coral-light: 78.61% 0.127 25;
+    --lch-coral-lighter: 89.06% 0.063 25;
+    --lch-coral-lightest: 94.97% 0.0281 25;
 
     --lch-emerald-darkest: 24.9% 0.06 156.9;
     --lch-emerald-darker: 39.79% 0.1 156.9;
@@ -178,13 +179,13 @@
         --lch-fuchsia-lighter: 87.77% 0.07 316;
         --lch-fuchsia-lightest: 93.28% 0.04 316;
 
-        --lch-coral-darkest: 17.63% 0.04 33;
-        --lch-coral-darker: 40.07% 0.09 33;
-        --lch-coral-dark: 49.85% 0.12 33;
-        --lch-coral-medium: 65.37% 0.15 33;
-        --lch-coral-light: 77.56% 0.13 33;
-        --lch-coral-lighter: 87.89% 0.07 33;
-        --lch-coral-lightest: 93.28% 0.04 33;
+        --lch-coral-darkest: 17.63% 0.0422 25;
+        --lch-coral-darker: 40.11% 0.0938 25;
+        --lch-coral-dark: 49.97% 0.118 25;
+        --lch-coral-medium: 65.49% 0.153 25;
+        --lch-coral-light: 77.79% 0.133 25;
+        --lch-coral-lighter: 87.77% 0.0703 25;
+        --lch-coral-lightest: 93.32% 0.0375 25;
 
         --lch-emerald-darkest: 17.63% 0.04 156.9;
         --lch-emerald-darker: 38.06% 0.09 156.9;

@@ -2,6 +2,7 @@ import { execSync } from "node:child_process";
 
 import adapter from "@sveltejs/adapter-static";
 import { sveltekit } from "@sveltejs/kit/vite";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { defineConfig } from "vite";
 
 const commit_hash = execSync("git rev-parse --short HEAD").toString().trim();
@@ -11,6 +12,7 @@ export default defineConfig({
     },
     plugins: [
         sveltekit({
+            preprocess: vitePreprocess(),
             compilerOptions: {
                 // Force runes mode for the project, except for libraries. Can be removed in svelte 6.
                 runes: ({ filename }) =>

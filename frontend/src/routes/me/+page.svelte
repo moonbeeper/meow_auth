@@ -1,101 +1,66 @@
-<main id="main" class="grid">
-    <div class="settings">
-        <section class="settings--panel">
-            <header class="settings--header">
-                <h2>Profile</h2>
-                <p>Its your identify when you sign in to other apps!</p>
-            </header>
-            <div class="settings--panel-content">
-                <div class="flex gap-4 justify-between align-center baba">
-                    <div class="avatar aa">?</div>
+<script>
+    import Button from "$comps/button.svelte";
+    import AuditLogItem from "$comps/items/auditLogItem.svelte";
+    import AuditLogItem2 from "$comps/items/auditLogItem2.svelte";
+    import * as LogItem from "$comps/logItem";
+    import SettingsPanel from "$comps/settingsPanel.svelte";
+</script>
 
-                    <div class="upload-zone">
-                        <p><a href="#main">Upload image</a> or drag and drop</p>
-                        <p>PNG, JPEG or WEBP (max. 256x256, 256KiB)</p>
-                    </div>
-                </div>
-                <div class="flex flex-col gap-2 text-start">
-                    <label>Name</label>
-                    <input class="input" value="Cow69" placeholder="Name" />
-                </div>
-                <div class="flex flex-col gap-2 text-start">
-                    <label>Email address</label>
-                    <div class="flex input input--proxy">
-                        <input class="input" value="meow@meow.com" placeholder="Email address" />
-                        <a href="#main">Meow</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <section class="settings--panel">
-            <header class="settings--header">
-                <h2>Audit log</h2>
-                <p>A little trail of your recent activity on your account</p>
-            </header>
-            <div class="settings--panel-content">
-                <div>
-                    <div class="audit-log">
-                        <div class="content">
-                            <div class="flex gap-2">
-                                <p>Created a new session</p>
-                                <p>[tag here]</p>
-                            </div>
-                            <p>you · 69 years ago</p>
-                        </div>
-                        <span>V</span>
-                    </div>
-                    <div class="audit-log">
-                        <div class="content">
-                            <div class="flex gap-2">
-                                <p>Created a new session</p>
-                                <p>[tag here]</p>
-                            </div>
-                            <p>you · 69 years ago</p>
-                        </div>
-                        <span>V</span>
-                    </div>
-                    <div class="audit-log">
-                        <div class="content">
-                            <div class="flex gap-2">
-                                <p>Created a new session</p>
-                                <p>[tag here]</p>
-                            </div>
-                            <p>you · 69 years ago</p>
-                        </div>
-                        <span>V</span>
-                    </div>
-                    <div class="audit-log">
-                        <div class="content">
-                            <div class="flex gap-2">
-                                <p>Created a new session</p>
-                                <p>[tag here]</p>
-                            </div>
-                            <p>you · 69 years ago</p>
-                        </div>
-                        <span>V</span>
-                        <span> MEOW </span>
-                        <div>
-                            asss
-                            <p>kdkasdksa</p>
-                            <c>eofkpoafkopasd</c>
-                            <a href="#main">MEOW LINK!!1</a>
-                        </div>
-                    </div>
-                    <div class="audit-log">
-                        <div class="content">
-                            <div class="flex gap-2">
-                                <p>Created a new session</p>
-                                <p>[tag here]</p>
-                            </div>
-                            <p>you · 69 years ago</p>
-                        </div>
-                        <span>V</span>
-                    </div>
-                </div>
-            </div>
-        </section>
+<SettingsPanel title="Profile" description="Its your identity when you sign in to other apps!">
+    <div class="flex gap-4 justify-between align-center baba">
+        <div class="avatar aa">?</div>
+
+        <div class="upload-zone">
+            <p><a href="#main">Upload image</a> or drag and drop</p>
+            <p>PNG, JPEG or WEBP (max. 256x256, 256KiB)</p>
+        </div>
     </div>
-</main>
+    <div class="flex flex-col gap-2 text-start">
+        <label>Name</label>
+        <input class="input" value="Cow69" placeholder="Name" type="text" />
+    </div>
+    <div class="flex flex-col gap-2 text-start">
+        <label>Email address</label>
+        <div class="flex input input--proxy">
+            <input
+                class="input"
+                value="meow@meow.com"
+                placeholder="Email address"
+                readonly
+                type="email"
+            />
+            <a href="#main">Meow</a>
+        </div>
+    </div>
+    <Button primary>Save changes</Button>
+</SettingsPanel>
+
+<SettingsPanel
+    title="Audit log"
+    description="A little trail of your recent activity on your account"
+>
+    <LogItem.Container>
+        <AuditLogItem2 title="Created session" tag="Auth" who="you" when="2h ago">
+            <span>hi this is metadata or just uselss</span>
+        </AuditLogItem2>
+        <AuditLogItem2 />
+        <AuditLogItem2 />
+        <AuditLogItem2 />
+        <AuditLogItem2 />
+        <AuditLogItem2 />
+        <AuditLogItem2 />
+        <AuditLogItem2 />
+    </LogItem.Container>
+    <Button>View all</Button>
+</SettingsPanel>
+
+<SettingsPanel
+    title="Delete account"
+    description="Delete your account and everything associated with it, including authorized apps and created apps."
+    negative
+>
+    <Button negative>Delete account</Button>
+</SettingsPanel>
 
 <style lang="scss">
     .aa {
@@ -130,40 +95,48 @@
         }
     }
 
-    .audit-log {
-        display: flex;
-        border-bottom: 1px solid var(--color-iron-dark);
-        border-inline: 1px solid var(--color-iron-dark);
+    // .audit-log {
+    //     display: flex;
+    //     border-bottom: 1px solid var(--color-iron-dark);
+    //     border-inline: 1px solid var(--color-iron-dark);
 
-        padding-block: calc(var(--spacing) * 3);
-        padding-inline: calc(var(--spacing) * 5);
-        align-items: center;
-        gap: calc(var(--spacing) * 4);
-        text-align: start;
+    //     padding-block: calc(var(--spacing) * 3);
+    //     padding-inline: calc(var(--spacing) * 5);
+    //     align-items: center;
+    //     gap: calc(var(--spacing) * 4);
+    //     text-align: start;
 
-        &:first-child {
-            border-top-left-radius: var(--typical-radius);
-            border-top-right-radius: var(--typical-radius);
-            border-top: 1px solid var(--color-iron-dark);
-        }
+    //     &:first-child {
+    //         border-top-left-radius: var(--typical-radius);
+    //         border-top-right-radius: var(--typical-radius);
+    //         border-top: 1px solid var(--color-iron-dark);
+    //     }
 
-        &:last-child {
-            border-bottom-left-radius: var(--typical-radius);
-            border-bottom-right-radius: var(--typical-radius);
-            border-bottom: 1px solid var(--color-iron-dark);
-        }
+    //     &:last-child {
+    //         border-bottom-left-radius: var(--typical-radius);
+    //         border-bottom-right-radius: var(--typical-radius);
+    //         border-bottom: 1px solid var(--color-iron-dark);
+    //     }
 
-        .content {
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-        }
-    }
+    //     .content {
+    //         display: flex;
+    //         flex: 1;
+    //         min-inline-size: 0;
+    //         flex-direction: column;
+    //     }
+    // }
+    // .audit-log .content p,
+    // .audit-log .content c {
+    //     overflow-wrap: anywhere; // or word-break: break-word;
+    // }
 
     @media (max-width: 768px) {
         .baba {
             flex-direction: column;
             align-items: center;
         }
+        // .audit-log {
+        //     flex-wrap: wrap;
+        // }
     }
 </style>

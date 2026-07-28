@@ -19,11 +19,11 @@
         }
     }
 
-    .settings {
-        max-inline-size: 72rem; // 1152px
-        inline-size: 100%; // without this, it wont do anything the above.
-        margin-inline: auto;
-    }
+    // .settings {
+    //     max-inline-size: 72rem; // 1152px
+    //     inline-size: 100%; // without this, it wont do anything the above.
+    //     margin-inline: auto;
+    // }
 
     .settings--header {
         display: flex;

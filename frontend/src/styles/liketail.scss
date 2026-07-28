@@ -24,7 +24,7 @@
     }
 
     .font-x-small {
-        font-size: var(--text-x-small);
+        font-size: var(--text-smaller);
     }
 
     .font-small {
@@ -44,11 +44,11 @@
     }
 
     .font-x-large {
-        font-size: var(--text-x-large);
+        font-size: var(--text-larger);
     }
 
     .font-xx-large {
-        font-size: var(--text-xx-large);
+        font-size: var(--text-largest);
     }
 
     .grid {

@@ -55,7 +55,7 @@
             --input-padding-block: 0;
             --input-border-color: transparent;
             --input-radius: 0;
-            outline: 0;
+            outline: 0 !important;
         }
 
         a {
