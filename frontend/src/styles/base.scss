@@ -26,6 +26,7 @@
         max-inline-size: 100dvw;
         padding-inline: var(--main-padding);
         text-align: center;
+        outline: 0;
     }
 
     :is(.button, .input, a) {

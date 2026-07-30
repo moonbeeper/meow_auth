@@ -1,19 +1,18 @@
 <script>
+    import Avatar from "$comps/avatar.svelte";
     import Button from "$comps/button.svelte";
     import AuditLogItem from "$comps/items/auditLogItem.svelte";
     import AuditLogItem2 from "$comps/items/auditLogItem2.svelte";
     import * as LogItem from "$comps/logItem";
     import SettingsPanel from "$comps/settingsPanel.svelte";
+    import UploadBox from "$comps/uploadBox.svelte";
 </script>
 
 <SettingsPanel title="Profile" description="Its your identity when you sign in to other apps!">
     <div class="flex gap-4 justify-between align-center baba">
-        <div class="avatar aa">?</div>
-
-        <div class="upload-zone">
-            <p><a href="#main">Upload image</a> or drag and drop</p>
-            <p>PNG, JPEG or WEBP (max. 256x256, 256KiB)</p>
-        </div>
+        <!-- <div class="avatar2 aa">?</div> -->
+        <Avatar />
+        <UploadBox />
     </div>
     <div class="flex flex-col gap-2 text-start">
         <label>Name</label>
@@ -51,7 +50,7 @@
         <AuditLogItem2 />
         <AuditLogItem2 />
     </LogItem.Container>
-    <Button>View all</Button>
+    <Button href="/me/audit-log">View all</Button>
 </SettingsPanel>
 
 <SettingsPanel

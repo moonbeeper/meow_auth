@@ -5,23 +5,28 @@
     import logo_dark from "$lib/assets/logo_dark.svg";
     import { auth } from "$lib/auth.svelte";
 
+    import Avatar from "./avatar.svelte";
+    import Button from "./button.svelte";
+
     // let has_session = $derived.by(() => {
     //     return auth.user != null;
     // });
-    const has_session = true;
+    const hasSession = true;
 
     const links = [
-        { href: "/me", label: "Account" },
-        { href: "/me/security", label: "Security" },
-        { href: "/me/authorized-apps", label: "Authorized apps" },
-        { href: "/me/my-apps", label: "My apps" },
-        { href: "/me/admin", label: "Admin" } // should only show whenn... THEY ARE AND
+        { href: ["/me", "/me/audit-log"], label: "Account" },
+        { href: ["/me/security"], label: "Security" },
+        { href: ["/me/authorized-apps"], label: "Authorized apps" },
+        { href: ["/me/my-apps"], label: "My apps" },
+        { href: ["/me/admin"], label: "Admin" } // should only show whenn... THEY ARE AND
     ];
 </script>
 
 <header class="header">
-    <a href="#main" class="to-content button">Skip to content</a>
-    <nav class="nav" data-session={has_session}>
+    <div class="to-content">
+        <Button href="#main">Skip to content</Button>
+    </div>
+    <nav class="nav" data-session={hasSession}>
         <a href="/" class="nav__logo">
             <picture>
                 <source srcset={logo_dark} media="(prefers-color-scheme: dark)" />
@@ -29,17 +34,18 @@
             </picture>
         </a>
 
-        {#if has_session}
+        {#if hasSession}
             <div class="nav__user">
-                <div class="avatar">?</div>
+                <!-- <div class="avatar2">?</div> -->
+                <Avatar small />
             </div>
 
             <div class="nav__links">
                 {#each links as link}
                     <a
-                        href={link.href}
+                        href={link.href[0]}
                         class="nav__link"
-                        aria-current={page.url.pathname == link.href ? "page" : "false"}
+                        aria-current={link.href.includes(page.url.pathname) ? "page" : "false"}
                         >{link.label}</a
                     >
                 {/each}
@@ -60,7 +66,7 @@
         inset-block-start: 4rem;
         inset-inline-start: -99999px;
 
-        &:focus-visible {
+        &:focus-within {
             inset-inline-start: calc(var(--spacing) * 2);
         }
     }

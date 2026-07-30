@@ -4,7 +4,7 @@
     let { children }: { children: Snippet } = $props();
 </script>
 
-<main id="main" class="grid justify-center margin-auto">
+<main id="main" class="grid justify-center margin-auto" tabindex="-1">
     <div class="authbox">
         {@render children()}
     </div>

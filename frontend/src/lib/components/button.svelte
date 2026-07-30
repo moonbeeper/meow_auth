@@ -76,6 +76,8 @@
             color 0.1s ease-out;
         justify-content: center;
         align-items: center;
+        // makes so the line height does not change when the button is a link
+        line-height: 1.1;
 
         @media (any-hover: hover) {
             &:hover {

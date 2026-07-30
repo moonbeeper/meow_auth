@@ -7,10 +7,15 @@
         title = "Section Title",
         description = "i love space birbs. and hate space cats. i love space birbs (once again).",
         negative = false
-    }: { children: Snippet; title: string; description: string; negative?: boolean } = $props();
+    }: {
+        children: Snippet;
+        title: string;
+        description: string;
+        negative?: boolean;
+    } = $props();
 </script>
 
-<section class="panel" class:negative>
+<section class={["panel", { negative }]}>
     <header class="header">
         <h2>{title}</h2>
         <p>{description}</p>
@@ -37,6 +42,10 @@
 
         &:last-child {
             border-block-end: 0;
+        }
+
+        &:only-child {
+            --first-padding-start: calc(var(--spacing) * 0);
         }
 
         @media (max-width: 768px) {
