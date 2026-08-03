@@ -10,7 +10,7 @@ use crate::http::{error::ApiErrorCodes, middleware::auth_manager::AuthContext};
 
 /// this layer checks if the user is authenticated or not, returning the appropriate [ApiErrorCodes] if not authenticated.
 ///
-/// the `need_auth` param controls whether the use needs to be authenticated or not.
+/// the `need_auth` param, which is enabled by default, controls whether the use needs to be authenticated or not.
 ///
 /// `enforce` is enabled by default, so authenticated users cannot access routes meant for unauthenticated users.
 ///

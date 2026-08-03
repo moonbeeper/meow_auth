@@ -97,7 +97,7 @@ pub async fn list_oauth_authorizations(
     }))
 }
 
-#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate, utoipa::IntoParams)]
 pub struct OauthAuthorizationIdParam {
     pub id: UlidId,
 }
@@ -105,6 +105,7 @@ pub struct OauthAuthorizationIdParam {
 /// Revoke an oauth authorization
 #[utoipa::path(
     delete,
+    params(OauthAuthorizationIdParam),
     path = "/{id}",
     tags = ["oauth"],
     responses(

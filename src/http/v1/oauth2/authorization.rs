@@ -284,6 +284,7 @@ pub async fn authorize(
     responses(
         (status = 303, description = "consent given, redirected to client's redirect url"),
         (status = 200, description = "consent denied"),
+        // (status = 401, description = "means, you don't have a session, dummy :)", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

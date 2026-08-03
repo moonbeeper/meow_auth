@@ -128,7 +128,7 @@ pub async fn create_application(
     }))
 }
 
-#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate)]
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate, utoipa::IntoParams)]
 pub struct OauthApplicationIdParam {
     pub id: UlidId,
 }
@@ -136,6 +136,7 @@ pub struct OauthApplicationIdParam {
 /// Get info about a specific oauth application
 #[utoipa::path(
     get,
+    params(OauthApplicationIdParam),
     path = "/{id}",
     tags = ["oauth"],
     responses(
@@ -163,6 +164,7 @@ pub async fn get_info_application(
 /// Update an existing oauth application
 #[utoipa::path(
     patch,
+    params(OauthApplicationIdParam),
     path = "/{id}",
     tags = ["oauth"],
     responses(
@@ -202,6 +204,7 @@ pub async fn edit_application(
 /// Delete an existing oauth application
 #[utoipa::path(
     delete,
+    params(OauthApplicationIdParam),
     path = "/{id}",
     tags = ["oauth"],
     responses(
@@ -233,6 +236,7 @@ pub async fn delete_application(
 /// Rotate the secret of an existing oauth application
 #[utoipa::path(
     patch,
+    params(OauthApplicationIdParam),
     path = "/{id}/rotate_keys",
     tags = ["oauth"],
     responses(

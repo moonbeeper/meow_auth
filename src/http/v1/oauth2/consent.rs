@@ -25,6 +25,8 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new().routes(routes!(oauth_consent_info))
 }
 
+// TODO: should match the userid with the user session id!
+
 /// Get the pending oauth authorization metadata
 #[utoipa::path(
     get,
