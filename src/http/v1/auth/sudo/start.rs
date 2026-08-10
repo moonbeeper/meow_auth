@@ -119,6 +119,7 @@ pub async fn totp_option(
         .purpose(AuthChallengePurpose::Sudo)
         .secret(None)
         .session_id(Some(auth.session_id()))
+        .expires_at(chrono::Utc::now() + chrono::Duration::minutes(10))
         .build();
 
     let mut transaction = global.database.begin().await?;

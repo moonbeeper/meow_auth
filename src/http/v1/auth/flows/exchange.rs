@@ -12,7 +12,10 @@ use crate::{
         mailer::AuthMailer,
         otp::{is_flow_correct, verify_otp_code},
         session::{create_session, create_session_cookie},
-        totp::{decrypt_secrets, get_totp, is_recovery_code_used, set_recovery_code_used},
+        totp::{
+            TotpCodeState, decrypt_secrets, get_recovery_code_state, get_totp,
+            set_recovery_code_used,
+        },
         webauthn::{get_challenge_id_from_cookies, update_passkey_with_authentication_result},
     },
     database::{
@@ -55,6 +58,15 @@ pub struct ExchangeRequest {
     code: String,
 }
 
+// Workaround for utoipa not liking the RouteEither type. works tho.
+#[derive(serde::Serialize, utoipa::ToSchema)]
+#[serde(untagged)]
+#[allow(unused)]
+pub enum _OtpExchangeResponse {
+    NeedsTotp(FlowResponse),
+    Done(AlrightResponse),
+}
+
 /// Exchange the Authentication Flow ID made by an OTP code
 ///
 /// This can be also requested by a user registering a new account.
@@ -64,7 +76,7 @@ pub struct ExchangeRequest {
     path = "/",
     tags = ["auth"],
     responses(
-        (status = 200, description = "authentication exchanged successfully"),
+        (status = 200, description = "authentication exchanged successfully", body = _OtpExchangeResponse),
         (status = 401, description = "invalid code", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
@@ -138,6 +150,7 @@ pub async fn flow_otp_exchange(
         let login_request = UserAuthChallenges::builder()
             .user_id(Some(user.id))
             .kind(AuthChallengeKind::Totp)
+            .expires_at(chrono::Utc::now() + chrono::Duration::minutes(10))
             .build();
 
         let mut transaction = global.database.begin().await?;
@@ -268,6 +281,7 @@ pub async fn flow_webauthn_exchange(
         (status = 200, description = "authentication exchanged successfully", body = AlrightResponse),
         (status = 401, description = "invalid code", body = ApiError),
         (status = 400, description = "totp recovery code already used", body = ApiError),
+        (status = 404, description = "authentication flow not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -279,7 +293,9 @@ pub async fn flow_totp_exchange(
     let Ok(Some(mut flow)) =
         UserAuthChallenges::find_by_id(request.flow_id, &global.database).await
     else {
-        return Err(ApiErrorCodes::InvalidCode);
+        // non oracle move BECAUSE USERS, LIKE me, get mad trying to think about if something i touched has broken
+        // the whole chain of flow and bleh bleh blah WAWAW I AM MAD THIS SPACEBIRD I MAD OKAY!?
+        return Err(ApiErrorCodes::FlowNotFound);
     };
 
     if !crate::auth::is_flow_correct(&flow, Some(AuthChallengeKind::Totp), None) {
@@ -322,27 +338,26 @@ pub async fn flow_totp_exchange(
         db_totp.update(&mut tx).await?;
         tx.commit().await?;
     } else {
-        let (idx, check) =
-            is_recovery_code_used(&db_totp, &totp.recovery_secret, request.code.clone());
-        if check {
+        let state = get_recovery_code_state(&db_totp, &totp.recovery_secret, request.code.clone());
+        if let TotpCodeState::Unused(idx) = state {
+            set_recovery_code_used(idx, &mut db_totp, &global.database)
+                .await
+                .map_err(|e| {
+                    tracing::error!(
+                        "something went wrong while setting the used totp recovery code: {e}"
+                    );
+                    ApiErrorCodes::InternalServerError
+                })?;
+
+            AuthMailer::totp_recovery_code_used(
+                user.name.clone(),
+                user.email.clone(),
+                &global.database,
+            )
+            .await?;
+        } else {
             return Err(ApiErrorCodes::TotpRecoveryAlreadyUsed);
         }
-
-        set_recovery_code_used(idx, &mut db_totp, &global.database)
-            .await
-            .map_err(|e| {
-                tracing::error!(
-                    "something went wrong while setting the used totp recovery code: {e}"
-                );
-                ApiErrorCodes::InternalServerError
-            })?;
-
-        AuthMailer::totp_recovery_code_used(
-            user.name.clone(),
-            user.email.clone(),
-            &global.database,
-        )
-        .await?;
     }
 
     let mut transaction = global.database.begin().await?;

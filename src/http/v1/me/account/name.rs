@@ -54,7 +54,10 @@ pub async fn change_user_name(
         return Err(ApiErrorCodes::InternalServerError);
     };
 
-    if user.name_updated_at + chrono::Duration::days(24) > chrono::Utc::now() {
+    // let the user change their name after the timeout or if they haven't set their name yet
+    if user.name_updated_at + chrono::Duration::days(24) > chrono::Utc::now()
+        && auth.user_flags().has(UserFlag::HasSetName)
+    {
         return Err(ApiErrorCodes::NameChangeTooSoon);
     }
 

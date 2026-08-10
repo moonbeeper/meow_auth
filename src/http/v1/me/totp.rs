@@ -7,7 +7,7 @@ use crate::{
     audit::{self, AuditAction},
     auth::{
         mailer::AuthMailer,
-        totp::{create_user_totp, decrypt_secrets, get_totp, usable_recovery_codes},
+        totp::{create_user_totp, decrypt_secrets, get_totp, get_unused_recovery_codes},
     },
     database::models::{user::User, user_totp::UserTotp as DbUserTotp},
     global::GlobalState,
@@ -284,7 +284,7 @@ pub async fn see_recovery_codes(
         return Err(ApiErrorCodes::InvalidCode);
     }
 
-    let recovery_codes = usable_recovery_codes(&db_totp, &totp.recovery_secret);
+    let recovery_codes = get_unused_recovery_codes(&db_totp, &totp.recovery_secret);
 
     let mut tx = global.database.begin().await?;
     db_totp.update(&mut tx).await?;

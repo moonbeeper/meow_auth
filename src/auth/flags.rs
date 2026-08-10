@@ -12,7 +12,8 @@ flags! {
         CannotAuthorizeOauthApplications,
         CannotModifyName,
         CannotModifyEmail,
-        // If this is set, the user has completed their setup process. If not, access not granted :(
+        // If this is set, the user has completed their setup process by changing their display name.
+        // If not, access not granted to anything :(
         HasSetName,
     }
 }
@@ -56,19 +57,19 @@ impl UserFlags {
         Self(self.0 & allowed_scopes.0)
     }
 
-    /// Returns a Scopes instance with all available scopes.
+    /// Returns a Scopes instance with all available scopes
     pub fn all() -> Self {
         Self(FlagSet::full())
     }
 
-    /// Add a new flag to the instance.
+    /// Add a new flag to the instance
     #[allow(clippy::should_implement_trait)] // I don't feel like doing that?
     pub fn add(mut self, flag: UserFlag) -> Self {
         self.0 |= flag;
         self
     }
 
-    /// Remove a flag from the instance.
+    /// Remove a flag from the instance
     pub fn remove(mut self, flag: UserFlag) -> Self {
         self.0 -= flag;
         self

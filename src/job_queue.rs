@@ -195,7 +195,7 @@ impl QueueRegistry {
         let mut listener = PgListener::connect_with(&self.global.database).await?;
         listener.listen("added_queued_job").await?;
 
-        let worker = Arc::new(Worker::new(
+        let worker = Arc::new(WorkerMaster::new(
             self.concurrency,
             self.batch_size,
             self.heartbeat_interval,
@@ -227,9 +227,9 @@ impl QueueRegistry {
             }
         }
 
-        tracing::info!("waiting for queue workers to finish");
+        tracing::info!("waiting for the workers that are still working (heh) finishing their jobs");
         worker.wait_for_idle().await;
-        tracing::info!("goodnight little workers");
+        tracing::info!("goodnight little workers (smooch)");
         Ok(())
     }
 }
@@ -265,7 +265,7 @@ struct QueuedJobData {
     input: Vec<u8>,
 }
 
-struct Worker {
+struct WorkerMaster {
     job_handlers: HashMap<&'static str, JobHandler>,
     global: Arc<GlobalState>,
     semaphore: Arc<Semaphore>,
@@ -275,7 +275,7 @@ struct Worker {
     active_workers: Arc<AtomicUsize>,
 }
 
-impl Worker {
+impl WorkerMaster {
     pub fn new(
         concurrency: usize,
         batch_size: usize,
@@ -490,14 +490,27 @@ impl Worker {
 
     pub async fn wait_for_idle(&self) {
         self.semaphore.close();
+        let mut last_active_workers: usize = self
+            .active_workers
+            .load(std::sync::atomic::Ordering::Relaxed);
+
         loop {
+            let active_workers = self
+                .active_workers
+                .load(std::sync::atomic::Ordering::Relaxed);
+
             if self
                 .active_workers
-                .load(std::sync::atomic::Ordering::SeqCst)
+                .load(std::sync::atomic::Ordering::Relaxed)
                 == 0
             {
                 break;
             }
+
+            if last_active_workers != active_workers {
+                tracing::info!("waiting for {active_workers} workers to finish");
+            }
+            last_active_workers = active_workers;
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
     }

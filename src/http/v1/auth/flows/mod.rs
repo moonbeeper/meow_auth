@@ -59,7 +59,7 @@ pub struct FlowOptionResponse {
     path = "/",
     tags = ["auth"],
     responses(
-        (status = 200, description = "authentication options", body = FlowResponse),
+        (status = 200, description = "authentication options", body = FlowOptionResponse),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

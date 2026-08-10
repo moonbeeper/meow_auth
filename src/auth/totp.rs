@@ -9,6 +9,7 @@ use crate::{
     settings::Settings,
 };
 
+/// Generates a TOTP instance for a given account and secret key.
 pub fn get_totp(
     account: String,
     secret: SecretKey,
@@ -27,7 +28,8 @@ pub fn get_totp(
     Ok(totp)
 }
 
-pub fn recovery_code(secret: &str, n: u64) -> String {
+/// Generates a single recovery code for a given secret key and index.
+pub fn get_recovery_code(secret: &str, n: u64) -> String {
     let hash = format!("{secret}:{n}");
 
     blake3::hash(hash.as_bytes())
@@ -37,10 +39,18 @@ pub fn recovery_code(secret: &str, n: u64) -> String {
         .collect()
 }
 
-pub fn recovery_codes(secret: &SecretKey) -> Vec<String> {
+/// Generates the 16 recovery codes for a given secret key.
+///
+/// Normally, you would want to use the recovery codes without the separator, but for display purposes,
+/// you can add the separator to make it easier to read for... people.
+pub fn get_recovery_codes(secret: &SecretKey, without_separator: bool) -> Vec<String> {
     (0..16)
-        .map(|n| recovery_code(&secret.to_string(), n).to_uppercase())
+        .map(|n| get_recovery_code(&secret.to_string(), n).to_uppercase())
         .map(|str| {
+            if without_separator {
+                return str;
+            }
+
             format!(
                 "{}-{}",
                 str.chars().take(5).collect::<String>(),
@@ -135,6 +145,8 @@ pub struct CreatedTotp {
     pub recovery_codes: Vec<String>,
 }
 
+/// Full stacked, create a new TOTP entry in the db for the user and returns everything needed for the user to
+/// set it up, including the secret and recovery codes.
 pub async fn create_user_totp(
     user_id: UserId,
     db: &PgPool,
@@ -142,7 +154,7 @@ pub async fn create_user_totp(
 ) -> anyhow::Result<CreatedTotp> {
     let secret = get_secret_key(32); // n*8+4 = char len. its 52 btw. QUITE looong idk if its bad.
     let recovery_secret = get_secret_key(32);
-    let recovery_codes = recovery_codes(&recovery_secret);
+    let recovery_codes = get_recovery_codes(&recovery_secret, false);
 
     let secrets = encrypt_secrets(secret.clone(), recovery_secret, settings)?;
 
@@ -164,22 +176,53 @@ pub async fn create_user_totp(
     })
 }
 
-pub fn is_recovery_code_used(
-    user_totp: &UserTotp,
-    recovery_secret: &SecretKey,
-    code: String,
-) -> (usize, bool) {
-    recovery_codes(recovery_secret)
-        .into_iter()
-        .position(|x| x == code)
-        .map_or_else(
-            || (0, false),
-            |idx| (idx, user_totp.is_recovery_code_used(idx)),
-        )
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+pub enum TotpCodeState {
+    Invalid,
+    Unused(usize),
+    Used(usize),
 }
 
-pub fn usable_recovery_codes(user_totp: &UserTotp, recovery_secret: &SecretKey) -> Vec<String> {
-    recovery_codes(recovery_secret)
+/// Gets the state of a given recovery code, whether its valid and unused... or plainly invalid.
+///
+/// If the code is valid, it will return the index inside of the enum tuple!
+pub fn get_recovery_code_state(
+    userdb_totp: &UserTotp,
+    recovery_secret: &SecretKey,
+    code: String,
+) -> TotpCodeState {
+    println!("the code is: {code}");
+    let code = code.to_uppercase().replace("-", "");
+    println!("the code now is: {code}");
+
+    match get_recovery_codes(recovery_secret, true)
+        .into_iter()
+        .position(|x| x == code)
+    {
+        Some(idx) => {
+            if userdb_totp.is_recovery_code_used(idx) {
+                println!("used code");
+                TotpCodeState::Used(idx)
+            } else {
+                println!("unsued code");
+
+                TotpCodeState::Unused(idx)
+            }
+        }
+        None => {
+            println!("bad code");
+            TotpCodeState::Invalid
+        }
+    }
+    // .map_or_else(
+    //     || (0, false),
+    //     |idx| (idx, user_totp.is_recovery_code_used(idx)),
+    // )
+}
+
+/// Returns the recovery codes that are still usable for a given user
+pub fn get_unused_recovery_codes(user_totp: &UserTotp, recovery_secret: &SecretKey) -> Vec<String> {
+    get_recovery_codes(recovery_secret, false)
         .iter()
         .enumerate()
         .filter(|(idx, _)| !user_totp.is_recovery_code_used(*idx))
@@ -187,6 +230,7 @@ pub fn usable_recovery_codes(user_totp: &UserTotp, recovery_secret: &SecretKey) 
         .collect::<Vec<_>>()
 }
 
+/// Plainly, marks a recovery used by its index.
 pub async fn set_recovery_code_used(
     idx: usize,
     user_totp: &mut UserTotp,

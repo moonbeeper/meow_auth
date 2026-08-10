@@ -83,7 +83,14 @@ where
             };
 
             let mut response: Response = inner.call(request).await?; // <-- goes into handler then makes the response.
-            response.headers_mut().extend(ratelimit_headers);
+
+            // fixes issue where the route ratelimiter would overwrite the headers if another ratelimiter was used inside a
+            // router. A clear exmaple is the /auth route, where the ratelimiter headers were overwritten with the root ones.
+            // This checks if the headers are already set, and if they are not.... IT SETS THEM. gosh dang this sapce birb
+            // do be thinking real stupid stuff
+            for (name, value) in ratelimit_headers.iter() {
+                response.headers_mut().entry(name).or_insert(value.clone());
+            }
             Ok(response)
         })
     }

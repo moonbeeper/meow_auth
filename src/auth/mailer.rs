@@ -178,7 +178,7 @@ impl AuthMailer {
             "One of your Two factor authentication recovery codes was used".to_string(),
             to,
             EmailTemplate {
-                base: "totp_recovery_code_used",
+                base: "totp_recovery_codes_used",
                 data: json!({
                   "user": {
                       "name": name,

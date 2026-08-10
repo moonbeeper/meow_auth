@@ -11,7 +11,10 @@ use crate::{
         mailer::AuthMailer,
         otp::verify_otp_code,
         sudo::{enable_sudo_tx, has_sudo_option, is_flow_correct},
-        totp::{decrypt_secrets, get_totp, is_recovery_code_used, set_recovery_code_used},
+        totp::{
+            TotpCodeState, decrypt_secrets, get_recovery_code_state, get_totp,
+            set_recovery_code_used,
+        },
         webauthn::update_passkey_with_authentication_result,
     },
     database::{
@@ -217,6 +220,7 @@ pub async fn sudo_webauthn_exchange(
         (status = 200, description = "sudo enable exchanged successfully", body = AlrightResponse),
         (status = 401, description = "invalid code", body = ApiError),
         (status = 400, description = "already enabled or totp recovery code already used", body = ApiError),
+        (status = 404, description = "authentication flow not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -232,7 +236,7 @@ pub async fn sudo_totp_exchange(
     let Ok(Some(mut flow)) =
         UserAuthChallenges::find_by_id(request.flow_id, &global.database).await
     else {
-        return Err(ApiErrorCodes::InvalidCode);
+        return Err(ApiErrorCodes::FlowNotFound);
     };
 
     if !is_flow_correct(&flow, auth.session_id()) {
@@ -275,27 +279,26 @@ pub async fn sudo_totp_exchange(
         db_totp.update(&mut tx).await?;
         tx.commit().await?;
     } else {
-        let (idx, check) =
-            is_recovery_code_used(&db_totp, &totp.recovery_secret, request.code.clone());
-        if check {
-            return Err(ApiErrorCodes::TotpRecoveryAlreadyUsed);
+        let state = get_recovery_code_state(&db_totp, &totp.recovery_secret, request.code.clone());
+        if let TotpCodeState::Unused(idx) = state {
+            set_recovery_code_used(idx, &mut db_totp, &global.database)
+                .await
+                .map_err(|e| {
+                    tracing::error!(
+                        "something went wrong while setting the used totp recovery code: {e}"
+                    );
+                    ApiErrorCodes::InternalServerError
+                })?;
+
+            AuthMailer::totp_recovery_code_used(
+                user.name.clone(),
+                user.email.clone(),
+                &global.database,
+            )
+            .await?;
         }
 
-        set_recovery_code_used(idx, &mut db_totp, &global.database)
-            .await
-            .map_err(|e| {
-                tracing::error!(
-                    "something went wrong while setting the used totp recovery code: {e}"
-                );
-                ApiErrorCodes::InternalServerError
-            })?;
-
-        AuthMailer::totp_recovery_code_used(
-            user.name.clone(),
-            user.email.clone(),
-            &global.database,
-        )
-        .await?;
+        return Err(ApiErrorCodes::TotpRecoveryAlreadyUsed);
     }
 
     let mut transaction = global.database.begin().await?;
