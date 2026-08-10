@@ -1,6 +1,9 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import type { HTMLAnchorAttributes, HTMLButtonAttributes } from "svelte/elements";
+    import { slide } from "svelte/transition";
+
+    import Spinner from "./spinner.svelte";
 
     type ButtonProps = HTMLButtonAttributes &
         Props & {
@@ -15,6 +18,8 @@
     type Props = {
         primary?: boolean;
         negative?: boolean;
+        disabled?: boolean;
+        loading?: boolean;
         fontSize?: "normal" | "medium";
         children: Snippet;
     };
@@ -25,6 +30,8 @@
         primary = false,
         negative = false,
         fontSize = "normal",
+        disabled = false,
+        loading = false,
         href,
         ...rest
     }: ButtonProps | LinkProps = $props();
@@ -36,9 +43,8 @@
 
 {#if href}
     <a
-        class={{ button: true, [fontSizeClass]: true }}
-        class:primary
-        class:negative
+        class={["button", fontSizeClass, { primary, negative, loading }]}
+        aria-disabled={disabled}
         {href}
         {...rest as HTMLAnchorAttributes}
     >
@@ -46,11 +52,16 @@
     </a>
 {:else}
     <button
-        class={{ button: true, [fontSizeClass]: true }}
-        class:primary
-        class:negative
+        class={["button", fontSizeClass, { primary, negative, loading }]}
+        aria-disabled={disabled}
+        {disabled}
         {...rest as HTMLButtonAttributes}
     >
+        {#if loading}
+            <span class="spinner" transition:slide={{ axis: "x", duration: 200 }}>
+                <Spinner />
+            </span>
+        {/if}
         {@render children()}
     </button>
 {/if}
@@ -69,15 +80,14 @@
         font-size: var(--button-font-size);
         font-weight: 600;
         display: inline-flex;
-        transition:
-            background-color,
-            outline,
-            border,
-            color 0.1s ease-out;
+        transition-property: background-color, outline, border, opacity, color;
+        transition-duration: 0.1s;
+        transition-timing-function: ease-out;
         justify-content: center;
         align-items: center;
         // makes so the line height does not change when the button is a link
         line-height: 1.1;
+        gap: calc(var(--spacing) * 2);
 
         @media (any-hover: hover) {
             &:hover {
@@ -88,6 +98,11 @@
         @media (prefers-color-scheme: dark) {
             --button-hover-brightness: 1.1;
         }
+
+        // &[disabled] {
+        //     cursor: not-allowed;
+        //     opacity: 0.5;
+        // }
     }
 
     .primary {
@@ -110,5 +125,20 @@
 
     .font-medium {
         --button-font-size: var(--text-medium);
+    }
+
+    .loading {
+        cursor: progress !important;
+    }
+
+    .spinner {
+        display: inline-flex;
+        position: relative;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        inline-size: var(--button-font-size, 1em);
+        block-size: var(--button-font-size, 1em);
+        pointer-events: none;
     }
 </style>

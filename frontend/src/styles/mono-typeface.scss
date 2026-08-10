@@ -1,6 +1,7 @@
 @font-face {
     font-family: "Paper Mono";
-    font-style: "normal";
+    // it isnt "normal", its plainly normal (heh)
+    font-style: normal;
     font-display: swap;
     font-weight: 100 900;
     src: url("/PaperMono.woff2") format("woff2-variations");

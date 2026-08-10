@@ -1,6 +1,9 @@
 <script>
     import Avatar from "$comps/avatar.svelte";
     import Button from "$comps/button.svelte";
+    import Dropdown from "$comps/dropdown/dropdown.svelte";
+    import DropdownItem from "$comps/dropdown/dropdownItem.svelte";
+    import DropdownText from "$comps/dropdown/dropdownText.svelte";
     import AuditLogItem from "$comps/items/auditLogItem.svelte";
     import AuditLogItem2 from "$comps/items/auditLogItem2.svelte";
     import * as LogItem from "$comps/logItem";
@@ -59,6 +62,22 @@
     negative
 >
     <Button negative>Delete account</Button>
+    <!--
+    <Dropdown>
+        {#snippet trigger({ props })}
+            <Button negative {...props}>Delete account</Button>
+        {/snippet}
+        <!-- hi helo my name is moooon -->
+    <!-- 000000000000000000000000000000000000000000000000000000000000000000000000 -->
+    <!-- <DropdownItem>hi helo mah name is moon from space birb land!! wonky bird!!!</DropdownItem> -->
+    <!-- <DropdownText>
+            <p>poopy pants</p>
+        </DropdownText>
+        <DropdownItem>Log out</DropdownItem>
+        <DropdownItem>Log out</DropdownItem>
+        <DropdownItem>Log out</DropdownItem>
+        <DropdownItem>Log out</DropdownItem>
+    </Dropdown> -->
 </SettingsPanel>
 
 <style lang="scss">

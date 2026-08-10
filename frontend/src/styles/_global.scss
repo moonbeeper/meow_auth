@@ -90,6 +90,8 @@
 
     /* Actual colors OKLCH */
     --color-body: oklch(var(--lch-body, var(--lch-white)));
+    --color-black: oklch(var(--lch-black));
+    --color-white: oklch(var(--lch-white));
 
     --color-iron-darkest: oklch(var(--lch-iron-darkest));
     --color-iron-darker: oklch(var(--lch-iron-darker));

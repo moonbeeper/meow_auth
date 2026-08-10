@@ -1,19 +1,88 @@
 <script lang="ts">
+    import { invalidateAll } from "$app/navigation";
+    import { isOk } from "$lib/api/ignoreThisPlease";
+    import { logout } from "$lib/api/user/user";
+    import { auth } from "$lib/auth/auth.svelte";
     import { Avatar } from "bits-ui";
+    import { preventDefault } from "svelte/legacy";
 
-    let { small = false }: { small?: boolean } = $props();
+    import * as Dropdown from "./dropdown";
+
+    type Props = {
+        small?: boolean;
+        interactive?: boolean;
+    };
+
+    let { small = false, interactive = false }: Props = $props();
+
+    let loggingOut = $state(false);
+
+    async function handleLogout(e: Event) {
+        if (loggingOut) {
+            console.warn("already loggin out, ignoring");
+            e.preventDefault();
+            return;
+        }
+        console.log("logging out");
+        loggingOut = true;
+        try {
+            const res = await logout();
+            if (!isOk(res)) {
+                console.error("failed to log out");
+                return;
+            }
+            await invalidateAll();
+            console.log("logged out");
+        } finally {
+            loggingOut = false;
+        }
+    }
 </script>
 
 <!-- SVELTE USES CLSX NOW?!?!?!?!??!?? -->
-<Avatar.Root class={["avatar", { small }]}>
-    <div class="inner">
-        <Avatar.Image src="https://github.com/moonbeeper.png" alt="Moonbeeper's avatar" />
-        <Avatar.Fallback>HB</Avatar.Fallback>
+{#snippet avatar()}
+    <div class="container">
+        <Avatar.Root class={["avatar", { small }]}>
+            <div class="inner">
+                <Avatar.Image src="https://github.com/moonbeeper.png" alt="Moonbeeper's avatar" />
+                <Avatar.Fallback>HB</Avatar.Fallback>
+            </div>
+        </Avatar.Root>
     </div>
-</Avatar.Root>
+{/snippet}
+
+{#if interactive}
+    <Dropdown.Root>
+        {#snippet trigger({ props })}
+            <button class="decoration" {...props}>
+                {@render avatar()}
+            </button>
+        {/snippet}
+        <Dropdown.Text>
+            <p class="user-display">poopy pants</p>
+        </Dropdown.Text>
+        <Dropdown.Item onSelect={handleLogout}>Log out</Dropdown.Item>
+    </Dropdown.Root>
+{:else}
+    {@render avatar()}
+{/if}
 
 <style lang="scss">
-    :global(.avatar) {
+    .container {
+        // position: relative;
+        // inline-size: fit-content;
+        // flex-shrink: 0;
+        display: contents;
+        user-select: none;
+    }
+
+    .user-display {
+        font-size: var(--text-small);
+        font-weight: 500;
+        color: var(--color-iron-dark);
+    }
+
+    .container :global(.avatar) {
         position: relative;
         // width: 96px;
         // height: 96px;
@@ -46,7 +115,7 @@
         //
     }
 
-    :global(.avatar.small) {
+    .container :global(.avatar.small) {
         max-inline-size: 2.25rem;
         max-block-size: 2.25rem;
     }
@@ -59,5 +128,22 @@
         justify-content: center;
         align-items: center;
         border-radius: 50%;
+    }
+
+    .decoration {
+        --focus-outline-offset: 3px;
+        all: unset;
+        box-sizing: border-box;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        outline: var(--typical-outline-size) solid transparent;
+        outline-offset: var(--focus-outline-offset, 1px);
+
+        &:focus-visible {
+            outline-color: var(--focus-outline-color, var(--color-accent-light));
+        }
     }
 </style>

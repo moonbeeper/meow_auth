@@ -18,6 +18,16 @@
         line-height: 1.428;
         display: grid;
         grid-template-rows: auto 1fr auto;
+
+        ::selection {
+            --selection-color: var(--color-accent-medium);
+            background: var(--selection-color);
+            color: var(--color-iron-inverted);
+
+            @media (prefers-color-scheme: dark) {
+                --selection-color: var(--color-accent-light);
+            }
+        }
     }
 
     #main {
@@ -30,10 +40,20 @@
     }
 
     :is(.button, .input, a) {
+        // seems like i was wrong. IT was not the transition that was hecking up the outline and making it appear
+        // black first. It was that the outline was NOT set and wehn transitioning to the color and offset, it
+        // would use the browser's defaults (BECUASE IT WAS TRANSITIONING INTO THE SET ONES!!!). this should fix it!!
+        outline: var(--typical-outline-size) solid transparent;
+        outline-offset: var(--focus-outline-offset, 1px);
+
         &:focus-visible {
-            outline: var(--typical-outline-size) solid
-                var(--focus-outline-color, var(--color-accent-light));
-            outline-offset: var(--focus-outline-offset, 1px);
+            outline-color: var(--focus-outline-color, var(--color-accent-light));
+        }
+
+        &[disabled] {
+            cursor: not-allowed;
+            opacity: 0.5;
+            pointer-events: none;
         }
     }
 

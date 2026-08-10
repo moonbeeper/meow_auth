@@ -1,25 +1,48 @@
 <script lang="ts">
+    import { invalidateAll } from "$app/navigation";
     // Could use https://data-slot.com/
     import { page } from "$app/state";
     import logo from "$lib/assets/logo.svg";
     import logo_dark from "$lib/assets/logo_dark.svg";
-    import { auth } from "$lib/auth.svelte";
+    import { auth } from "$lib/auth/auth.svelte";
+    import { UserFlag } from "$lib/auth/userFlags";
 
     import Avatar from "./avatar.svelte";
     import Button from "./button.svelte";
 
-    // let has_session = $derived.by(() => {
-    //     return auth.user != null;
-    // });
-    const hasSession = true;
+    let hasSession = $derived.by(() => {
+        return auth.user != null;
+    });
 
-    const links = [
-        { href: ["/me", "/me/audit-log"], label: "Account" },
-        { href: ["/me/security"], label: "Security" },
-        { href: ["/me/authorized-apps"], label: "Authorized apps" },
-        { href: ["/me/my-apps"], label: "My apps" },
-        { href: ["/me/admin"], label: "Admin" } // should only show whenn... THEY ARE AND
-    ];
+    let isSuperAdmin = $derived.by(() => {
+        return auth.user?.flags.has(UserFlag.SuperAdmin) ?? false;
+    });
+    // const hasSession = true;
+
+    type NavLink = {
+        href: string[];
+        label: string;
+    };
+
+    let links = $derived.by(() => {
+        const links: NavLink[] = [
+            { href: ["/me", "/me/audit-log"], label: "Account" },
+            { href: ["/me/security"], label: "Security" },
+            { href: ["/me/authorized-apps"], label: "Authorized apps" },
+            { href: ["/me/my-apps"], label: "My apps" }
+        ];
+
+        if (isSuperAdmin) {
+            links.push({ href: ["/me/admin"], label: "Admin" }); // should only show whenn... THEY ARE AND
+        }
+
+        return links;
+    });
+    $effect(() => {
+        if (!hasSession) {
+            invalidateAll();
+        }
+    });
 </script>
 
 <header class="header">
@@ -37,7 +60,7 @@
         {#if hasSession}
             <div class="nav__user">
                 <!-- <div class="avatar2">?</div> -->
-                <Avatar small />
+                <Avatar small interactive />
             </div>
 
             <div class="nav__links">
@@ -84,8 +107,9 @@
         --focus-outline-offset: 4px; // better than using padding :]
         border-radius: 6px; // makes the focus ring rounded as the email logo
         margin-inline-start: var(--main-padding);
+        user-select: none;
 
-        .header--nav[data-session="true"] & {
+        .nav[data-session="true"] & {
             grid-area: logo;
         }
     }
