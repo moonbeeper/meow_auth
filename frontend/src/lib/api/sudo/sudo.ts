@@ -24,31 +24,32 @@ import type {
     AuthenticationPasskeyRequest,
     ExchangeRequest,
     FlowResponse,
+    StartChallengeResponse,
     SudoOptionsResponse
 } from "../model";
 
-export type getEnableOptionsResponse200 = {
+export type sudoEnableOptionsResponse200 = {
     data: SudoOptionsResponse;
     status: 200;
 };
 
-export type getEnableOptionsResponse500 = {
+export type sudoEnableOptionsResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type getEnableOptionsResponseSuccess = getEnableOptionsResponse200 & {
+export type sudoEnableOptionsResponseSuccess = sudoEnableOptionsResponse200 & {
     headers: Headers;
 };
-export type getEnableOptionsResponseError = getEnableOptionsResponse500 & {
+export type sudoEnableOptionsResponseError = sudoEnableOptionsResponse500 & {
     headers: Headers;
 };
 
-export type getEnableOptionsResponse =
-    | getEnableOptionsResponseSuccess
-    | getEnableOptionsResponseError;
+export type sudoEnableOptionsResponse =
+    | sudoEnableOptionsResponseSuccess
+    | sudoEnableOptionsResponseError;
 
-export const getGetEnableOptionsUrl = () => {
+export const getSudoEnableOptionsUrl = () => {
     return `${apiUrlForOrval}/v1/auth/sudo`;
 };
 
@@ -56,11 +57,11 @@ export const getGetEnableOptionsUrl = () => {
  * Requests what authentications methods you can use to re-authenticate with the current user.
  * @summary Get the Sudo Re-Authentication options
  */
-export const getEnableOptions = async (
+export const sudoEnableOptions = async (
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<getEnableOptionsResponse> => {
-    const res = await (fetchFn ?? fetch)(getGetEnableOptionsUrl(), {
+): Promise<sudoEnableOptionsResponse> => {
+    const res = await (fetchFn ?? fetch)(getSudoEnableOptionsUrl(), {
         credentials: "include",
         ...options,
         method: "GET"
@@ -68,52 +69,54 @@ export const getEnableOptions = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: getEnableOptionsResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as getEnableOptionsResponse;
+    const data: sudoEnableOptionsResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as sudoEnableOptionsResponse;
 };
 
-export const getGetEnableOptionsQueryKey = () => {
-    return [`${apiUrlForOrval}/v1/auth/sudo`] as const;
+export const getSudoEnableOptionsQueryKey = () => {
+    return ["sudoEnableOptions"] as const;
 };
 
-export const getGetEnableOptionsQueryOptions = <
-    TData = Awaited<ReturnType<typeof getEnableOptions>>,
+export const getSudoEnableOptionsQueryOptions = <
+    TData = Awaited<ReturnType<typeof sudoEnableOptions>>,
     TError = ApiError
 >(options?: {
     query?: Partial<
-        CreateQueryOptions<Awaited<ReturnType<typeof getEnableOptions>>, TError, TData>
+        CreateQueryOptions<Awaited<ReturnType<typeof sudoEnableOptions>>, TError, TData>
     >;
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }) => {
     const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
 
-    const queryKey = queryOptions?.queryKey ?? getGetEnableOptionsQueryKey();
+    const queryKey = queryOptions?.queryKey ?? getSudoEnableOptionsQueryKey();
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEnableOptions>>> = ({ signal }) =>
-        getEnableOptions({ signal, ...fetchOptions }, fetcherFn);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof sudoEnableOptions>>> = ({ signal }) =>
+        sudoEnableOptions({ signal, ...fetchOptions }, fetcherFn);
 
     return { queryKey, queryFn, ...queryOptions } as CreateQueryOptions<
-        Awaited<ReturnType<typeof getEnableOptions>>,
+        Awaited<ReturnType<typeof sudoEnableOptions>>,
         TError,
         TData
     > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetEnableOptionsQueryResult = NonNullable<Awaited<ReturnType<typeof getEnableOptions>>>;
-export type GetEnableOptionsQueryError = ApiError;
+export type SudoEnableOptionsQueryResult = NonNullable<
+    Awaited<ReturnType<typeof sudoEnableOptions>>
+>;
+export type SudoEnableOptionsQueryError = ApiError;
 
 /**
  * @summary Get the Sudo Re-Authentication options
  */
 
-export function createGetEnableOptions<
-    TData = Awaited<ReturnType<typeof getEnableOptions>>,
+export function createSudoEnableOptions<
+    TData = Awaited<ReturnType<typeof sudoEnableOptions>>,
     TError = ApiError
 >(
     options?: () => {
         query?: Partial<
-            CreateQueryOptions<Awaited<ReturnType<typeof getEnableOptions>>, TError, TData>
+            CreateQueryOptions<Awaited<ReturnType<typeof sudoEnableOptions>>, TError, TData>
         >;
         fetch?: RequestInit;
         fetcher?: typeof globalThis.fetch;
@@ -121,7 +124,7 @@ export function createGetEnableOptions<
     queryClient?: () => QueryClient
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
-        () => getGetEnableOptionsQueryOptions(options?.()),
+        () => getSudoEnableOptionsQueryOptions(options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -537,42 +540,42 @@ export const createSudoWebauthnExchange = <TError = ApiError, TContext = unknown
         queryClient
     );
 };
-export type otpOptionResponse200 = {
+export type sudoOtpStartResponse200 = {
     data: FlowResponse;
     status: 200;
 };
 
-export type otpOptionResponse400 = {
+export type sudoOtpStartResponse400 = {
     data: ApiError;
     status: 400;
 };
 
-export type otpOptionResponse500 = {
+export type sudoOtpStartResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type otpOptionResponseSuccess = otpOptionResponse200 & {
+export type sudoOtpStartResponseSuccess = sudoOtpStartResponse200 & {
     headers: Headers;
 };
-export type otpOptionResponseError = (otpOptionResponse400 | otpOptionResponse500) & {
+export type sudoOtpStartResponseError = (sudoOtpStartResponse400 | sudoOtpStartResponse500) & {
     headers: Headers;
 };
 
-export type otpOptionResponse = otpOptionResponseSuccess | otpOptionResponseError;
+export type sudoOtpStartResponse = sudoOtpStartResponseSuccess | sudoOtpStartResponseError;
 
-export const getOtpOptionUrl = () => {
+export const getSudoOtpStartUrl = () => {
     return `${apiUrlForOrval}/v1/auth/sudo/start`;
 };
 
 /**
  * @summary Re-Authenticate via an OTP code
  */
-export const otpOption = async (
+export const sudoOtpStart = async (
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<otpOptionResponse> => {
-    const res = await (fetchFn ?? fetch)(getOtpOptionUrl(), {
+): Promise<sudoOtpStartResponse> => {
+    const res = await (fetchFn ?? fetch)(getSudoOtpStartUrl(), {
         credentials: "include",
         ...options,
         method: "POST"
@@ -580,113 +583,21 @@ export const otpOption = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: otpOptionResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as otpOptionResponse;
+    const data: sudoOtpStartResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as sudoOtpStartResponse;
 };
 
-export const getOtpOptionMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
-    mutation?: CreateMutationOptions<Awaited<ReturnType<typeof otpOption>>, TError, void, TContext>;
-    fetch?: RequestInit;
-    fetcher?: typeof globalThis.fetch;
-}): CreateMutationOptions<Awaited<ReturnType<typeof otpOption>>, TError, void, TContext> => {
-    const mutationKey = ["otpOption"];
-    const {
-        mutation: mutationOptions,
-        fetch: fetchOptions,
-        fetcher: fetcherFn
-    } = options
-        ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
-            ? options
-            : { ...options, mutation: { ...options.mutation, mutationKey } }
-        : { mutation: { mutationKey }, fetch: undefined };
-
-    const mutationFn: MutationFunction<Awaited<ReturnType<typeof otpOption>>, void> = () => {
-        return otpOption(fetchOptions, fetcherFn);
-    };
-
-    return { mutationFn, ...mutationOptions };
-};
-
-export type OtpOptionMutationResult = NonNullable<Awaited<ReturnType<typeof otpOption>>>;
-
-export type OtpOptionMutationError = ApiError;
-
-/**
- * @summary Re-Authenticate via an OTP code
- */
-export const createOtpOption = <TError = ApiError, TContext = unknown>(
-    options?: () => {
-        mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof otpOption>>,
-            TError,
-            void,
-            TContext
-        >;
-        fetch?: RequestInit;
-        fetcher?: typeof globalThis.fetch;
-    },
-    queryClient?: () => QueryClient
-): CreateMutationResult<Awaited<ReturnType<typeof otpOption>>, TError, void, TContext> => {
-    return createMutation(() => ({ ...getOtpOptionMutationOptions(options?.()) }), queryClient);
-};
-export type totpOptionResponse200 = {
-    data: FlowResponse;
-    status: 200;
-};
-
-export type totpOptionResponse400 = {
-    data: ApiError;
-    status: 400;
-};
-
-export type totpOptionResponse500 = {
-    data: ApiError;
-    status: 500;
-};
-
-export type totpOptionResponseSuccess = totpOptionResponse200 & {
-    headers: Headers;
-};
-export type totpOptionResponseError = (totpOptionResponse400 | totpOptionResponse500) & {
-    headers: Headers;
-};
-
-export type totpOptionResponse = totpOptionResponseSuccess | totpOptionResponseError;
-
-export const getTotpOptionUrl = () => {
-    return `${apiUrlForOrval}/v1/auth/sudo/start/totp`;
-};
-
-/**
- * @summary Re-Authenticate via a TOTP code (if enabled)
- */
-export const totpOption = async (
-    options?: RequestInit,
-    fetchFn?: typeof globalThis.fetch
-): Promise<totpOptionResponse> => {
-    const res = await (fetchFn ?? fetch)(getTotpOptionUrl(), {
-        credentials: "include",
-        ...options,
-        method: "POST"
-    });
-
-    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-    const data: totpOptionResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as totpOptionResponse;
-};
-
-export const getTotpOptionMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
+export const getSudoOtpStartMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof totpOption>>,
+        Awaited<ReturnType<typeof sudoOtpStart>>,
         TError,
         void,
         TContext
     >;
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
-}): CreateMutationOptions<Awaited<ReturnType<typeof totpOption>>, TError, void, TContext> => {
-    const mutationKey = ["totpOption"];
+}): CreateMutationOptions<Awaited<ReturnType<typeof sudoOtpStart>>, TError, void, TContext> => {
+    const mutationKey = ["sudoOtpStart"];
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -697,24 +608,24 @@ export const getTotpOptionMutationOptions = <TError = ApiError, TContext = unkno
             : { ...options, mutation: { ...options.mutation, mutationKey } }
         : { mutation: { mutationKey }, fetch: undefined };
 
-    const mutationFn: MutationFunction<Awaited<ReturnType<typeof totpOption>>, void> = () => {
-        return totpOption(fetchOptions, fetcherFn);
+    const mutationFn: MutationFunction<Awaited<ReturnType<typeof sudoOtpStart>>, void> = () => {
+        return sudoOtpStart(fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type TotpOptionMutationResult = NonNullable<Awaited<ReturnType<typeof totpOption>>>;
+export type SudoOtpStartMutationResult = NonNullable<Awaited<ReturnType<typeof sudoOtpStart>>>;
 
-export type TotpOptionMutationError = ApiError;
+export type SudoOtpStartMutationError = ApiError;
 
 /**
- * @summary Re-Authenticate via a TOTP code (if enabled)
+ * @summary Re-Authenticate via an OTP code
  */
-export const createTotpOption = <TError = ApiError, TContext = unknown>(
+export const createSudoOtpStart = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof totpOption>>,
+            Awaited<ReturnType<typeof sudoOtpStart>>,
             TError,
             void,
             TContext
@@ -723,37 +634,136 @@ export const createTotpOption = <TError = ApiError, TContext = unknown>(
         fetcher?: typeof globalThis.fetch;
     },
     queryClient?: () => QueryClient
-): CreateMutationResult<Awaited<ReturnType<typeof totpOption>>, TError, void, TContext> => {
-    return createMutation(() => ({ ...getTotpOptionMutationOptions(options?.()) }), queryClient);
+): CreateMutationResult<Awaited<ReturnType<typeof sudoOtpStart>>, TError, void, TContext> => {
+    return createMutation(() => ({ ...getSudoOtpStartMutationOptions(options?.()) }), queryClient);
 };
-export type webauthnOptionsResponse200 = {
-    data: void;
+export type sudoTotpStartResponse200 = {
+    data: FlowResponse;
     status: 200;
 };
 
-export type webauthnOptionsResponse400 = {
+export type sudoTotpStartResponse400 = {
     data: ApiError;
     status: 400;
 };
 
-export type webauthnOptionsResponse500 = {
+export type sudoTotpStartResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type webauthnOptionsResponseSuccess = webauthnOptionsResponse200 & {
+export type sudoTotpStartResponseSuccess = sudoTotpStartResponse200 & {
     headers: Headers;
 };
-export type webauthnOptionsResponseError = (
-    | webauthnOptionsResponse400
-    | webauthnOptionsResponse500
+export type sudoTotpStartResponseError = (sudoTotpStartResponse400 | sudoTotpStartResponse500) & {
+    headers: Headers;
+};
+
+export type sudoTotpStartResponse = sudoTotpStartResponseSuccess | sudoTotpStartResponseError;
+
+export const getSudoTotpStartUrl = () => {
+    return `${apiUrlForOrval}/v1/auth/sudo/start/totp`;
+};
+
+/**
+ * @summary Re-Authenticate via a TOTP code (if enabled)
+ */
+export const sudoTotpStart = async (
+    options?: RequestInit,
+    fetchFn?: typeof globalThis.fetch
+): Promise<sudoTotpStartResponse> => {
+    const res = await (fetchFn ?? fetch)(getSudoTotpStartUrl(), {
+        credentials: "include",
+        ...options,
+        method: "POST"
+    });
+
+    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+    const data: sudoTotpStartResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as sudoTotpStartResponse;
+};
+
+export const getSudoTotpStartMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
+    mutation?: CreateMutationOptions<
+        Awaited<ReturnType<typeof sudoTotpStart>>,
+        TError,
+        void,
+        TContext
+    >;
+    fetch?: RequestInit;
+    fetcher?: typeof globalThis.fetch;
+}): CreateMutationOptions<Awaited<ReturnType<typeof sudoTotpStart>>, TError, void, TContext> => {
+    const mutationKey = ["sudoTotpStart"];
+    const {
+        mutation: mutationOptions,
+        fetch: fetchOptions,
+        fetcher: fetcherFn
+    } = options
+        ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+            ? options
+            : { ...options, mutation: { ...options.mutation, mutationKey } }
+        : { mutation: { mutationKey }, fetch: undefined };
+
+    const mutationFn: MutationFunction<Awaited<ReturnType<typeof sudoTotpStart>>, void> = () => {
+        return sudoTotpStart(fetchOptions, fetcherFn);
+    };
+
+    return { mutationFn, ...mutationOptions };
+};
+
+export type SudoTotpStartMutationResult = NonNullable<Awaited<ReturnType<typeof sudoTotpStart>>>;
+
+export type SudoTotpStartMutationError = ApiError;
+
+/**
+ * @summary Re-Authenticate via a TOTP code (if enabled)
+ */
+export const createSudoTotpStart = <TError = ApiError, TContext = unknown>(
+    options?: () => {
+        mutation?: CreateMutationOptions<
+            Awaited<ReturnType<typeof sudoTotpStart>>,
+            TError,
+            void,
+            TContext
+        >;
+        fetch?: RequestInit;
+        fetcher?: typeof globalThis.fetch;
+    },
+    queryClient?: () => QueryClient
+): CreateMutationResult<Awaited<ReturnType<typeof sudoTotpStart>>, TError, void, TContext> => {
+    return createMutation(() => ({ ...getSudoTotpStartMutationOptions(options?.()) }), queryClient);
+};
+export type sudoWebauthnStartResponse200 = {
+    data: StartChallengeResponse;
+    status: 200;
+};
+
+export type sudoWebauthnStartResponse400 = {
+    data: ApiError;
+    status: 400;
+};
+
+export type sudoWebauthnStartResponse500 = {
+    data: ApiError;
+    status: 500;
+};
+
+export type sudoWebauthnStartResponseSuccess = sudoWebauthnStartResponse200 & {
+    headers: Headers;
+};
+export type sudoWebauthnStartResponseError = (
+    | sudoWebauthnStartResponse400
+    | sudoWebauthnStartResponse500
 ) & {
     headers: Headers;
 };
 
-export type webauthnOptionsResponse = webauthnOptionsResponseSuccess | webauthnOptionsResponseError;
+export type sudoWebauthnStartResponse =
+    | sudoWebauthnStartResponseSuccess
+    | sudoWebauthnStartResponseError;
 
-export const getWebauthnOptionsUrl = () => {
+export const getSudoWebauthnStartUrl = () => {
     return `${apiUrlForOrval}/v1/auth/sudo/start/webauthn`;
 };
 
@@ -761,11 +771,11 @@ export const getWebauthnOptionsUrl = () => {
  * Returns the challenge for the user's browser to use to re-authenticate.
  * @summary Re-Authenticate via a Passkey
  */
-export const webauthnOptions = async (
+export const sudoWebauthnStart = async (
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<webauthnOptionsResponse> => {
-    const res = await (fetchFn ?? fetch)(getWebauthnOptionsUrl(), {
+): Promise<sudoWebauthnStartResponse> => {
+    const res = await (fetchFn ?? fetch)(getSudoWebauthnStartUrl(), {
         credentials: "include",
         ...options,
         method: "POST"
@@ -773,21 +783,29 @@ export const webauthnOptions = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: webauthnOptionsResponse["data"] = body ? JSON.parse(body) : undefined;
-    return { data, status: res.status, headers: res.headers } as webauthnOptionsResponse;
+    const data: sudoWebauthnStartResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as sudoWebauthnStartResponse;
 };
 
-export const getWebauthnOptionsMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
+export const getSudoWebauthnStartMutationOptions = <
+    TError = ApiError,
+    TContext = unknown
+>(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof webauthnOptions>>,
+        Awaited<ReturnType<typeof sudoWebauthnStart>>,
         TError,
         void,
         TContext
     >;
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
-}): CreateMutationOptions<Awaited<ReturnType<typeof webauthnOptions>>, TError, void, TContext> => {
-    const mutationKey = ["webauthnOptions"];
+}): CreateMutationOptions<
+    Awaited<ReturnType<typeof sudoWebauthnStart>>,
+    TError,
+    void,
+    TContext
+> => {
+    const mutationKey = ["sudoWebauthnStart"];
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -798,26 +816,29 @@ export const getWebauthnOptionsMutationOptions = <TError = ApiError, TContext = 
             : { ...options, mutation: { ...options.mutation, mutationKey } }
         : { mutation: { mutationKey }, fetch: undefined };
 
-    const mutationFn: MutationFunction<Awaited<ReturnType<typeof webauthnOptions>>, void> = () => {
-        return webauthnOptions(fetchOptions, fetcherFn);
+    const mutationFn: MutationFunction<
+        Awaited<ReturnType<typeof sudoWebauthnStart>>,
+        void
+    > = () => {
+        return sudoWebauthnStart(fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type WebauthnOptionsMutationResult = NonNullable<
-    Awaited<ReturnType<typeof webauthnOptions>>
+export type SudoWebauthnStartMutationResult = NonNullable<
+    Awaited<ReturnType<typeof sudoWebauthnStart>>
 >;
 
-export type WebauthnOptionsMutationError = ApiError;
+export type SudoWebauthnStartMutationError = ApiError;
 
 /**
  * @summary Re-Authenticate via a Passkey
  */
-export const createWebauthnOptions = <TError = ApiError, TContext = unknown>(
+export const createSudoWebauthnStart = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof webauthnOptions>>,
+            Awaited<ReturnType<typeof sudoWebauthnStart>>,
             TError,
             void,
             TContext
@@ -826,9 +847,9 @@ export const createWebauthnOptions = <TError = ApiError, TContext = unknown>(
         fetcher?: typeof globalThis.fetch;
     },
     queryClient?: () => QueryClient
-): CreateMutationResult<Awaited<ReturnType<typeof webauthnOptions>>, TError, void, TContext> => {
+): CreateMutationResult<Awaited<ReturnType<typeof sudoWebauthnStart>>, TError, void, TContext> => {
     return createMutation(
-        () => ({ ...getWebauthnOptionsMutationOptions(options?.()) }),
+        () => ({ ...getSudoWebauthnStartMutationOptions(options?.()) }),
         queryClient
     );
 };

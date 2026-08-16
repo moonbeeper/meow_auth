@@ -66,7 +66,7 @@ export const wellknownOauth = async (
 };
 
 export const getWellknownOauthQueryKey = () => {
-    return [`${apiUrlForOrval}/.well-known/oauth-authorization-server`] as const;
+    return ["wellknownOauth"] as const;
 };
 
 export const getWellknownOauthQueryOptions = <
@@ -154,7 +154,7 @@ export const wellknownOpenid = async (
 };
 
 export const getWellknownOpenidQueryKey = () => {
-    return [`${apiUrlForOrval}/.well-known/openid-configuration`] as const;
+    return ["wellknownOpenid"] as const;
 };
 
 export const getWellknownOpenidQueryOptions = <
@@ -276,7 +276,11 @@ export const authorize = async (
 };
 
 export const getAuthorizeQueryKey = (authorizationRequest?: AuthorizationRequest) => {
-    return [`${apiUrlForOrval}/v1/oauth2/authorize`, authorizationRequest] as const;
+    return [
+        "authorize",
+        ...(authorizationRequest ? [authorizationRequest] : []),
+        authorizationRequest
+    ] as const;
 };
 
 export const getAuthorizeQueryOptions = <
@@ -376,7 +380,7 @@ export const oauthConsentInfo = async (
 };
 
 export const getOauthConsentInfoQueryKey = () => {
-    return [`${apiUrlForOrval}/v1/oauth2/consent`] as const;
+    return ["oauthConsentInfo"] as const;
 };
 
 export const getOauthConsentInfoQueryOptions = <
@@ -594,7 +598,7 @@ export const oauthDiscoveryJwks = async (
 };
 
 export const getOauthDiscoveryJwksQueryKey = () => {
-    return [`${apiUrlForOrval}/v1/oauth2/discovery/keys`] as const;
+    return ["oauthDiscoveryJwks"] as const;
 };
 
 export const getOauthDiscoveryJwksQueryOptions = <
@@ -805,7 +809,7 @@ export const openidUserinfo = async (
 };
 
 export const getOpenidUserinfoQueryKey = () => {
-    return [`${apiUrlForOrval}/v1/oauth2/userinfo`] as const;
+    return ["openidUserinfo"] as const;
 };
 
 export const getOpenidUserinfoQueryOptions = <

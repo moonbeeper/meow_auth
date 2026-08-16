@@ -18,10 +18,16 @@ import type {
     QueryKey
 } from "@tanstack/svelte-query";
 
-import type { ApiError, Passkey, RegisterPasskeyRequest, UlidId } from "../model";
+import type {
+    ApiError,
+    Passkey,
+    RegisterPasskeyRequest,
+    RegistrationChallengeResponse,
+    UlidId
+} from "../model";
 
 export type registerPasskeyOptionsResponse200 = {
-    data: void;
+    data: RegistrationChallengeResponse;
     status: 200;
 };
 
@@ -68,7 +74,7 @@ export const registerPasskeyOptions = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: registerPasskeyOptionsResponse["data"] = body ? JSON.parse(body) : undefined;
+    const data: registerPasskeyOptionsResponse["data"] = body ? JSON.parse(body) : {};
     return { data, status: res.status, headers: res.headers } as registerPasskeyOptionsResponse;
 };
 
@@ -320,7 +326,7 @@ export const listPasskeys = async (
 };
 
 export const getListPasskeysQueryKey = () => {
-    return [`${apiUrlForOrval}/v1/me/webauthn/list`] as const;
+    return ["listPasskeys"] as const;
 };
 
 export const getListPasskeysQueryOptions = <

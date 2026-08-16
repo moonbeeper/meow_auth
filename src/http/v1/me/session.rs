@@ -54,6 +54,7 @@ pub async fn current_session_info(
     get,
     path = "/list",
     tags = ["sessions"],
+    params(ListDataRequest),
     responses(
         (status = 200, description = "list of open sessions", body = ListDataResponse<Session>),
         (status = 500, description = "internal server error", body = ApiError)

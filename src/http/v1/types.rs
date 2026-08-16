@@ -308,3 +308,86 @@ pub struct TwoIdParam<T, G> {
     #[serde(alias = "cid")]
     pub child_id: G,
 }
+
+// Copy and paste from webauthn_rs_proto::CreationChallengeResponse with some fields being serde_json::Value. its for the utoipa stuff :)
+#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct RegistrationChallengeResponse {
+    /// The options.
+    pub public_key: PublicKeyCredentialRegistrationOptions,
+}
+
+// Copy and paste from webauthn_rs_proto::PublicKeyCredentialCreationOptions with some fields being serde_json::Value. its for the utoipa stuff :)
+#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct PublicKeyCredentialRegistrationOptions {
+    /// The relying party
+    pub rp: serde_json::Value,
+    /// The user.
+    pub user: serde_json::Value,
+    /// The one-time challenge for the credential to sign.
+    pub challenge: serde_json::Value,
+    /// The set of cryptographic types allowed by this server.
+    pub pub_key_cred_params: Vec<serde_json::Value>,
+
+    /// The timeout for the authenticator to stop accepting the operation
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeout: Option<u32>,
+
+    /// Credential ID's that are excluded from being able to be registered.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exclude_credentials: Option<Vec<serde_json::Value>>,
+
+    /// Criteria defining which authenticators may be used in this operation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authenticator_selection: Option<serde_json::Value>,
+
+    /// Hints defining which credentials may be used in this operation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hints: Option<Vec<serde_json::Value>>,
+
+    /// The requested attestation level from the device.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attestation: Option<serde_json::Value>,
+
+    /// The list of attestation formats that the RP will accept.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attestation_formats: Option<Vec<serde_json::Value>>,
+
+    /// Non-standard extensions that may be used by the browser/authenticator.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<serde_json::Value>,
+}
+
+// Copy and paste from webauthn_rs_proto::RequestChallengeResponse with some fields being serde_json::Value. its for the utoipa stuff :)
+#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct StartChallengeResponse {
+    /// The options.
+    pub public_key: PublicKeyCredentialStartOptions,
+}
+
+// Copy and paste from webauthn_rs_proto::PublicKeyCredentialRequestOptions with some fields being serde_json::Value. its for the utoipa stuff :)
+#[derive(Debug, serde::Deserialize, serde::Serialize, utoipa::ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct PublicKeyCredentialStartOptions {
+    /// The challenge that should be signed by the authenticator.
+    pub challenge: serde_json::Value,
+    /// The timeout for the authenticator in case of no interaction.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub timeout: Option<u32>,
+    /// The relying party ID.
+    pub rp_id: String,
+    /// The set of credentials that are allowed to sign this challenge.
+    pub allow_credentials: Vec<serde_json::Value>,
+    /// The verification policy the browser will request.
+    pub user_verification: serde_json::Value,
+
+    /// Hints defining which types credentials may be used in this operation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hints: Option<Vec<serde_json::Value>>,
+
+    /// extensions.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<serde_json::Value>,
+}

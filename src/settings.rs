@@ -127,6 +127,8 @@ pub struct WebauthnSettings {
     pub rp_id: String,
     #[default("MeowAuth".to_string())]
     pub rp_display_name: String,
+    #[default(Url::parse("http://localhost:8080").expect("failed to parse default origin url burh"))]
+    pub rp_origin: Url,
     #[default(60*5)]
     pub timeout_seconds: i64,
 }

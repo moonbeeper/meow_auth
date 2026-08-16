@@ -11,10 +11,9 @@
     import InputError from "$comps/form/inputError.svelte";
     import Pin from "$comps/form/pin.svelte";
     import { PIN_DIGIT_AND_CHAR } from "$comps/form/regex";
-    import { flowOtpExchange, flowTotpExchange } from "$lib/api/auth/auth";
+    import { flowTotpExchange } from "$lib/api/auth/auth";
     import { isOk } from "$lib/api/ignoreThisPlease";
-    import { auth } from "$lib/auth/auth.svelte";
-    import { error } from "@sveltejs/kit";
+    import { sudoTotpExchange } from "$lib/api/sudo/sudo";
     import { Control, Field } from "formsnap";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
@@ -22,8 +21,16 @@
     import type { PageProps } from "./$types";
 
     let { data }: PageProps = $props();
+
+    let redirectTo = $derived.by(() => {
+        if (data.redirect) {
+            return `?redirect=${encodeURIComponent(data.redirect)}`;
+        }
+        return "";
+    });
+
     let totpRedirect = $derived.by(() => {
-        return `/auth/${data.flowId}/totp`;
+        return `/auth/${data.flowId}/totp${redirectTo}`;
     });
 
     const rawForm = superForm(defaults(zod4(schema)), {
@@ -37,27 +44,48 @@
                 return;
             }
 
-            const res = await flowTotpExchange({ flow_id: data.flowId, code: form.data.code });
+            if (!data.sudo) {
+                const res = await flowTotpExchange({ flow_id: data.flowId, code: form.data.code });
 
-            if (!isOk(res)) {
-                if (res.data.code == "FlowNotFound") {
-                    console.error("flow not found, redirecting to login");
-                    // TODO: Id like this to be a dialog!!
-                    setError(form, "code", "Flow not found, redirecting to login");
-                    setTimeout(() => {
-                        console.log("redirecting to login");
-                        goto("/");
-                    }, 2000);
+                if (!isOk(res)) {
+                    if (res.data.code == "FlowNotFound") {
+                        console.error("flow not found, redirecting to login");
+                        // TODO: Id like this to be a dialog!!
+                        setError(form, "code", "Flow not found, redirecting to login");
+                        setTimeout(() => {
+                            console.log("redirecting to login");
+                            goto(data.redirect ?? "/login");
+                        }, 2000);
+                        return;
+                    }
+
+                    console.warn("already used or invalid code submitted");
+                    setError(form, "code", "You've already used this code");
                     return;
                 }
+            } else {
+                const res = await sudoTotpExchange({ flow_id: data.flowId, code: form.data.code });
 
-                console.warn("already used or invalid code submitted");
-                setError(form, "code", "You've already used this code");
-                return;
+                if (!isOk(res)) {
+                    if (res.data.code == "FlowNotFound") {
+                        console.error("flow not found, redirecting to login");
+                        // TODO: Id like this to be a dialog!!
+                        setError(form, "code", "Flow not found, redirecting to login");
+                        setTimeout(() => {
+                            console.log("redirecting to login");
+                            goto(data.redirect ?? "/login");
+                        }, 2000);
+                        return;
+                    }
+
+                    console.warn("already used or invalid code submitted");
+                    setError(form, "code", "You've already used this code");
+                    return;
+                }
             }
             console.log("finalized authentication");
             await invalidateAll();
-            await goto("/me");
+            await goto(data.redirect ?? "/me");
         }
     });
     const { form, enhance, delayed } = rawForm;

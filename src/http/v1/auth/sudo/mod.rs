@@ -21,7 +21,7 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(get_enable_options))
+        .routes(routes!(sudo_enable_options))
         .nest("/start", start::routes())
         .nest("/exchange", exchange::routes())
         .layer(RequireAuthenticationLayer::new())
@@ -45,7 +45,7 @@ pub struct SudoOptionsResponse {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn get_enable_options(
+pub async fn sudo_enable_options(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<SudoOptionsResponse>, ApiErrorCodes> {

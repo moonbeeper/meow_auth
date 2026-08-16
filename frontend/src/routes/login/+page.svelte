@@ -12,12 +12,16 @@
     import Button from "$comps/button.svelte";
     import Input from "$comps/form/input.svelte";
     import InputError from "$comps/form/inputError.svelte";
-    import { flowOptions, otpLogin } from "$lib/api/auth/auth";
+    import { flowOptions, flowOtpStart } from "$lib/api/auth/auth";
     import { isOk } from "$lib/api/ignoreThisPlease";
     import { auth } from "$lib/auth/auth.svelte";
     import { Control, Field } from "formsnap";
     import { defaults, setMessage, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import type { PageProps } from "./$types";
+
+    let { data }: PageProps = $props();
 
     const greetings = [
         "Meow!",
@@ -32,12 +36,20 @@
         return greetings[Math.floor(Math.random() * greetings.length)];
     });
 
+    let redirectTo = $derived.by(() => {
+        if (data.redirect) {
+            return `?redirect=${encodeURIComponent(data.redirect)}`;
+        }
+        return "";
+    });
+
     const rawForm = superForm(defaults(zod4(schema)), {
         SPA: true,
         // validationMethod: "onsubmit", // makes so the error (data-fs-error) doesnt dissapear after blur
         validators: zod4(schema),
         onUpdate: async ({ form }) => {
             const res = await flowOptions({ email: form.data.email });
+            auth.pendingAuthEmail = form.data.email;
 
             if (!isOk(res)) {
                 console.error("i will cry");
@@ -50,15 +62,14 @@
                 return;
             } else if (methods.includes("otp")) {
                 console.log("going otp route");
-                const req = await otpLogin({ email: form.data.email });
+                const req = await flowOtpStart({ email: form.data.email });
 
                 if (!isOk(req)) {
                     console.error("otp login faild :(");
                     return;
                 }
 
-                auth.pendingAuthEmail = form.data.email;
-                await goto(`/auth/${req.data.flow_id}/otp`);
+                await goto(`/auth/${req.data.flow_id}/otp${redirectTo}`);
                 return;
             } else {
                 console.warn("somehow login options returned a non valid method list");

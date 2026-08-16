@@ -6,16 +6,18 @@
         children,
         title = "Section Title",
         description = "i love space birbs. and hate space cats. i love space birbs (once again).",
-        negative = false
+        negative = false,
+        contentSpacing
     }: {
         children: Snippet;
         title: string;
         description: string;
         negative?: boolean;
+        contentSpacing?: number;
     } = $props();
 </script>
 
-<section class={["panel", { negative }]}>
+<section class={["panel", { negative }]} style:--panel-content-spacing={contentSpacing}>
     <header class="header">
         <h2>{title}</h2>
         <p>{description}</p>
@@ -27,6 +29,7 @@
 
 <style lang="scss">
     .panel {
+        --panel-content-spacing: 4;
         display: grid;
         inline-size: 100%;
         // was 17.5rem the first column (header). Has a third column to make the middle column tinier
@@ -103,6 +106,6 @@
     .content {
         display: flex;
         flex-direction: column;
-        gap: calc(var(--spacing) * 4);
+        gap: calc(var(--spacing) * var(--panel-content-spacing, 4));
     }
 </style>

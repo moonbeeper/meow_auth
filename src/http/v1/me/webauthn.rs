@@ -25,7 +25,9 @@ use crate::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
         middleware::auth_manager::AuthContext,
-        v1::types::{AlrightResponse, Passkey, RegisterPasskeyRequest},
+        v1::types::{
+            AlrightResponse, Passkey, RegisterPasskeyRequest, RegistrationChallengeResponse,
+        },
     },
 };
 
@@ -43,7 +45,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     path = "/",
     tags = ["passkeys"],
     responses(
-        (status = 200, description = "passkey creation challenge options"),
+        (status = 200, description = "passkey creation challenge options", body = RegistrationChallengeResponse),
         (status = 401, description = "sudo not enabled", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )

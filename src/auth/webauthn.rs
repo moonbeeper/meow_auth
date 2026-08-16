@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
 use nom::{bytes::complete::take, error::ParseError, number::complete};
-use sqlx::PgPool;
+use sqlx::{PgPool, PgTransaction};
 use tower_cookies::{
     Cookies,
     cookie::{self},
@@ -10,6 +10,7 @@ use uuid::Uuid;
 use webauthn_rs::prelude::{AuthenticationResult, Passkey};
 
 use crate::{
+    audit::{self, AuditAction},
     auth::{create_cookie, get_cookie},
     database::{
         id::UlidId,
@@ -18,6 +19,7 @@ use crate::{
             user_webauthn_challenge::UserWebauthnChallengeId,
         },
     },
+    http::middleware::auth_manager::AuthContext,
     settings::Settings,
 };
 
@@ -125,7 +127,9 @@ pub fn update_passkey_with_authentication_result(
     auth_result: &AuthenticationResult,
 ) -> anyhow::Result<()> {
     let mut big_data: Passkey = serde_json::from_value(passkey.big_data.clone())?;
-    big_data.update_credential(auth_result);
-    passkey.big_data = serde_json::to_value(big_data)?;
+    if auth_result.needs_update() {
+        big_data.update_credential(auth_result);
+        passkey.big_data = serde_json::to_value(big_data)?;
+    }
     Ok(())
 }

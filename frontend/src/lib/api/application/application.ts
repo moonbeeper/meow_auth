@@ -52,7 +52,7 @@ export const applicationInfo = async (
 };
 
 export const getApplicationInfoQueryKey = () => {
-    return [`${apiUrlForOrval}/`] as const;
+    return ["applicationInfo"] as const;
 };
 
 export const getApplicationInfoQueryOptions = <
@@ -140,7 +140,7 @@ export const health = async (
 };
 
 export const getHealthQueryKey = () => {
-    return [`${apiUrlForOrval}/ok`] as const;
+    return ["health"] as const;
 };
 
 export const getHealthQueryOptions = <

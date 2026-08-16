@@ -27,11 +27,11 @@ export class UserFlags extends EnumFlags<UserFlag> {
 
     private static readonly humanNames: Record<UserFlag, string> = {
         [UserFlag.SuperAdmin]: "Super Admin",
-        [UserFlag.CannotManageOauthApplications]: "Cannot Manage OAuth Applications",
-        [UserFlag.CannotAuthorizeOauthApplications]: "Cannot Authorize OAuth Applications",
+        [UserFlag.CannotManageOauthApplications]: "Cannot manage OAuth apps",
+        [UserFlag.CannotAuthorizeOauthApplications]: "Cannot authorize OAuth apps",
         [UserFlag.CannotModifyName]: "Cannot modify name",
-        [UserFlag.CannotModifyEmail]: "CAnnot",
-        [UserFlag.HasSetName]: "has_set_name"
+        [UserFlag.CannotModifyEmail]: "Cannot modify email",
+        [UserFlag.HasSetName]: "Has set display name"
     };
 
     protected get all(): UserFlag[] {

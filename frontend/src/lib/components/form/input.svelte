@@ -5,7 +5,7 @@
         fontSize?: "normal" | "large";
     };
 
-    type FormProps = HTMLInputAttributes & Props;
+    export type FormProps = HTMLInputAttributes & Props;
 
     let { fontSize = "normal", value = $bindable(), ...rest }: FormProps = $props();
     let fontSizeClass = $derived.by(() => {
@@ -21,7 +21,8 @@
         --input-transition-duration: 0.1s;
         --input-transition-ease: ease-out;
         border-radius: var(--input-radius, var(--typical-radius));
-        border: 1px solid var(--input-border-color, var(--color-iron-medium));
+        border: var(--input-border-size, 1px) solid
+            var(--input-border-color, var(--color-iron-medium));
         padding-inline-start: var(--input-padding-inline-start, calc(var(--spacing) * 3));
         padding-inline-end: var(--input-padding-inline-end, calc(var(--spacing) * 2));
         padding-block: var(--input-padding-block, calc(var(--spacing) * 3));

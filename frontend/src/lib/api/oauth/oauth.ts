@@ -208,7 +208,7 @@ export const listApplications = async (
 };
 
 export const getListApplicationsQueryKey = (params?: ListApplicationsParams) => {
-    return [`${apiUrlForOrval}/v1/me/oauth/application/list`, ...(params ? [params] : [])] as const;
+    return ["listApplications", ...(params ? [params] : [])] as const;
 };
 
 export const getListApplicationsQueryOptions = <
@@ -321,7 +321,7 @@ export const getInfoApplication = async (
 };
 
 export const getGetInfoApplicationQueryKey = (id: UlidId) => {
-    return [`${apiUrlForOrval}/v1/me/oauth/application/${id}`] as const;
+    return ["getInfoApplication", ...(id ? [id] : [])] as const;
 };
 
 export const getGetInfoApplicationQueryOptions = <
@@ -819,10 +819,7 @@ export const listOauthAuthorizations = async (
 };
 
 export const getListOauthAuthorizationsQueryKey = (params?: ListOauthAuthorizationsParams) => {
-    return [
-        `${apiUrlForOrval}/v1/me/oauth/authorization/list`,
-        ...(params ? [params] : [])
-    ] as const;
+    return ["listOauthAuthorizations", ...(params ? [params] : [])] as const;
 };
 
 export const getListOauthAuthorizationsQueryOptions = <

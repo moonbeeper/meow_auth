@@ -5,7 +5,7 @@
 
     let {
         title = "my favorite passkey",
-        tag = "disabled",
+        tag,
         when = "Last used 2 days ago"
     }: { title?: string; tag?: string; when?: string } = $props();
 </script>

@@ -19,7 +19,7 @@ impl GlobalState {
         let database = database::setup_pg_database(&settings.database).await?;
         let mailer = Mailer::new(&settings).await?;
 
-        let webauth = WebauthnBuilder::new(&settings.webauthn.rp_id, &settings.http.origin)
+        let webauth = WebauthnBuilder::new(&settings.webauthn.rp_id, &settings.webauthn.rp_origin)
             .context("bad webauthn configuration")?;
         let webauth = webauth
             .rp_name(&settings.webauthn.rp_display_name)

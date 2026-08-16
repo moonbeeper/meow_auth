@@ -22,6 +22,7 @@ import type {
     FlowRequest,
     FlowResponse,
     RegisterRequest,
+    StartChallengeResponse,
     _OtpExchangeResponse
 } from "../model";
 
@@ -536,26 +537,26 @@ export const createFlowWebauthnExchange = <TError = ApiError, TContext = unknown
         queryClient
     );
 };
-export type otpLoginResponse200 = {
+export type flowOtpStartResponse200 = {
     data: FlowResponse;
     status: 200;
 };
 
-export type otpLoginResponse500 = {
+export type flowOtpStartResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type otpLoginResponseSuccess = otpLoginResponse200 & {
+export type flowOtpStartResponseSuccess = flowOtpStartResponse200 & {
     headers: Headers;
 };
-export type otpLoginResponseError = otpLoginResponse500 & {
+export type flowOtpStartResponseError = flowOtpStartResponse500 & {
     headers: Headers;
 };
 
-export type otpLoginResponse = otpLoginResponseSuccess | otpLoginResponseError;
+export type flowOtpStartResponse = flowOtpStartResponseSuccess | flowOtpStartResponseError;
 
-export const getOtpLoginUrl = () => {
+export const getFlowOtpStartUrl = () => {
     return `${apiUrlForOrval}/v1/auth/flow/start`;
 };
 
@@ -563,12 +564,12 @@ export const getOtpLoginUrl = () => {
  * Starts the flow to authenticate via an OTP sent to the user's email
  * @summary Authenticate via an OTP code
  */
-export const otpLogin = async (
+export const flowOtpStart = async (
     flowRequest: FlowRequest,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<otpLoginResponse> => {
-    const res = await (fetchFn ?? fetch)(getOtpLoginUrl(), {
+): Promise<flowOtpStartResponse> => {
+    const res = await (fetchFn ?? fetch)(getFlowOtpStartUrl(), {
         credentials: "include",
         ...options,
         method: "POST",
@@ -578,13 +579,13 @@ export const otpLogin = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: otpLoginResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as otpLoginResponse;
+    const data: flowOtpStartResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as flowOtpStartResponse;
 };
 
-export const getOtpLoginMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
+export const getFlowOtpStartMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof otpLogin>>,
+        Awaited<ReturnType<typeof flowOtpStart>>,
         TError,
         { data: FlowRequest },
         TContext
@@ -592,12 +593,12 @@ export const getOtpLoginMutationOptions = <TError = ApiError, TContext = unknown
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof otpLogin>>,
+    Awaited<ReturnType<typeof flowOtpStart>>,
     TError,
     { data: FlowRequest },
     TContext
 > => {
-    const mutationKey = ["otpLogin"];
+    const mutationKey = ["flowOtpStart"];
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -609,28 +610,28 @@ export const getOtpLoginMutationOptions = <TError = ApiError, TContext = unknown
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof otpLogin>>,
+        Awaited<ReturnType<typeof flowOtpStart>>,
         { data: FlowRequest }
     > = (props) => {
         const { data } = props ?? {};
 
-        return otpLogin(data, fetchOptions, fetcherFn);
+        return flowOtpStart(data, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type OtpLoginMutationResult = NonNullable<Awaited<ReturnType<typeof otpLogin>>>;
-export type OtpLoginMutationBody = FlowRequest;
-export type OtpLoginMutationError = ApiError;
+export type FlowOtpStartMutationResult = NonNullable<Awaited<ReturnType<typeof flowOtpStart>>>;
+export type FlowOtpStartMutationBody = FlowRequest;
+export type FlowOtpStartMutationError = ApiError;
 
 /**
  * @summary Authenticate via an OTP code
  */
-export const createOtpLogin = <TError = ApiError, TContext = unknown>(
+export const createFlowOtpStart = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof otpLogin>>,
+            Awaited<ReturnType<typeof flowOtpStart>>,
             TError,
             { data: FlowRequest },
             TContext
@@ -640,33 +641,33 @@ export const createOtpLogin = <TError = ApiError, TContext = unknown>(
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof otpLogin>>,
+    Awaited<ReturnType<typeof flowOtpStart>>,
     TError,
     { data: FlowRequest },
     TContext
 > => {
-    return createMutation(() => ({ ...getOtpLoginMutationOptions(options?.()) }), queryClient);
+    return createMutation(() => ({ ...getFlowOtpStartMutationOptions(options?.()) }), queryClient);
 };
-export type otpRegisterResponse200 = {
+export type flowOtpRegisterResponse200 = {
     data: FlowResponse;
     status: 200;
 };
 
-export type otpRegisterResponse500 = {
+export type flowOtpRegisterResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type otpRegisterResponseSuccess = otpRegisterResponse200 & {
+export type flowOtpRegisterResponseSuccess = flowOtpRegisterResponse200 & {
     headers: Headers;
 };
-export type otpRegisterResponseError = otpRegisterResponse500 & {
+export type flowOtpRegisterResponseError = flowOtpRegisterResponse500 & {
     headers: Headers;
 };
 
-export type otpRegisterResponse = otpRegisterResponseSuccess | otpRegisterResponseError;
+export type flowOtpRegisterResponse = flowOtpRegisterResponseSuccess | flowOtpRegisterResponseError;
 
-export const getOtpRegisterUrl = () => {
+export const getFlowOtpRegisterUrl = () => {
     return `${apiUrlForOrval}/v1/auth/flow/start/register`;
 };
 
@@ -675,12 +676,12 @@ export const getOtpRegisterUrl = () => {
  * Used on the same exchange endpoint as the authentication OTP code flow.
  * @summary Register a new account via an OTP code
  */
-export const otpRegister = async (
+export const flowOtpRegister = async (
     registerRequest: RegisterRequest,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<otpRegisterResponse> => {
-    const res = await (fetchFn ?? fetch)(getOtpRegisterUrl(), {
+): Promise<flowOtpRegisterResponse> => {
+    const res = await (fetchFn ?? fetch)(getFlowOtpRegisterUrl(), {
         credentials: "include",
         ...options,
         method: "POST",
@@ -690,13 +691,13 @@ export const otpRegister = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: otpRegisterResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as otpRegisterResponse;
+    const data: flowOtpRegisterResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as flowOtpRegisterResponse;
 };
 
-export const getOtpRegisterMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
+export const getFlowOtpRegisterMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof otpRegister>>,
+        Awaited<ReturnType<typeof flowOtpRegister>>,
         TError,
         { data: RegisterRequest },
         TContext
@@ -704,12 +705,12 @@ export const getOtpRegisterMutationOptions = <TError = ApiError, TContext = unkn
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof otpRegister>>,
+    Awaited<ReturnType<typeof flowOtpRegister>>,
     TError,
     { data: RegisterRequest },
     TContext
 > => {
-    const mutationKey = ["otpRegister"];
+    const mutationKey = ["flowOtpRegister"];
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -721,28 +722,30 @@ export const getOtpRegisterMutationOptions = <TError = ApiError, TContext = unkn
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof otpRegister>>,
+        Awaited<ReturnType<typeof flowOtpRegister>>,
         { data: RegisterRequest }
     > = (props) => {
         const { data } = props ?? {};
 
-        return otpRegister(data, fetchOptions, fetcherFn);
+        return flowOtpRegister(data, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type OtpRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof otpRegister>>>;
-export type OtpRegisterMutationBody = RegisterRequest;
-export type OtpRegisterMutationError = ApiError;
+export type FlowOtpRegisterMutationResult = NonNullable<
+    Awaited<ReturnType<typeof flowOtpRegister>>
+>;
+export type FlowOtpRegisterMutationBody = RegisterRequest;
+export type FlowOtpRegisterMutationError = ApiError;
 
 /**
  * @summary Register a new account via an OTP code
  */
-export const createOtpRegister = <TError = ApiError, TContext = unknown>(
+export const createFlowOtpRegister = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof otpRegister>>,
+            Awaited<ReturnType<typeof flowOtpRegister>>,
             TError,
             { data: RegisterRequest },
             TContext
@@ -752,41 +755,46 @@ export const createOtpRegister = <TError = ApiError, TContext = unknown>(
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof otpRegister>>,
+    Awaited<ReturnType<typeof flowOtpRegister>>,
     TError,
     { data: RegisterRequest },
     TContext
 > => {
-    return createMutation(() => ({ ...getOtpRegisterMutationOptions(options?.()) }), queryClient);
+    return createMutation(
+        () => ({ ...getFlowOtpRegisterMutationOptions(options?.()) }),
+        queryClient
+    );
 };
-export type webauthnOptionsResponse200 = {
-    data: void;
+export type flowWebauthnStartResponse200 = {
+    data: StartChallengeResponse;
     status: 200;
 };
 
-export type webauthnOptionsResponse400 = {
+export type flowWebauthnStartResponse400 = {
     data: ApiError;
     status: 400;
 };
 
-export type webauthnOptionsResponse500 = {
+export type flowWebauthnStartResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type webauthnOptionsResponseSuccess = webauthnOptionsResponse200 & {
+export type flowWebauthnStartResponseSuccess = flowWebauthnStartResponse200 & {
     headers: Headers;
 };
-export type webauthnOptionsResponseError = (
-    | webauthnOptionsResponse400
-    | webauthnOptionsResponse500
+export type flowWebauthnStartResponseError = (
+    | flowWebauthnStartResponse400
+    | flowWebauthnStartResponse500
 ) & {
     headers: Headers;
 };
 
-export type webauthnOptionsResponse = webauthnOptionsResponseSuccess | webauthnOptionsResponseError;
+export type flowWebauthnStartResponse =
+    | flowWebauthnStartResponseSuccess
+    | flowWebauthnStartResponseError;
 
-export const getWebauthnOptionsUrl = () => {
+export const getFlowWebauthnStartUrl = () => {
     return `${apiUrlForOrval}/v1/auth/flow/start/webauthn`;
 };
 
@@ -794,12 +802,12 @@ export const getWebauthnOptionsUrl = () => {
  * Returns the challenge for the user's browser to use to authenticate.
  * @summary Authenticate via a Passkey
  */
-export const webauthnOptions = async (
+export const flowWebauthnStart = async (
     flowRequest: FlowRequest,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<webauthnOptionsResponse> => {
-    const res = await (fetchFn ?? fetch)(getWebauthnOptionsUrl(), {
+): Promise<flowWebauthnStartResponse> => {
+    const res = await (fetchFn ?? fetch)(getFlowWebauthnStartUrl(), {
         credentials: "include",
         ...options,
         method: "POST",
@@ -809,13 +817,16 @@ export const webauthnOptions = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: webauthnOptionsResponse["data"] = body ? JSON.parse(body) : undefined;
-    return { data, status: res.status, headers: res.headers } as webauthnOptionsResponse;
+    const data: flowWebauthnStartResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as flowWebauthnStartResponse;
 };
 
-export const getWebauthnOptionsMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
+export const getFlowWebauthnStartMutationOptions = <
+    TError = ApiError,
+    TContext = unknown
+>(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof webauthnOptions>>,
+        Awaited<ReturnType<typeof flowWebauthnStart>>,
         TError,
         { data: FlowRequest },
         TContext
@@ -823,12 +834,12 @@ export const getWebauthnOptionsMutationOptions = <TError = ApiError, TContext = 
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof webauthnOptions>>,
+    Awaited<ReturnType<typeof flowWebauthnStart>>,
     TError,
     { data: FlowRequest },
     TContext
 > => {
-    const mutationKey = ["webauthnOptions"];
+    const mutationKey = ["flowWebauthnStart"];
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -840,30 +851,30 @@ export const getWebauthnOptionsMutationOptions = <TError = ApiError, TContext = 
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof webauthnOptions>>,
+        Awaited<ReturnType<typeof flowWebauthnStart>>,
         { data: FlowRequest }
     > = (props) => {
         const { data } = props ?? {};
 
-        return webauthnOptions(data, fetchOptions, fetcherFn);
+        return flowWebauthnStart(data, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type WebauthnOptionsMutationResult = NonNullable<
-    Awaited<ReturnType<typeof webauthnOptions>>
+export type FlowWebauthnStartMutationResult = NonNullable<
+    Awaited<ReturnType<typeof flowWebauthnStart>>
 >;
-export type WebauthnOptionsMutationBody = FlowRequest;
-export type WebauthnOptionsMutationError = ApiError;
+export type FlowWebauthnStartMutationBody = FlowRequest;
+export type FlowWebauthnStartMutationError = ApiError;
 
 /**
  * @summary Authenticate via a Passkey
  */
-export const createWebauthnOptions = <TError = ApiError, TContext = unknown>(
+export const createFlowWebauthnStart = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof webauthnOptions>>,
+            Awaited<ReturnType<typeof flowWebauthnStart>>,
             TError,
             { data: FlowRequest },
             TContext
@@ -873,13 +884,13 @@ export const createWebauthnOptions = <TError = ApiError, TContext = unknown>(
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof webauthnOptions>>,
+    Awaited<ReturnType<typeof flowWebauthnStart>>,
     TError,
     { data: FlowRequest },
     TContext
 > => {
     return createMutation(
-        () => ({ ...getWebauthnOptionsMutationOptions(options?.()) }),
+        () => ({ ...getFlowWebauthnStartMutationOptions(options?.()) }),
         queryClient
     );
 };

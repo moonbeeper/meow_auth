@@ -205,7 +205,7 @@ impl UserSession {
                 expires_at,
                 created_at,
                 updated_at
-             from user_sessions where user_id = $1 and ($2::uuid is null or id::uuid > $2) order by created_at asc limit 20+1",
+             from user_sessions where user_id = $1 and ($2::uuid is null or id::uuid < $2) order by created_at desc limit 20+1",
             user_id as UserId,
             from as Option<PIDUserSessionId>
         )

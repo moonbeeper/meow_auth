@@ -11,10 +11,9 @@
     import InputError from "$comps/form/inputError.svelte";
     import Pin from "$comps/form/pin.svelte";
     import { PIN_DIGIT_REGEX } from "$comps/form/regex";
-    import { flowOtpExchange, flowTotpExchange } from "$lib/api/auth/auth";
+    import { flowTotpExchange } from "$lib/api/auth/auth";
     import { isOk } from "$lib/api/ignoreThisPlease";
-    import { auth } from "$lib/auth/auth.svelte";
-    import { error } from "@sveltejs/kit";
+    import { sudoTotpExchange } from "$lib/api/sudo/sudo";
     import { Control, Field } from "formsnap";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
@@ -22,8 +21,16 @@
     import type { PageProps } from "./$types";
 
     let { data }: PageProps = $props();
+
+    let redirectTo = $derived.by(() => {
+        if (data.redirect) {
+            return `?redirect=${encodeURIComponent(data.redirect)}`;
+        }
+        return "";
+    });
+
     let recoveryRedirect = $derived.by(() => {
-        return `/auth/${data.flowId}/totp/recovery`;
+        return `/auth/${data.flowId}/totp/recovery${redirectTo}`;
     });
 
     const rawForm = superForm(defaults(zod4(schema)), {
@@ -36,41 +43,49 @@
                 console.warn("somehow the form was submitted without being valid");
                 return;
             }
+            if (!data.sudo) {
+                const res = await flowTotpExchange({ flow_id: data.flowId, code: form.data.code });
 
-            const res = await flowTotpExchange({ flow_id: data.flowId, code: form.data.code });
+                if (!isOk(res)) {
+                    if (res.data.code == "FlowNotFound") {
+                        console.error("flow not found, redirecting to login");
+                        // TODO: Id like this to be a dialog!!
+                        setError(form, "code", "Flow not found, redirecting to login");
+                        setTimeout(() => {
+                            console.log("redirecting to login");
+                            goto(data.redirect ?? "/login");
+                        }, 2000);
+                        return;
+                    }
 
-            if (!isOk(res)) {
-                if (res.data.code == "FlowNotFound") {
-                    console.error("flow not found, redirecting to login");
-                    // TODO: Id like this to be a dialog!!
-                    setError(form, "code", "Flow not found, redirecting to login");
-                    setTimeout(() => {
-                        console.log("redirecting to login");
-                        goto("/");
-                    }, 2000);
+                    console.warn("invalid code submitted");
+                    setError(form, "code", "Invalid code");
                     return;
                 }
+            } else {
+                const res = await sudoTotpExchange({ flow_id: data.flowId, code: form.data.code });
 
-                console.warn("invalid code submitted");
-                setError(form, "code", "Invalid code");
-                return;
+                if (!isOk(res)) {
+                    if (res.data.code == "FlowNotFound") {
+                        console.error("flow not found, redirecting to login");
+                        // TODO: Id like this to be a dialog!!
+                        setError(form, "code", "Flow not found, redirecting to login");
+                        setTimeout(() => {
+                            console.log("redirecting to login");
+                            goto(data.redirect ?? "/login");
+                        }, 2000);
+                        return;
+                    }
+
+                    console.warn("invalid code submitted");
+                    setError(form, "code", "Invalid code");
+                    return;
+                }
             }
-
-            // if ("next_method" in res.data) {
-            //     let next_method = res.data.next_method;
-            //     console.log("next auth method is: ", next_method);
-
-            //     if (next_method.includes("otp")) {
-            //         console.error("the next auth method cannot be once again otp");
-            //     }
-
-            //     await goto(`/auth/${data.flowId}/totp`);
-            //     return;
-            // }
 
             console.log("finalized authentication");
             await invalidateAll();
-            await goto("/me");
+            await goto(data.redirect ?? "/me");
         }
     });
     const { form, enhance, delayed } = rawForm;

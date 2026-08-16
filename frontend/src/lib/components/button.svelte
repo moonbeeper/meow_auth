@@ -1,8 +1,10 @@
 <script lang="ts">
+    import { KeysThatMatter } from "$lib/stupidKeymap";
     import type { Snippet } from "svelte";
     import type { HTMLAnchorAttributes, HTMLButtonAttributes } from "svelte/elements";
     import { slide } from "svelte/transition";
 
+    import KeyTag from "./keyTag.svelte";
     import Spinner from "./spinner.svelte";
 
     type ButtonProps = HTMLButtonAttributes &
@@ -20,8 +22,9 @@
         negative?: boolean;
         disabled?: boolean;
         loading?: boolean;
-        fontSize?: "normal" | "medium";
+        fontSize?: "normal" | "medium" | "small";
         children: Snippet;
+        shouldFill?: boolean;
     };
 
     // smh, typescript cant infer the type without doing as. man this union is uselss.
@@ -32,6 +35,7 @@
         fontSize = "normal",
         disabled = false,
         loading = false,
+        shouldFill = false,
         href,
         ...rest
     }: ButtonProps | LinkProps = $props();
@@ -43,7 +47,7 @@
 
 {#if href}
     <a
-        class={["button", fontSizeClass, { primary, negative, loading }]}
+        class={["button", fontSizeClass, { primary, negative, loading, shouldFill }]}
         aria-disabled={disabled}
         {href}
         {...rest as HTMLAnchorAttributes}
@@ -52,7 +56,7 @@
     </a>
 {:else}
     <button
-        class={["button", fontSizeClass, { primary, negative, loading }]}
+        class={["button", fontSizeClass, { primary, negative, loading, shouldFill }]}
         aria-disabled={disabled}
         {disabled}
         {...rest as HTMLButtonAttributes}
@@ -88,6 +92,7 @@
         // makes so the line height does not change when the button is a link
         line-height: 1.1;
         gap: calc(var(--spacing) * 2);
+        text-decoration: none;
 
         @media (any-hover: hover) {
             &:hover {
@@ -98,11 +103,6 @@
         @media (prefers-color-scheme: dark) {
             --button-hover-brightness: 1.1;
         }
-
-        // &[disabled] {
-        //     cursor: not-allowed;
-        //     opacity: 0.5;
-        // }
     }
 
     .primary {
@@ -127,6 +127,10 @@
         --button-font-size: var(--text-medium);
     }
 
+    .font-small {
+        --button-font-size: var(--text-small);
+    }
+
     .loading {
         cursor: progress !important;
     }
@@ -140,5 +144,9 @@
         inline-size: var(--button-font-size, 1em);
         block-size: var(--button-font-size, 1em);
         pointer-events: none;
+    }
+
+    .shouldFill {
+        inline-size: 100%;
     }
 </style>

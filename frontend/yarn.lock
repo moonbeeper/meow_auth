@@ -323,6 +323,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@humanspeak/svelte-virtual-list@npm:^0.5.14":
+  version: 0.5.14
+  resolution: "@humanspeak/svelte-virtual-list@npm:0.5.14"
+  dependencies:
+    esm-env: "npm:^1.2.2"
+  peerDependencies:
+    svelte: ^5.0.0
+  checksum: 10c0/6654f2e105477be3819bad9ead584beb482086d4d13204b74da535b5032b70d711a42926f94881ea052eb6e88474cd930a2da644fa994a18e8ee5a8fe8ccf1a9
+  languageName: node
+  linkType: hard
+
 "@internationalized/date@npm:^3.12.2":
   version: 3.12.2
   resolution: "@internationalized/date@npm:3.12.2"
@@ -1085,6 +1096,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@simplewebauthn/browser@npm:^13.3.0":
+  version: 13.3.0
+  resolution: "@simplewebauthn/browser@npm:13.3.0"
+  checksum: 10c0/23a9c14777c4ef6d15fd6c876a1035e6e597e92f96cd0ffe83b0b869f0e4db7789a591da9a39d1fe2c0529c42ecc291c4a30227fc705f0b7729c255f9ccc7c21
+  languageName: node
+  linkType: hard
+
 "@sindresorhus/merge-streams@npm:^4.0.0":
   version: 4.0.0
   resolution: "@sindresorhus/merge-streams@npm:4.0.0"
@@ -1194,6 +1212,26 @@ __metadata:
   version: 5.101.4
   resolution: "@tanstack/query-core@npm:5.101.4"
   checksum: 10c0/a407960303431e6498c6518cf6f8cc7283d3e4a95dbdc5e9fa42c217b9dd7afaffb82a4f2d36b38f578f745e8cf69ff8551abb947f5abcc0a290f3e3e75dc654
+  languageName: node
+  linkType: hard
+
+"@tanstack/query-devtools@npm:5.101.4":
+  version: 5.101.4
+  resolution: "@tanstack/query-devtools@npm:5.101.4"
+  checksum: 10c0/bd8c6bb3077d9561a24890ef78a9a1e81edde3910903e7e7cc667f181b763602b58ddb43b58c50a1fb550573e7a3e08f7f87d34eb7e2515b72973c4ac972bb36
+  languageName: node
+  linkType: hard
+
+"@tanstack/svelte-query-devtools@npm:^6.1.38":
+  version: 6.1.38
+  resolution: "@tanstack/svelte-query-devtools@npm:6.1.38"
+  dependencies:
+    "@tanstack/query-devtools": "npm:5.101.4"
+    esm-env: "npm:^1.2.1"
+  peerDependencies:
+    "@tanstack/svelte-query": ^6.1.38
+    svelte: ^5.25.0
+  checksum: 10c0/c6754a208a5981814a54a4105cdbbe8d89fca65596b0ddf1b8c36eb2944a34c5a1006dfa6b0e6b2ae954355a12fa4bddedcc9d28d9a716458223515bf4f52e30
   languageName: node
   linkType: hard
 
@@ -1554,6 +1592,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"date-fns@npm:^4.4.0":
+  version: 4.4.0
+  resolution: "date-fns@npm:4.4.0"
+  checksum: 10c0/988f0a13db183f5dfc85c36bbb6847a9c135a9225888bbea4005876ec15539a8613c21a07370a4e7ea543918d5a1cafb423c528b42cdbbde5fdfddb178126b21
+  languageName: node
+  linkType: hard
+
 "dayjs@npm:^1.11.13":
   version: 1.11.21
   resolution: "dayjs@npm:1.11.21"
@@ -1847,14 +1892,18 @@ __metadata:
   resolution: "frontend@workspace:."
   dependencies:
     "@fontsource-variable/inter": "npm:^5.2.8"
+    "@humanspeak/svelte-virtual-list": "npm:^0.5.14"
     "@internationalized/date": "npm:^3.12.2"
+    "@simplewebauthn/browser": "npm:^13.3.0"
     "@sveltejs/adapter-auto": "npm:^7.0.1"
     "@sveltejs/adapter-static": "npm:^3.0.10"
     "@sveltejs/kit": "npm:^2.63.0"
     "@sveltejs/vite-plugin-svelte": "npm:^7.1.2"
     "@tanstack/svelte-query": "npm:^6.1.38"
+    "@tanstack/svelte-query-devtools": "npm:^6.1.38"
     "@types/node": "npm:^26.1.0"
     bits-ui: "npm:^2.18.1"
+    date-fns: "npm:^4.4.0"
     formsnap: "npm:^2.0.1"
     orval: "npm:^8.23.0"
     oxfmt: "npm:^0.58.0"

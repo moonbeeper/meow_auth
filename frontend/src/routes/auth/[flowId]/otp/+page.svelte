@@ -12,10 +12,10 @@
     import InputError from "$comps/form/inputError.svelte";
     import Pin from "$comps/form/pin.svelte";
     import { PIN_DIGIT_AND_CHAR } from "$comps/form/regex";
-    import { flowOtpExchange, otpLogin } from "$lib/api/auth/auth";
+    import { flowOtpExchange, flowOtpStart } from "$lib/api/auth/auth";
     import { isOk } from "$lib/api/ignoreThisPlease";
+    import { sudoOtpExchange, sudoOtpStart } from "$lib/api/sudo/sudo";
     import { auth } from "$lib/auth/auth.svelte";
-    import { error } from "@sveltejs/kit";
     import { Control, Field } from "formsnap";
     import { fly } from "svelte/transition";
     import { defaults, setError, superForm } from "sveltekit-superforms";
@@ -26,6 +26,13 @@
     let { data }: PageProps = $props();
     let resendTimeout = $state(false);
     let resendLoading = $state(false);
+
+    let redirectTo = $derived.by(() => {
+        if (data.redirect) {
+            return `?redirect=${encodeURIComponent(data.redirect)}`;
+        }
+        return "";
+    });
 
     const rawForm = superForm(defaults(zod4(schema)), {
         SPA: true,
@@ -38,33 +45,42 @@
                 return;
             }
 
-            const res = await flowOtpExchange({ flow_id: data.flowId, code: form.data.code });
+            if (!data.sudo) {
+                const res = await flowOtpExchange({ flow_id: data.flowId, code: form.data.code });
 
-            if (!isOk(res)) {
-                // if (res.data.code == "RatelimitExceeded") { i have to find another way, i dont like this one
-                //     console.error("auth ratelimit exceeded");
-                //     setError(form, "code", "Ratelimit exceeded, please try again later");
-                // }
-                console.warn("invalid code submitted");
-                setError(form, "code", "Invalid code");
-                return;
-            }
-
-            if ("next_method" in res.data) {
-                let next_method = res.data.next_method;
-                console.log("next auth method is: ", next_method);
-
-                if (next_method.includes("otp")) {
-                    console.error("the next auth method cannot be once again otp");
+                if (!isOk(res)) {
+                    // if (res.data.code == "RatelimitExceeded") { i have to find another way, i dont like this one
+                    //     console.error("auth ratelimit exceeded");
+                    //     setError(form, "code", "Ratelimit exceeded, please try again later");
+                    // }
+                    console.warn("invalid code submitted");
+                    setError(form, "code", "Invalid code");
+                    return;
                 }
 
-                await goto(`/auth/${res.data.flow_id}/totp`);
-                return;
-            }
+                if ("next_method" in res.data) {
+                    let next_method = res.data.next_method;
+                    console.log("next auth method is: ", next_method);
 
+                    if (next_method.includes("otp")) {
+                        console.error("the next auth method cannot be once again otp");
+                    }
+
+                    await goto(`/auth/${res.data.flow_id}/totp${redirectTo}`);
+                    return;
+                }
+            } else {
+                const res = await sudoOtpExchange({ flow_id: data.flowId, code: form.data.code });
+
+                if (!isOk(res)) {
+                    console.warn("invalid code submitted");
+                    setError(form, "code", "Invalid code");
+                    return;
+                }
+            }
             console.log("finalized authentication");
             await invalidateAll();
-            await goto("/");
+            await goto(data.redirect ?? "/me");
         }
     });
 
@@ -77,20 +93,38 @@
         }
 
         console.log("resending code and redirecting");
-        if (!auth.pendingAuthEmail) {
+        if (!auth.pendingAuthEmail && !data.sudo) {
             console.error("no pending auth email, cannot resend code");
             await goto("/");
         }
         resendLoading = true;
         try {
-            const req = await otpLogin({ email: auth.pendingAuthEmail as string });
+            let flow_id;
+            if (!data.sudo) {
+                const req = await flowOtpStart({ email: auth.pendingAuthEmail as string });
 
-            if (!isOk(req)) {
-                await goto("/");
-                console.error("resending otp login faild :(");
-                return;
+                if (!isOk(req)) {
+                    console.error("resending otp login faild :(");
+                    await goto("/");
+                    return;
+                }
+                flow_id = req.data.flow_id;
+            } else {
+                const reqSudo = await sudoOtpStart();
+
+                if (!isOk(reqSudo)) {
+                    if (reqSudo.data.code == "SudoAlreadyEnabled") {
+                        console.warn("sudo was already enabled");
+                        await goto(data.redirect ?? "/me");
+                    }
+
+                    console.error("resending otp login faild :(");
+                    await goto("/");
+                    return;
+                }
+                flow_id = reqSudo.data.flow_id;
             }
-            await goto(`/auth/${req.data.flow_id}/otp`);
+            await goto(`/auth/${flow_id}/otp`);
         } finally {
             resendLoading = false;
         }

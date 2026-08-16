@@ -21,15 +21,18 @@ use crate::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
         middleware::auth_manager::AuthContext,
-        v1::{auth::flows::FlowResponse, types::AuthMethod},
+        v1::{
+            auth::flows::FlowResponse,
+            types::{AuthMethod, StartChallengeResponse},
+        },
     },
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(otp_option))
-        .routes(routes!(totp_option))
-        .routes(routes!(webauthn_options))
+        .routes(routes!(sudo_otp_start))
+        .routes(routes!(sudo_totp_start))
+        .routes(routes!(sudo_webauthn_start))
 }
 
 /// Re-Authenticate via an OTP code
@@ -43,7 +46,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn otp_option(
+pub async fn sudo_otp_start(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
@@ -100,7 +103,7 @@ pub async fn otp_option(
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn totp_option(
+pub async fn sudo_totp_start(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
@@ -140,12 +143,12 @@ pub async fn totp_option(
     path = "/webauthn",
     tags = ["sudo"],
     responses(
-        (status = 200, description = "sudo re-authentication flow created"),
+        (status = 200, description = "sudo re-authentication flow created", body = StartChallengeResponse),
         (status = 400, description = "already enabled or option not available", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn webauthn_options(
+pub async fn sudo_webauthn_start(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<RequestChallengeResponse>, ApiErrorCodes> {

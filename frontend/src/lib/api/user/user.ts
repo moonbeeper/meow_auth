@@ -21,10 +21,11 @@ import type {
 import type {
     AlrightResponse,
     ApiError,
-    AuditLog,
     ChangeEmailRequest,
     ChangeNameRequest,
+    CurrentUserAuditLogParams,
     ExchangeChangeEmailRequest,
+    ListDataResponseAuditLog,
     User
 } from "../model";
 
@@ -71,7 +72,7 @@ export const currentUserInfo = async (
 };
 
 export const getCurrentUserInfoQueryKey = () => {
-    return [`${apiUrlForOrval}/v1/me`] as const;
+    return ["currentUserInfo"] as const;
 };
 
 export const getCurrentUserInfoQueryOptions = <
@@ -125,7 +126,7 @@ export function createCurrentUserInfo<
 }
 
 export type currentUserAuditLogResponse200 = {
-    data: AuditLog;
+    data: ListDataResponseAuditLog;
     status: 200;
 };
 
@@ -145,18 +146,31 @@ export type currentUserAuditLogResponse =
     | currentUserAuditLogResponseSuccess
     | currentUserAuditLogResponseError;
 
-export const getCurrentUserAuditLogUrl = () => {
-    return `${apiUrlForOrval}/v1/me/account/audit`;
+export const getCurrentUserAuditLogUrl = (params?: CurrentUserAuditLogParams) => {
+    const normalizedParams = new URLSearchParams();
+
+    Object.entries(params || {}).forEach(([key, value]) => {
+        if (value !== undefined) {
+            normalizedParams.append(key, value === null ? "null" : String(value));
+        }
+    });
+
+    const stringifiedParams = normalizedParams.toString();
+
+    return stringifiedParams.length > 0
+        ? `${apiUrlForOrval}/v1/me/account/audit?${stringifiedParams}`
+        : `${apiUrlForOrval}/v1/me/account/audit`;
 };
 
 /**
  * @summary Get your current user audit log
  */
 export const currentUserAuditLog = async (
+    params?: CurrentUserAuditLogParams,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
 ): Promise<currentUserAuditLogResponse> => {
-    const res = await (fetchFn ?? fetch)(getCurrentUserAuditLogUrl(), {
+    const res = await (fetchFn ?? fetch)(getCurrentUserAuditLogUrl(params), {
         credentials: "include",
         ...options,
         method: "GET"
@@ -168,26 +182,29 @@ export const currentUserAuditLog = async (
     return { data, status: res.status, headers: res.headers } as currentUserAuditLogResponse;
 };
 
-export const getCurrentUserAuditLogQueryKey = () => {
-    return [`${apiUrlForOrval}/v1/me/account/audit`] as const;
+export const getCurrentUserAuditLogQueryKey = (params?: CurrentUserAuditLogParams) => {
+    return ["currentUserAuditLog", ...(params ? [params] : [])] as const;
 };
 
 export const getCurrentUserAuditLogQueryOptions = <
     TData = Awaited<ReturnType<typeof currentUserAuditLog>>,
     TError = ApiError
->(options?: {
-    query?: Partial<
-        CreateQueryOptions<Awaited<ReturnType<typeof currentUserAuditLog>>, TError, TData>
-    >;
-    fetch?: RequestInit;
-    fetcher?: typeof globalThis.fetch;
-}) => {
+>(
+    params?: CurrentUserAuditLogParams,
+    options?: {
+        query?: Partial<
+            CreateQueryOptions<Awaited<ReturnType<typeof currentUserAuditLog>>, TError, TData>
+        >;
+        fetch?: RequestInit;
+        fetcher?: typeof globalThis.fetch;
+    }
+) => {
     const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
 
-    const queryKey = queryOptions?.queryKey ?? getCurrentUserAuditLogQueryKey();
+    const queryKey = queryOptions?.queryKey ?? getCurrentUserAuditLogQueryKey(params);
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof currentUserAuditLog>>> = ({ signal }) =>
-        currentUserAuditLog({ signal, ...fetchOptions }, fetcherFn);
+        currentUserAuditLog(params, { signal, ...fetchOptions }, fetcherFn);
 
     return { queryKey, queryFn, ...queryOptions } as CreateQueryOptions<
         Awaited<ReturnType<typeof currentUserAuditLog>>,
@@ -209,6 +226,7 @@ export function createCurrentUserAuditLog<
     TData = Awaited<ReturnType<typeof currentUserAuditLog>>,
     TError = ApiError
 >(
+    params?: () => CurrentUserAuditLogParams,
     options?: () => {
         query?: Partial<
             CreateQueryOptions<Awaited<ReturnType<typeof currentUserAuditLog>>, TError, TData>
@@ -219,7 +237,7 @@ export function createCurrentUserAuditLog<
     queryClient?: () => QueryClient
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
-        () => getCurrentUserAuditLogQueryOptions(options?.()),
+        () => getCurrentUserAuditLogQueryOptions(params?.(), options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

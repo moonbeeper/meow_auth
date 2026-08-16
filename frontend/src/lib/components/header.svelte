@@ -38,6 +38,7 @@
 
         return links;
     });
+
     $effect(() => {
         if (!hasSession) {
             invalidateAll();

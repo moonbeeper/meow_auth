@@ -24,6 +24,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     tags = ["admin"],
     params(
         ("id" = UlidId, description = "the id of the user"),
+        ListDataRequest
     ),
     responses(
         (status = 200, description = "current user audit log", body = AuditLog),

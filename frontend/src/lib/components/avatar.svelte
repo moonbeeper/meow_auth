@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { invalidateAll } from "$app/navigation";
+    import { goto, invalidateAll } from "$app/navigation";
     import { isOk } from "$lib/api/ignoreThisPlease";
     import { logout } from "$lib/api/user/user";
     import { auth } from "$lib/auth/auth.svelte";
     import { Avatar } from "bits-ui";
-    import { preventDefault } from "svelte/legacy";
 
     import * as Dropdown from "./dropdown";
 
@@ -32,6 +31,7 @@
                 return;
             }
             await invalidateAll();
+            await goto("/");
             console.log("logged out");
         } finally {
             loggingOut = false;
@@ -51,7 +51,7 @@
     </div>
 {/snippet}
 
-{#if interactive}
+{#if interactive && auth.user}
     <Dropdown.Root>
         {#snippet trigger({ props })}
             <button class="decoration" {...props}>
@@ -59,7 +59,7 @@
             </button>
         {/snippet}
         <Dropdown.Text>
-            <p class="user-display">poopy pants</p>
+            <p class="user-display">{auth.user.login}</p>
         </Dropdown.Text>
         <Dropdown.Item onSelect={handleLogout}>Log out</Dropdown.Item>
     </Dropdown.Root>

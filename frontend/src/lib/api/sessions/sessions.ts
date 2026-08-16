@@ -18,7 +18,13 @@ import type {
     QueryKey
 } from "@tanstack/svelte-query";
 
-import type { ApiError, ListDataResponseSession, Session, UlidId } from "../model";
+import type {
+    ApiError,
+    ListDataResponseSession,
+    ListSessionsParams,
+    Session,
+    UlidId
+} from "../model";
 
 export type currentSessionInfoResponse200 = {
     data: Session;
@@ -65,7 +71,7 @@ export const currentSessionInfo = async (
 };
 
 export const getCurrentSessionInfoQueryKey = () => {
-    return [`${apiUrlForOrval}/v1/me/session`] as const;
+    return ["currentSessionInfo"] as const;
 };
 
 export const getCurrentSessionInfoQueryOptions = <
@@ -252,18 +258,31 @@ export type listSessionsResponseError = listSessionsResponse500 & {
 
 export type listSessionsResponse = listSessionsResponseSuccess | listSessionsResponseError;
 
-export const getListSessionsUrl = () => {
-    return `${apiUrlForOrval}/v1/me/session/list`;
+export const getListSessionsUrl = (params?: ListSessionsParams) => {
+    const normalizedParams = new URLSearchParams();
+
+    Object.entries(params || {}).forEach(([key, value]) => {
+        if (value !== undefined) {
+            normalizedParams.append(key, value === null ? "null" : String(value));
+        }
+    });
+
+    const stringifiedParams = normalizedParams.toString();
+
+    return stringifiedParams.length > 0
+        ? `${apiUrlForOrval}/v1/me/session/list?${stringifiedParams}`
+        : `${apiUrlForOrval}/v1/me/session/list`;
 };
 
 /**
  * @summary List all your open sessions
  */
 export const listSessions = async (
+    params?: ListSessionsParams,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
 ): Promise<listSessionsResponse> => {
-    const res = await (fetchFn ?? fetch)(getListSessionsUrl(), {
+    const res = await (fetchFn ?? fetch)(getListSessionsUrl(params), {
         credentials: "include",
         ...options,
         method: "GET"
@@ -275,24 +294,29 @@ export const listSessions = async (
     return { data, status: res.status, headers: res.headers } as listSessionsResponse;
 };
 
-export const getListSessionsQueryKey = () => {
-    return [`${apiUrlForOrval}/v1/me/session/list`] as const;
+export const getListSessionsQueryKey = (params?: ListSessionsParams) => {
+    return ["listSessions", ...(params ? [params] : [])] as const;
 };
 
 export const getListSessionsQueryOptions = <
     TData = Awaited<ReturnType<typeof listSessions>>,
     TError = ApiError
->(options?: {
-    query?: Partial<CreateQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData>>;
-    fetch?: RequestInit;
-    fetcher?: typeof globalThis.fetch;
-}) => {
+>(
+    params?: ListSessionsParams,
+    options?: {
+        query?: Partial<
+            CreateQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData>
+        >;
+        fetch?: RequestInit;
+        fetcher?: typeof globalThis.fetch;
+    }
+) => {
     const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
 
-    const queryKey = queryOptions?.queryKey ?? getListSessionsQueryKey();
+    const queryKey = queryOptions?.queryKey ?? getListSessionsQueryKey(params);
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof listSessions>>> = ({ signal }) =>
-        listSessions({ signal, ...fetchOptions }, fetcherFn);
+        listSessions(params, { signal, ...fetchOptions }, fetcherFn);
 
     return { queryKey, queryFn, ...queryOptions } as CreateQueryOptions<
         Awaited<ReturnType<typeof listSessions>>,
@@ -312,6 +336,7 @@ export function createListSessions<
     TData = Awaited<ReturnType<typeof listSessions>>,
     TError = ApiError
 >(
+    params?: () => ListSessionsParams,
     options?: () => {
         query?: Partial<
             CreateQueryOptions<Awaited<ReturnType<typeof listSessions>>, TError, TData>
@@ -322,7 +347,7 @@ export function createListSessions<
     queryClient?: () => QueryClient
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
-        () => getListSessionsQueryOptions(options?.()),
+        () => getListSessionsQueryOptions(params?.(), options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -5,7 +5,7 @@ import { redirect } from "@sveltejs/kit";
 export const ssr = false;
 
 export const load = async ({ fetch, url }) => {
-    await auth.update(fetch);
+    await auth.fetchAndSynctan(fetch);
 
     const redirectUrl = getRedirectUrl(auth.user, url);
     if (redirectUrl) {

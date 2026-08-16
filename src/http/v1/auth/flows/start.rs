@@ -26,7 +26,7 @@ use crate::{
         extractor::Json,
         v1::{
             auth::flows::{FlowRequest, FlowResponse},
-            types::AuthMethod,
+            types::{AuthMethod, StartChallengeResponse},
         },
         validator::Valid,
     },
@@ -34,9 +34,9 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(otp_login))
-        .routes(routes!(otp_register))
-        .routes(routes!(webauthn_options))
+        .routes(routes!(flow_otp_start))
+        .routes(routes!(flow_otp_register))
+        .routes(routes!(flow_webauthn_start))
 }
 
 /// Authenticate via an OTP code
@@ -52,7 +52,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn otp_login(
+pub async fn flow_otp_start(
     State(global): State<Arc<GlobalState>>,
     Json(request): Json<FlowRequest>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
@@ -117,7 +117,7 @@ pub struct RegisterRequest {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn otp_register(
+pub async fn flow_otp_register(
     State(global): State<Arc<GlobalState>>,
     Valid(Json(request)): Valid<Json<RegisterRequest>>,
 ) -> Result<Json<FlowResponse>, ApiErrorCodes> {
@@ -192,13 +192,14 @@ pub async fn otp_register(
     path = "/webauthn",
     tags = ["auth"],
     responses(
-        (status = 200, description = "authentication flow created"),
+        (status = 200, description = "authentication flow created", body = StartChallengeResponse),
+
         // (status = 404, description = "account not found", body = ApiError),
         (status = 400, description = "user has webauthn not enabled", body = ApiError), // should i be even returning 400 here?
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn webauthn_options(
+pub async fn flow_webauthn_start(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<FlowRequest>,

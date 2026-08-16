@@ -70,6 +70,7 @@
     }
 
     a {
+        text-decoration: none;
         color: var(--a-color, var(--color-accent-medium));
         @media (prefers-color-scheme: dark) {
             --a-color: var(--color-accent-light);

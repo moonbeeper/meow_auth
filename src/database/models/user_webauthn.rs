@@ -20,7 +20,7 @@ pub struct UserWebauthn {
     pub credential_id: Vec<u8>,
     #[builder(default = Some(uuid::Uuid::from_u128(0)))]
     pub aaguid: Option<uuid::Uuid>,
-    #[builder(default = 1)]
+    #[builder(default = 0)]
     pub counter: i32,
     pub big_data: serde_json::Value,
     #[builder(default = None)]
@@ -222,7 +222,7 @@ impl UserWebauthn {
                 disabled_at,
                 created_at,
                 updated_at
-             from user_webauthn where user_id = $1",
+             from user_webauthn where user_id = $1 order by created_at desc",
             id as UserId
         )
         .fetch_all(pool)

@@ -122,7 +122,7 @@ impl AuditLog {
             from audit_logs al
             join users u on u.id = al.user_id
             join users a on a.id = al.actor_id
-            where al.user_id = $1 and ($2::uuid is null or al.id::uuid > $2) order by created_at asc limit 20+1
+            where al.user_id = $1 and ($2::uuid is null or al.id::uuid < $2) order by created_at desc limit 20+1
             "#,
             user_id as UserId,
             from as Option<AuditLogId>
@@ -154,7 +154,7 @@ impl AuditLog {
                 action,
                 metadata,
                 created_at
-            from audit_logs where user_id = $1 and ($2::uuid is null or id::uuid > $2) order by created_at asc limit 20+1
+            from audit_logs where user_id = $1 and ($2::uuid is null or id::uuid < $2) order by created_at desc limit 20+1
             "#,
             user_id as UserId,
             from as Option<AuditLogId>

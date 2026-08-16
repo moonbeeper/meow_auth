@@ -31,9 +31,10 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 #[utoipa::path(
     get,
     path = "/audit",
+    params(ListDataRequest),
     tags = ["user"],
     responses(
-        (status = 200, description = "current user audit log", body = AuditLog),
+        (status = 200, description = "current user audit log", body = ListDataResponse<AuditLog>),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

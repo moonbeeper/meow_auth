@@ -6,7 +6,7 @@ master_key = "df2f3ba178ecaa9968c042e230661d668e96f73881da2968a525af802d72692c"
 [http]
 bind = "127.0.0.1:8080"
 origin = "http://localhost:8080/"
-frontend = "http://127.0.0.1:5173"
+frontend = "http://localhost:5173"
 is_under_cloudflare = false
 
 [http.api_docs]
@@ -45,6 +45,7 @@ digits = 6
 [webauthn]
 rp_id = "localhost"
 rp_display_name = "MeowAuth"
+rp_origin = "http://localhost:5173/"
 timeout_seconds = 300
 
 [oauth]

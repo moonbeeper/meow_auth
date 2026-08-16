@@ -1,16 +1,22 @@
 <script lang="ts">
     import { version } from "$app/env";
     import Header from "$comps/header.svelte";
-    import { QueryClient, QueryClientProvider } from "@tanstack/svelte-query";
+    import queryClient from "$lib/api/tanstackClient";
+    import { createCurrentUserInfo } from "$lib/api/user/user";
+    import { auth } from "$lib/auth/auth.svelte";
 
     import "../styles/_global.scss";
     import "@fontsource-variable/inter/wght.css";
+    import { QueryClient, QueryClientProvider } from "@tanstack/svelte-query";
+    import { SvelteQueryDevtools } from "@tanstack/svelte-query-devtools";
 
     let { children } = $props();
     let build_date = new Date(Number(version)).toTimeString();
     // remember: cannot use crypto stuff [how would have known that, i didnt :(]
-
-    const queryClient = new QueryClient();
+    // const userQuery = createCurrentUserInfo();
+    // $effect(() => {
+    //     auth.sync(userQuery.data, userQuery.isPending);
+    // });
 </script>
 
 <QueryClientProvider client={queryClient}>
@@ -21,4 +27,5 @@
             Running on {__COMMIT_HASH__} built at {build_date}
         </div>
     </footer>
+    <SvelteQueryDevtools />
 </QueryClientProvider>

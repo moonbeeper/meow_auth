@@ -12,18 +12,29 @@
     import Button from "$comps/button.svelte";
     import Input from "$comps/form/input.svelte";
     import InputError from "$comps/form/inputError.svelte";
-    import { otpRegister } from "$lib/api/auth/auth";
+    import { flowOtpRegister } from "$lib/api/auth/auth";
     import { isOk } from "$lib/api/ignoreThisPlease";
     import { auth } from "$lib/auth/auth.svelte";
     import { Control, Field } from "formsnap";
     import { defaults, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
 
+    import type { PageProps } from "./$types";
+
+    let { data }: PageProps = $props();
+
+    let redirectTo = $derived.by(() => {
+        if (data.redirect) {
+            return `?redirect=${encodeURIComponent(data.redirect)}`;
+        }
+        return "";
+    });
+
     const rawForm = superForm(defaults(zod4(schema)), {
         SPA: true,
         validators: zod4(schema),
         onUpdate: async ({ form }) => {
-            const res = await otpRegister({ email: form.data.email });
+            const res = await flowOtpRegister({ email: form.data.email });
 
             if (!isOk(res)) {
                 console.error("i will cry");
@@ -33,8 +44,7 @@
 
             console.log("going otp route");
             auth.pendingAuthEmail = form.data.email;
-            await goto(`/auth/${flow_id}/otp`);
-            return;
+            await goto(`/auth/${flow_id}/otp${redirectTo}`);
         }
     });
     const { form, enhance, delayed } = rawForm;

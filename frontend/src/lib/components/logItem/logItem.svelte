@@ -54,7 +54,20 @@
         // }
 
         &:hover {
-            background: color-mix(in oklab, var(--color-accent-lightest) 50%, transparent 50%);
+            --logItem-hover-background: color-mix(
+                in oklab,
+                var(--color-accent-lightest) 50%,
+                transparent 50%
+            );
+            background: var(--logItem-hover-background);
+
+            @media (prefers-color-scheme: dark) {
+                --logItem-hover-background: color-mix(
+                    in oklab,
+                    var(--color-accent-light) 50%,
+                    transparent 50%
+                );
+            }
         }
     }
     // .header {

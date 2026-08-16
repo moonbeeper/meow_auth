@@ -17,6 +17,9 @@ export default defineConfig({
                 },
                 requestOptions: {
                     credentials: "include"
+                },
+                query: {
+                    useOperationIdAsQueryKey: true
                 }
             }
         },

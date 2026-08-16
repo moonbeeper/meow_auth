@@ -20,6 +20,7 @@ import type {
 
 import type {
     AdminListUsersParams,
+    AdminUserAuditLogParams,
     AlrightResponse,
     ApiError,
     AuditLog,
@@ -97,7 +98,7 @@ export const adminListUsers = async (
 };
 
 export const getAdminListUsersQueryKey = (params?: AdminListUsersParams) => {
-    return [`${apiUrlForOrval}/v1/admin/users/list`, ...(params ? [params] : [])] as const;
+    return ["adminListUsers", ...(params ? [params] : [])] as const;
 };
 
 export const getAdminListUsersQueryOptions = <
@@ -214,7 +215,7 @@ export const adminInfoUser = async (
 };
 
 export const getAdminInfoUserQueryKey = (id: UlidId) => {
-    return [`${apiUrlForOrval}/v1/admin/users/${id}`] as const;
+    return ["adminInfoUser", ...(id ? [id] : [])] as const;
 };
 
 export const getAdminInfoUserQueryOptions = <
@@ -430,8 +431,20 @@ export type adminUserAuditLogResponse =
     | adminUserAuditLogResponseSuccess
     | adminUserAuditLogResponseError;
 
-export const getAdminUserAuditLogUrl = (id: UlidId) => {
-    return `${apiUrlForOrval}/v1/admin/users/${id}/audit`;
+export const getAdminUserAuditLogUrl = (id: UlidId, params?: AdminUserAuditLogParams) => {
+    const normalizedParams = new URLSearchParams();
+
+    Object.entries(params || {}).forEach(([key, value]) => {
+        if (value !== undefined) {
+            normalizedParams.append(key, value === null ? "null" : String(value));
+        }
+    });
+
+    const stringifiedParams = normalizedParams.toString();
+
+    return stringifiedParams.length > 0
+        ? `${apiUrlForOrval}/v1/admin/users/${id}/audit?${stringifiedParams}`
+        : `${apiUrlForOrval}/v1/admin/users/${id}/audit`;
 };
 
 /**
@@ -439,10 +452,11 @@ export const getAdminUserAuditLogUrl = (id: UlidId) => {
  */
 export const adminUserAuditLog = async (
     id: UlidId,
+    params?: AdminUserAuditLogParams,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
 ): Promise<adminUserAuditLogResponse> => {
-    const res = await (fetchFn ?? fetch)(getAdminUserAuditLogUrl(id), {
+    const res = await (fetchFn ?? fetch)(getAdminUserAuditLogUrl(id, params), {
         credentials: "include",
         ...options,
         method: "GET"
@@ -454,8 +468,8 @@ export const adminUserAuditLog = async (
     return { data, status: res.status, headers: res.headers } as adminUserAuditLogResponse;
 };
 
-export const getAdminUserAuditLogQueryKey = (id: UlidId) => {
-    return [`${apiUrlForOrval}/v1/admin/users/${id}/audit`] as const;
+export const getAdminUserAuditLogQueryKey = (id: UlidId, params?: AdminUserAuditLogParams) => {
+    return ["adminUserAuditLog", ...(id ? [id] : []), ...(params ? [params] : [])] as const;
 };
 
 export const getAdminUserAuditLogQueryOptions = <
@@ -463,6 +477,7 @@ export const getAdminUserAuditLogQueryOptions = <
     TError = ApiError
 >(
     id: UlidId,
+    params?: AdminUserAuditLogParams,
     options?: {
         query?: Partial<
             CreateQueryOptions<Awaited<ReturnType<typeof adminUserAuditLog>>, TError, TData>
@@ -473,10 +488,10 @@ export const getAdminUserAuditLogQueryOptions = <
 ) => {
     const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
 
-    const queryKey = queryOptions?.queryKey ?? getAdminUserAuditLogQueryKey(id);
+    const queryKey = queryOptions?.queryKey ?? getAdminUserAuditLogQueryKey(id, params);
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUserAuditLog>>> = ({ signal }) =>
-        adminUserAuditLog(id, { signal, ...fetchOptions }, fetcherFn);
+        adminUserAuditLog(id, params, { signal, ...fetchOptions }, fetcherFn);
 
     return {
         queryKey,
@@ -502,6 +517,7 @@ export function createAdminUserAuditLog<
     TError = ApiError
 >(
     id: () => UlidId,
+    params?: () => AdminUserAuditLogParams,
     options?: () => {
         query?: Partial<
             CreateQueryOptions<Awaited<ReturnType<typeof adminUserAuditLog>>, TError, TData>
@@ -512,7 +528,7 @@ export function createAdminUserAuditLog<
     queryClient?: () => QueryClient
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
-        () => getAdminUserAuditLogQueryOptions(id(), options?.()),
+        () => getAdminUserAuditLogQueryOptions(id(), params?.(), options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -573,7 +589,7 @@ export const adminListUserApplications = async (
 };
 
 export const getAdminListUserApplicationsQueryKey = (id: UlidId) => {
-    return [`${apiUrlForOrval}/v1/admin/users/${id}/oauth/application/list`] as const;
+    return ["adminListUserApplications", ...(id ? [id] : [])] as const;
 };
 
 export const getAdminListUserApplicationsQueryOptions = <
@@ -1244,7 +1260,7 @@ export const adminListUserOauthAuthorizations = async (
 };
 
 export const getAdminListUserOauthAuthorizationsQueryKey = (id: UlidId) => {
-    return [`${apiUrlForOrval}/v1/admin/users/${id}/oauth/authorization/list`] as const;
+    return ["adminListUserOauthAuthorizations", ...(id ? [id] : [])] as const;
 };
 
 export const getAdminListUserOauthAuthorizationsQueryOptions = <
@@ -1637,7 +1653,7 @@ export const adminListUserSessions = async (
 };
 
 export const getAdminListUserSessionsQueryKey = (id: UlidId) => {
-    return [`${apiUrlForOrval}/v1/admin/users/${id}/session/list`] as const;
+    return ["adminListUserSessions", ...(id ? [id] : [])] as const;
 };
 
 export const getAdminListUserSessionsQueryOptions = <

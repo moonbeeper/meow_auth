@@ -231,8 +231,17 @@ pub async fn flow_webauthn_exchange(
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
+    if passkey.user_id != user.id {
+        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
+    }
+
+    // WARNING: 1Password synced passkeys, have a counter of 0 always.
+    // while hardware should ahve normal counters.
+
     // check counter to account for cloning attackssss
-    if auth_result.counter() <= passkey.counter as u32 {
+    // TODO: move to helper method for common usage in login and sudo
+    // past me wtf, "less and equal" IS NOT THE RIGHT THING. dumb bird brain, a new passkey has a counter of 0!
+    if auth_result.counter() < passkey.counter as u32 {
         let mut tx = global.database.begin().await?;
         passkey.enabled = false;
         passkey.update(&mut tx).await?;
@@ -247,15 +256,12 @@ pub async fn flow_webauthn_exchange(
         return Err(ApiErrorCodes::WebauthnCompromised);
     }
 
-    if passkey.user_id != user.id {
-        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
-    }
-
     update_passkey_with_authentication_result(&mut passkey, &auth_result)
         .map_err(|_| ApiErrorCodes::InternalServerError)?;
 
+    // update passkey
     let mut tx = global.database.begin().await?;
-    passkey.counter += 1;
+    passkey.counter = auth_result.counter().cast_signed();
     passkey.update(&mut tx).await?;
     tx.commit().await?;
 
