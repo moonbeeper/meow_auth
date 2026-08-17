@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { createCurrentUserInfo } from "$lib/api/user/user";
+    import { auth } from "$lib/auth/auth.svelte";
     import type { Snippet } from "svelte";
 
     // you cant actually do more snippets. that's not how layouts work, Svelte, like you might have
@@ -8,6 +10,11 @@
     }: {
         children: Snippet;
     } = $props();
+
+    const userQuery = createCurrentUserInfo();
+    $effect(() => {
+        auth.sync(userQuery.data, userQuery.isPending);
+    });
 </script>
 
 <main id="main" class="grid" tabindex="-1">

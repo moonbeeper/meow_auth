@@ -1,10 +1,8 @@
 <script lang="ts">
-    import { KeysThatMatter } from "$lib/stupidKeymap";
     import type { Snippet } from "svelte";
     import type { HTMLAnchorAttributes, HTMLButtonAttributes } from "svelte/elements";
     import { slide } from "svelte/transition";
 
-    import KeyTag from "./keyTag.svelte";
     import Spinner from "./spinner.svelte";
 
     type ButtonProps = HTMLButtonAttributes &
@@ -25,6 +23,7 @@
         fontSize?: "normal" | "medium" | "small";
         children: Snippet;
         shouldFill?: boolean;
+        square?: boolean;
     };
 
     // smh, typescript cant infer the type without doing as. man this union is uselss.
@@ -36,6 +35,7 @@
         disabled = false,
         loading = false,
         shouldFill = false,
+        square = false,
         href,
         ...rest
     }: ButtonProps | LinkProps = $props();
@@ -47,7 +47,7 @@
 
 {#if href}
     <a
-        class={["button", fontSizeClass, { primary, negative, loading, shouldFill }]}
+        class={["button", fontSizeClass, { primary, negative, loading, shouldFill, square }]}
         aria-disabled={disabled}
         {href}
         {...rest as HTMLAnchorAttributes}
@@ -56,7 +56,7 @@
     </a>
 {:else}
     <button
-        class={["button", fontSizeClass, { primary, negative, loading, shouldFill }]}
+        class={["button", fontSizeClass, { primary, negative, loading, shouldFill, square }]}
         aria-disabled={disabled}
         {disabled}
         {...rest as HTMLButtonAttributes}
@@ -75,7 +75,8 @@
         --button-hover-brightness: 0.9;
         --button-font-size: var(--text-normal);
         border-radius: var(--typical-radius);
-        border: 1px solid var(--button-border-color, var(--color-iron-medium));
+        border: var(--button-border-width, 1px) solid
+            var(--button-border-color, var(--color-iron-medium));
         padding: calc(var(--spacing) * 2) 1rem;
         /* accent-color: var(--color-accent-medium); */
         color: var(--button-color, inherit);
@@ -89,6 +90,11 @@
         transition-timing-function: ease-out;
         justify-content: center;
         align-items: center;
+
+        @media (prefers-color-scheme: dark) {
+            --button-background: var(--color-body);
+        }
+
         // makes so the line height does not change when the button is a link
         line-height: 1.1;
         gap: calc(var(--spacing) * 2);
@@ -101,7 +107,7 @@
         }
 
         @media (prefers-color-scheme: dark) {
-            --button-hover-brightness: 1.1;
+            --button-hover-brightness: 1.15;
         }
     }
 
@@ -148,5 +154,31 @@
 
     .shouldFill {
         inline-size: 100%;
+    }
+
+    .square {
+        --button-background: var(--color-iron-lightest);
+        --button-color: inherit !important;
+        --button-border-width: 0;
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 0.4rem;
+        text-align: center;
+        white-space: nowrap;
+
+        @media (prefers-color-scheme: dark) {
+            --button-background: var(--color-body);
+            --button-border-width: 1px;
+        }
+
+        &.primary {
+            --button-background: var(--color-accent-lighter);
+            @media (prefers-color-scheme: dark) {
+                --button-background: var(--color-accent-darker);
+            }
+        }
     }
 </style>

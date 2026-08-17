@@ -21,6 +21,7 @@ pub struct User {
     pub login: String,
     pub email: String,
     pub flags: i64,
+    pub has_totp: bool,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -32,6 +33,7 @@ impl From<database::models::user::User> for User {
             login: value.name,
             email: value.email,
             flags: value.flags,
+            has_totp: value.totp_enabled,
             created_at: value.created_at,
             updated_at: value.updated_at,
         }

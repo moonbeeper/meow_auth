@@ -10,6 +10,7 @@ export interface User {
     created_at: string;
     email: string;
     flags: number;
+    has_totp: boolean;
     id: UlidId;
     login: string;
     updated_at: string;

@@ -57,10 +57,7 @@
             }
             const { methods } = res.data;
 
-            if (methods.includes("passkey")) {
-                console.log("going webauthn route by priority lol");
-                return;
-            } else if (methods.includes("otp")) {
+            if (methods.includes("otp")) {
                 console.log("going otp route");
                 const req = await flowOtpStart({ email: form.data.email });
 

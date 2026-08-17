@@ -1,0 +1,14 @@
+@layer components {
+    .vlist-container {
+        position: relative;
+        height: auto;
+    }
+
+    .vlist-viewport {
+        position: relative;
+        max-height: var(--vlist-viewport-height, 50dvh);
+        overflow-y: auto;
+        // seems that this isnt standard. whhy the heck are you even using it vlist library!?
+        -webkit-overflow-scrolling: touch;
+    }
+}

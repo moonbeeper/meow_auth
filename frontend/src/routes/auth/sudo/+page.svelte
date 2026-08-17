@@ -39,12 +39,12 @@
 
     async function handlePasskey() {
         console.log("going passkey route");
-        const otpData = await sudoWebauthnStart();
-        if (!isOk(otpData)) {
-            if (otpData.data.code == "SudoAlreadyEnabled") {
+        const res = await sudoWebauthnStart();
+        if (!isOk(res)) {
+            if (res.data.code == "SudoAlreadyEnabled") {
                 console.warn("sudo was already enabled");
                 await goto(data.redirect ?? "/me");
-            } else if (otpData.data.code == "SudoOptionNotAvailable") {
+            } else if (res.data.code == "SudoOptionNotAvailable") {
                 console.warn("sudo option not available");
                 await goto(data.redirect ?? "/me");
             }
@@ -56,7 +56,7 @@
 
         let attestationResult = await tryCatch(() =>
             startAuthentication({
-                optionsJSON: otpData.data.publicKey as PublicKeyCredentialRequestOptionsJSON
+                optionsJSON: res.data.publicKey as PublicKeyCredentialRequestOptionsJSON
             })
         );
 
@@ -67,7 +67,7 @@
 
         console.log("got attestation result: ", attestationResult);
 
-        const res = await sudoWebauthnExchange({
+        const exchangeRes = await sudoWebauthnExchange({
             id: attestationResult.result.id,
             rawId: attestationResult.result.rawId,
             response: attestationResult.result.response,
@@ -75,7 +75,7 @@
             extensions: attestationResult.result.clientExtensionResults
         });
 
-        if (!isOk(res)) {
+        if (!isOk(exchangeRes)) {
             console.error("failed to exchange passkey");
             return;
         }
@@ -86,12 +86,12 @@
 
     async function handleOtp() {
         console.log("going otp route");
-        const otpData = await sudoOtpStart();
-        if (!isOk(otpData)) {
-            if (otpData.data.code == "SudoAlreadyEnabled") {
+        const res = await sudoOtpStart();
+        if (!isOk(res)) {
+            if (res.data.code == "SudoAlreadyEnabled") {
                 console.warn("sudo was already enabled");
                 await goto(data.redirect ?? "/me");
-            } else if (otpData.data.code == "SudoOptionNotAvailable") {
+            } else if (res.data.code == "SudoOptionNotAvailable") {
                 console.warn("sudo option not available");
                 await goto(data.redirect ?? "/me");
             }
@@ -100,7 +100,7 @@
             await goto(data.redirect ?? "/me");
             return;
         }
-        await goto(`/auth/${otpData.data.flow_id}/otp?sudo=true${redirectTo}`);
+        await goto(`/auth/${res.data.flow_id}/otp?sudo=true${redirectTo}`);
     }
 
     async function handleTotp() {

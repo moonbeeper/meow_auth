@@ -8,6 +8,7 @@
 @use "avatar.scss";
 @use "liketail.scss"; /* order matters!!!!*/
 @use "mono-typeface.scss";
+@use "virtual_list.scss";
 @layer reset, base, components, liketail;
 
 :root {
