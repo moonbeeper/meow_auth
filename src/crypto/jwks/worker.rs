@@ -1,8 +1,10 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
+
+use sqlx::postgres::PgListener;
 
 use crate::{
     crypto::jwks::create_new_db_jwk, database::models::jwk_key::JwkKey, global::GlobalState,
-    job_queue::QueuedJob,
+    job_queue::QueuedJob, manager::WatcherChild,
 };
 
 pub struct JwkCycleWorker;
@@ -31,6 +33,10 @@ impl QueuedJob for JwkCycleWorker {
         JwkKey::set_retire(&mut tx).await?;
         tx.commit().await?;
 
+        sqlx::query!("notify updated_crypto_jwks")
+            .execute(&global.database)
+            .await?;
+
         global
             .jwks
             .update(&global.database, &global.settings)
@@ -47,4 +53,31 @@ impl QueuedJob for JwkCycleWorker {
 
         Ok(())
     }
+}
+
+/// Watches for notifications from the database when the jwks have been updated
+pub async fn watch_jwk_updates(
+    global: Arc<GlobalState>,
+    shutdown: WatcherChild,
+) -> anyhow::Result<()> {
+    tracing::info!("watching for jwk update notifications");
+
+    let mut tick = tokio::time::interval(Duration::from_secs(120));
+    let mut listener = PgListener::connect_with(&global.database).await?;
+    listener.listen("updated_crypto_jwks").await?;
+
+    loop {
+        // this thing exits when the first thing completes.
+        tokio::select! {
+            _ = shutdown.cancelled() => break,
+            _ = tick.tick() => {}
+            _ = listener.recv() => {}
+        }
+
+        tracing::info!("received update notification for jwks, updating local keys");
+        if let Err(e) = global.jwks.update(&global.database, &global.settings).await {
+            tracing::error!("failed to update jwks: {:?}", e)
+        }
+    }
+    Ok(())
 }

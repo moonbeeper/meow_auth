@@ -4,7 +4,7 @@ use std::time::Duration;
 use anyhow::Context as _;
 use futures_util::TryFutureExt;
 use meow_auth2::{
-    crypto::jwks::worker::JwkCycleWorker,
+    crypto::jwks::worker::{JwkCycleWorker, watch_jwk_updates},
     global::GlobalState,
     http,
     job_queue::QueueRegistry,
@@ -33,6 +33,10 @@ async fn main() -> anyhow::Result<()> {
     spawn_service(
         "queues",
         queues.run(watcher.child()).map_err(|e| anyhow::anyhow!(e)),
+    );
+    spawn_service(
+        "update_jwks",
+        watch_jwk_updates(global.clone(), watcher.child()),
     );
 
     let _ = tokio::signal::ctrl_c().await;
