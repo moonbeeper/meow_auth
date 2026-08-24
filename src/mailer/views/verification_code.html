@@ -1,11 +1,12 @@
 {% extends "partials/base.html" %}
 
-{% set sign_word = "in" %}
-{% if kind == "register" %}
-    {% set sign_word = "up" %}
-{% endif %}
 
 {% block content %}
+    {% set sign_word = "in" %}
+    {% if kind == "register" %}
+        {% set sign_word = "up" %}
+    {% endif %}
+
     {{<ui.heading text={globals.greeting ~ " " ~ user.name ~ "!"} />}}
     {{<ui.spacer px={16} />}}
     {% if kind == "register" %}

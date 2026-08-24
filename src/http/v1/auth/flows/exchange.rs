@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::{Extension, extract::State};
 use tower_cookies::Cookies;
 use utoipa_axum::{router::OpenApiRouter, routes};
-use webauthn_rs::prelude::PasskeyAuthentication;
+use webauthn_rs::prelude::{DiscoverableAuthentication, DiscoverableKey, Passkey};
 use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
@@ -16,7 +16,7 @@ use crate::{
             TotpCodeState, decrypt_secrets, get_recovery_code_state, get_totp,
             set_recovery_code_used,
         },
-        webauthn::{get_challenge_id_from_cookies, update_passkey_with_authentication_result},
+        webauthn::get_challenge_id_from_cookies,
     },
     database::{
         id::UlidId,
@@ -35,6 +35,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
+        middleware::ratelimit_manager::RatelimitLayer,
         v1::{
             auth::flows::FlowResponse,
             types::{AlrightResponse, AuthMethod, AuthenticationPasskeyRequest, RouteEither},
@@ -45,8 +46,10 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(flow_otp_exchange))
+        .layer(RatelimitLayer::new(60, chrono::Duration::seconds(60)))
         .routes(routes!(flow_webauthn_exchange))
+        .layer(RatelimitLayer::new(20, chrono::Duration::seconds(60)))
+        .routes(routes!(flow_otp_exchange))
         .routes(routes!(flow_totp_exchange))
 }
 
@@ -215,25 +218,25 @@ pub async fn flow_webauthn_exchange(
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
-    let Ok(Some(user)) = User::find_by_id(db_challenge.user_id, &global.database).await else {
-        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
-    };
-
-    let challenge: PasskeyAuthentication = serde_json::from_value(db_challenge.big_data)?;
-
-    let auth_result = global
-        .webauthn
-        .finish_passkey_authentication(&request, &challenge)?;
-
-    let Ok(Some(mut passkey)) =
-        UserWebauthn::find_by_credential_id(auth_result.cred_id(), &global.database).await
+    let Ok(Some(mut db_passkey)) =
+        UserWebauthn::find_by_credential_id(request.get_credential_id(), &global.database).await
     else {
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
-    if passkey.user_id != user.id {
-        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
-    }
+    let mut passkey: Passkey = serde_json::from_value(db_passkey.big_data.clone())?;
+
+    let challenge: DiscoverableAuthentication = serde_json::from_value(db_challenge.big_data)?;
+
+    let auth_result = global.webauthn.finish_discoverable_authentication(
+        &request,
+        challenge,
+        &[DiscoverableKey::from(&passkey)],
+    )?;
+
+    let Ok(Some(user)) = User::find_by_id(db_passkey.user_id, &global.database).await else {
+        return Err(ApiErrorCodes::InternalServerError);
+    };
 
     // WARNING: 1Password synced passkeys, have a counter of 0 always.
     // while hardware should ahve normal counters.
@@ -241,14 +244,14 @@ pub async fn flow_webauthn_exchange(
     // check counter to account for cloning attackssss
     // TODO: move to helper method for common usage in login and sudo
     // past me wtf, "less and equal" IS NOT THE RIGHT THING. dumb bird brain, a new passkey has a counter of 0!
-    if auth_result.counter() < passkey.counter as u32 {
+    if auth_result.counter() < db_passkey.counter as u32 {
         let mut tx = global.database.begin().await?;
-        passkey.enabled = false;
-        passkey.update(&mut tx).await?;
+        db_passkey.enabled = false;
+        db_passkey.update(&mut tx).await?;
         tx.commit().await?;
         AuthMailer::webauthn_compromised(
             user.name,
-            passkey.display_name,
+            db_passkey.display_name,
             user.email,
             &global.database,
         )
@@ -256,16 +259,16 @@ pub async fn flow_webauthn_exchange(
         return Err(ApiErrorCodes::WebauthnCompromised);
     }
 
-    update_passkey_with_authentication_result(&mut passkey, &auth_result)
-        .map_err(|_| ApiErrorCodes::InternalServerError)?;
+    passkey.update_credential(&auth_result);
+    db_passkey.big_data = serde_json::to_value(passkey)?;
 
     // update passkey
     let mut tx = global.database.begin().await?;
-    passkey.counter = auth_result.counter().cast_signed();
-    passkey.update(&mut tx).await?;
+    db_passkey.counter = auth_result.counter().cast_signed();
+    db_passkey.update(&mut tx).await?;
     tx.commit().await?;
 
-    let session_id = create_session(passkey.user_id, &global.database, &global.settings)
+    let session_id = create_session(db_passkey.user_id, &global.database, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed creating session: you opened a new{}", e);

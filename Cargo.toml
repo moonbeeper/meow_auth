@@ -84,10 +84,7 @@ utoipa = { version = "5.5.0", features = [
 utoipa-axum = "0.2.0"
 utoipa-scalar = { version = "0.3.0", features = ["axum"] }
 uuid = { version = "1.25.0", features = ["v4"] }
-webauthn-rs = { version = "0.5.5", features = [
-    "danger-allow-state-serialisation",
-    "danger-credential-internals",
-] }
+webauthn-rs = { version = "0.5.5", features = ["conditional-ui", "danger-allow-state-serialisation", "danger-credential-internals"] }
 webauthn-rs-proto = "0.5.5"
 regex = "1.13.1"
 hmac = "0.13.0"

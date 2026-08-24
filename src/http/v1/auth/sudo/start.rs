@@ -169,7 +169,7 @@ pub async fn sudo_webauthn_start(
     let data = serde_json::to_value(data)?;
 
     let db_challenge = UserWebauthnChallenge::builder()
-        .user_id(auth.user_id())
+        .user_id(Some(auth.user_id()))
         .big_data(data)
         .kind(WebauthnChallengeKind::ReAuthenticate)
         .expires_at(

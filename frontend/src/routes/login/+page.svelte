@@ -12,11 +12,20 @@
     import Button from "$comps/button.svelte";
     import Input from "$comps/form/input.svelte";
     import InputError from "$comps/form/inputError.svelte";
-    import { flowOptions, flowOtpStart } from "$lib/api/auth/auth";
+    import Separator from "$comps/separator.svelte";
+    import { flowOtpStart, flowWebauthnExchange, flowWebauthnStart } from "$lib/api/auth/auth";
     import { isOk } from "$lib/api/ignoreThisPlease";
     import { auth } from "$lib/auth/auth.svelte";
+    import { tryCatch } from "$lib/common";
+    import {
+        startAuthentication,
+        WebAuthnAbortService,
+        WebAuthnError,
+        type PublicKeyCredentialRequestOptionsJSON
+    } from "@simplewebauthn/browser";
     import { Control, Field } from "formsnap";
-    import { defaults, setMessage, superForm } from "sveltekit-superforms";
+    import { onMount } from "svelte";
+    import { defaults, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
 
     import type { PageProps } from "./$types";
@@ -45,36 +54,124 @@
 
     const rawForm = superForm(defaults(zod4(schema)), {
         SPA: true,
-        // validationMethod: "onsubmit", // makes so the error (data-fs-error) doesnt dissapear after blur
         validators: zod4(schema),
         onUpdate: async ({ form }) => {
-            const res = await flowOptions({ email: form.data.email });
+            // kill the passkey flow if the user is trying to use email instead
+            WebAuthnAbortService.cancelCeremony();
             auth.pendingAuthEmail = form.data.email;
 
-            if (!isOk(res)) {
-                console.error("i will cry");
+            const res = await tryCatch(() => flowOtpStart({ email: form.data.email }));
+
+            if (res.error || !isOk(res.result)) {
+                console.error("failed to create otp flow: ", res.error);
                 return;
             }
-            const { methods } = res.data;
+            const { flow_id } = res.result.data;
 
-            if (methods.includes("otp")) {
-                console.log("going otp route");
-                const req = await flowOtpStart({ email: form.data.email });
-
-                if (!isOk(req)) {
-                    console.error("otp login faild :(");
-                    return;
-                }
-
-                await goto(`/auth/${req.data.flow_id}/otp${redirectTo}`);
-                return;
-            } else {
-                console.warn("somehow login options returned a non valid method list");
-                return;
-            }
+            await goto(`/auth/${flow_id}/otp${redirectTo}`);
+            return;
         }
     });
+
     const { form, enhance, delayed } = rawForm;
+
+    type PasskeyError = {
+        type: "error" | "cancel";
+        message: string;
+    };
+    let passkeyPending = $state(false);
+    let passkeyError = $state<PasskeyError | null>(null);
+
+    function setPasskeyState(pending: boolean = true, error: PasskeyError | null = null) {
+        passkeyPending = pending;
+        passkeyError = error;
+    }
+
+    async function startPasskeyFlow() {
+        if (passkeyPending) return;
+        setPasskeyState();
+        const res = await tryCatch(() => flowWebauthnStart());
+        if (res.error || !isOk(res.result)) {
+            console.error("failed to start passkey flow", res.error);
+
+            if (res.result?.data && "code" in res.result.data) {
+                if (res.result.data.code == "RatelimitExceeded") {
+                    setPasskeyState(false, {
+                        type: "error",
+                        message: "You have exceeded the rate limit for passkey logins! Wait a bit"
+                    });
+                    return;
+                }
+            }
+
+            setPasskeyState(false, {
+                type: "error",
+                message: "Server did not respond with challenge"
+            });
+            return;
+        }
+
+        const { publicKey } = res.result.data;
+
+        const attestationResult = await tryCatch(() =>
+            startAuthentication({
+                optionsJSON: publicKey as PublicKeyCredentialRequestOptionsJSON,
+                useBrowserAutofill: true
+            })
+        );
+
+        if (attestationResult.error) {
+            const error = attestationResult.error;
+
+            if (error instanceof WebAuthnError && error.name == "NotAllowedError") {
+                console.warn("user cancelled passkey prompt or has expired");
+                setPasskeyState(false, {
+                    type: "cancel",
+                    message: "You cancelled the passkey prompt or it has expired"
+                });
+                return;
+            }
+
+            console.error("failed to get attestation result: ", attestationResult.error);
+            setPasskeyState(false, {
+                type: "error",
+                message: "Something went wrong while trying to use your passkey"
+            });
+            return;
+        }
+
+        const exchangeRes = await tryCatch(() =>
+            flowWebauthnExchange({
+                id: attestationResult.result.id,
+                rawId: attestationResult.result.rawId,
+                response: attestationResult.result.response,
+                type: attestationResult.result.type,
+                extensions: attestationResult.result.clientExtensionResults
+            })
+        );
+
+        if (exchangeRes.error || !isOk(exchangeRes.result)) {
+            console.error("failed to exchange passkey", exchangeRes.error);
+            setPasskeyState(false, {
+                type: "error",
+                message: "Something went wrong while trying to use your passkey"
+            });
+            return;
+        }
+
+        setPasskeyState(false);
+        console.log("successfully logged in with passkey, redirecting");
+        await goto(data.redirect ?? "/me");
+    }
+
+    let passkeyErrorClass = $derived.by(() => {
+        if (!passkeyError) return "";
+        return passkeyError.type == "error" ? "error" : "cancel";
+    });
+
+    onMount(() => {
+        startPasskeyFlow();
+    });
 </script>
 
 <AuthBox.Root>
@@ -87,7 +184,7 @@
                         type="email"
                         fontSize="large"
                         placeholder="Your email address"
-                        autocomplete="email"
+                        autocomplete="email webauthn"
                         disabled={$delayed}
                         required
                         {...props}
@@ -98,9 +195,38 @@
             <InputError />
         </Field>
         <p class="font-medium">New around this auth realm? <a href="/signup">Sign up</a>!</p>
-        <!-- <button class="button button--primary font-medium">Continue</button> -->
         <Button primary fontSize="medium" type="submit" disabled={$delayed} loading={$delayed}>
             Continue
         </Button>
     </form>
+    <Separator text="or" />
+    <div class="passkey">
+        <div>
+            <Button onclick={() => startPasskeyFlow()}>Use a Passkey</Button>
+        </div>
+        {#if passkeyError}
+            <p class={["hint", passkeyErrorClass]}>{passkeyError.message}</p>
+        {/if}
+    </div>
 </AuthBox.Root>
+
+<style lang="scss">
+    .passkey {
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--spacing) * 2);
+    }
+
+    .hint {
+        --text-color: inherit;
+        color: var(--text-color);
+        font-size: var(--text-small);
+        font-weight: 500;
+        &.error {
+            --text-color: var(--color-coral-medium);
+            @media (prefers-color-scheme: dark) {
+                ----text-color: var(--color-coral-light);
+            }
+        }
+    }
+</style>

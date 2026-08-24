@@ -32,7 +32,9 @@ pub type UserWebauthnChallengeId = UlidId; // holy that's long
 pub struct UserWebauthnChallenge {
     #[builder(default = UserWebauthnChallengeId::new())]
     pub id: UserWebauthnChallengeId,
-    pub user_id: UserId,
+    #[builder(default = None)]
+    pub user_id: Option<UserId>,
+    #[builder(default = WebauthnChallengeKind::Authenticate)]
     pub kind: WebauthnChallengeKind,
     pub big_data: serde_json::Value,
     #[builder(default = chrono::Utc::now() + chrono::Duration::minutes(5))]
@@ -51,7 +53,7 @@ impl UserWebauthnChallenge {
              values
                 ($1, $2, $3, $4, $5, now(), now())",
             self.id as UserWebauthnChallengeId,
-            self.user_id as UserId,
+            self.user_id as Option<UserId>,
             self.kind as WebauthnChallengeKind,
             self.big_data,
             self.expires_at
@@ -98,7 +100,7 @@ impl UserWebauthnChallenge {
             Self,
             r#"select
                 id,
-                user_id,
+                user_id as "user_id: UserId",
                 kind as "kind: WebauthnChallengeKind",
                 big_data,
                 expires_at,
@@ -127,7 +129,7 @@ impl UserWebauthnChallenge {
             Self,
             r#"select
                 id,
-                user_id,
+                user_id as "user_id: UserId",
                 kind as "kind: WebauthnChallengeKind",
                 big_data,
                 expires_at,
@@ -158,7 +160,7 @@ impl UserWebauthnChallenge {
                 where id = $1 and expires_at > now() and kind = $2
                 returning
                     id,
-                    user_id,
+                    user_id as "user_id: UserId",
                     kind as "kind: WebauthnChallengeKind",
                     big_data,
                     expires_at,
@@ -189,7 +191,7 @@ impl UserWebauthnChallenge {
                 where user_id = $1 and expires_at > now() and kind = $2
                 returning
                     id,
-                    user_id,
+                    user_id as "user_id: UserId",
                     kind as "kind: WebauthnChallengeKind",
                     big_data,
                     expires_at,

@@ -25,7 +25,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .nest("/start", start::routes())
         .nest("/exchange", exchange::routes())
         .layer(RequireAuthenticationLayer::new())
-        .layer(RatelimitLayer::new(10, chrono::Duration::seconds(60)))
+        .layer(RatelimitLayer::new(120, chrono::Duration::seconds(60)))
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]

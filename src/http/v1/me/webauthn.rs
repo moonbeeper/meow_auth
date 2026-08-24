@@ -8,6 +8,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 use webauthn_rs::prelude::{
     CreationChallengeResponse, PasskeyRegistration, RegisterPublicKeyCredential,
 };
+use webauthn_rs_proto::ResidentKeyRequirement;
 
 use crate::{
     audit::{self, AuditAction},
@@ -45,7 +46,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     path = "/",
     tags = ["passkeys"],
     responses(
-        (status = 200, description = "passkey creation challenge options", body = RegistrationChallengeResponse),
+        (status = 200, description = "passkey registration challenge options", body = RegistrationChallengeResponse),
         (status = 401, description = "sudo not enabled", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
@@ -71,16 +72,28 @@ pub async fn register_passkey_options(
         .collect();
 
     // exclude credentials are the pid of the already stored passkeys
-    let (client_challenge, data) = global.webauthn.start_passkey_registration(
+    let (mut client_challenge, data) = global.webauthn.start_passkey_registration(
         user.id.into(),
         &user.email,
         &user.name,
         Some(credential_ids),
     )?;
 
+    // we have to hook into the auth selector to make resident passkeys
+    // (the discoverable flow of webauthn-rs does not have the registration flow, just the authentication flow.
+    // so we need to set this here).
+    // The "authenticator_selection" will always exist, see its builder.
+    let auth_selector = client_challenge
+        .public_key
+        .authenticator_selection
+        .as_mut()
+        .unwrap();
+    auth_selector.require_resident_key = true;
+    auth_selector.resident_key = Some(ResidentKeyRequirement::Required);
+
     let data = serde_json::to_value(data)?;
     let db_challenge = UserWebauthnChallenge::builder()
-        .user_id(user.id)
+        .user_id(Some(user.id))
         .big_data(data)
         .kind(WebauthnChallengeKind::Register)
         .expires_at(

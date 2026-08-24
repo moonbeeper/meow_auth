@@ -803,16 +803,13 @@ export const getFlowWebauthnStartUrl = () => {
  * @summary Authenticate via a Passkey
  */
 export const flowWebauthnStart = async (
-    flowRequest: FlowRequest,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
 ): Promise<flowWebauthnStartResponse> => {
     const res = await (fetchFn ?? fetch)(getFlowWebauthnStartUrl(), {
         credentials: "include",
         ...options,
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...options?.headers },
-        body: JSON.stringify(flowRequest)
+        method: "POST"
     });
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
@@ -828,7 +825,7 @@ export const getFlowWebauthnStartMutationOptions = <
     mutation?: CreateMutationOptions<
         Awaited<ReturnType<typeof flowWebauthnStart>>,
         TError,
-        { data: FlowRequest },
+        void,
         TContext
     >;
     fetch?: RequestInit;
@@ -836,7 +833,7 @@ export const getFlowWebauthnStartMutationOptions = <
 }): CreateMutationOptions<
     Awaited<ReturnType<typeof flowWebauthnStart>>,
     TError,
-    { data: FlowRequest },
+    void,
     TContext
 > => {
     const mutationKey = ["flowWebauthnStart"];
@@ -852,11 +849,9 @@ export const getFlowWebauthnStartMutationOptions = <
 
     const mutationFn: MutationFunction<
         Awaited<ReturnType<typeof flowWebauthnStart>>,
-        { data: FlowRequest }
-    > = (props) => {
-        const { data } = props ?? {};
-
-        return flowWebauthnStart(data, fetchOptions, fetcherFn);
+        void
+    > = () => {
+        return flowWebauthnStart(fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
@@ -865,7 +860,7 @@ export const getFlowWebauthnStartMutationOptions = <
 export type FlowWebauthnStartMutationResult = NonNullable<
     Awaited<ReturnType<typeof flowWebauthnStart>>
 >;
-export type FlowWebauthnStartMutationBody = FlowRequest;
+
 export type FlowWebauthnStartMutationError = ApiError;
 
 /**
@@ -876,19 +871,14 @@ export const createFlowWebauthnStart = <TError = ApiError, TContext = unknown>(
         mutation?: CreateMutationOptions<
             Awaited<ReturnType<typeof flowWebauthnStart>>,
             TError,
-            { data: FlowRequest },
+            void,
             TContext
         >;
         fetch?: RequestInit;
         fetcher?: typeof globalThis.fetch;
     },
     queryClient?: () => QueryClient
-): CreateMutationResult<
-    Awaited<ReturnType<typeof flowWebauthnStart>>,
-    TError,
-    { data: FlowRequest },
-    TContext
-> => {
+): CreateMutationResult<Awaited<ReturnType<typeof flowWebauthnStart>>, TError, void, TContext> => {
     return createMutation(
         () => ({ ...getFlowWebauthnStartMutationOptions(options?.()) }),
         queryClient

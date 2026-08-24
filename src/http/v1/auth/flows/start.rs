@@ -9,7 +9,7 @@ use crate::{
     auth::{
         mailer::{AuthMailer, EmailVerificationCodeKind},
         otp::get_otp_code,
-        webauthn::{create_webauthn_cookie, get_user_passkeys},
+        webauthn::create_webauthn_cookie,
     },
     database::{
         id::UlidId,
@@ -17,13 +17,14 @@ use crate::{
             user::User,
             user_auth_challenge::{AuthChallengeKind, AuthChallengePurpose, UserAuthChallenges},
             user_signup::UserSignup,
-            user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
+            user_webauthn_challenge::UserWebauthnChallenge,
         },
     },
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
+        middleware::ratelimit_manager::RatelimitLayer,
         v1::{
             auth::flows::{FlowRequest, FlowResponse},
             types::{AuthMethod, StartChallengeResponse},
@@ -34,9 +35,11 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
+        .layer(RatelimitLayer::new(60, chrono::Duration::seconds(60)))
+        .routes(routes!(flow_webauthn_start))
+        .layer(RatelimitLayer::new(20, chrono::Duration::seconds(60)))
         .routes(routes!(flow_otp_start))
         .routes(routes!(flow_otp_register))
-        .routes(routes!(flow_webauthn_start))
 }
 
 /// Authenticate via an OTP code
@@ -202,27 +205,13 @@ pub async fn flow_otp_register(
 pub async fn flow_webauthn_start(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
-    Json(request): Json<FlowRequest>,
+    // Json(request): Json<FlowRequest>,
 ) -> Result<Json<RequestChallengeResponse>, ApiErrorCodes> {
-    let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
-        return Err(ApiErrorCodes::WebauthnNotEnabled); // mask the existence of the user
-    };
-
-    if !user.has_webauthn {
-        return Err(ApiErrorCodes::WebauthnNotEnabled);
-    }
-
-    let passkeys = get_user_passkeys(user.id, &global.database)
-        .await
-        .map_err(|_| ApiErrorCodes::InternalServerError)?;
-
-    let (client_challenge, data) = global.webauthn.start_passkey_authentication(&passkeys)?;
+    let (client_challenge, data) = global.webauthn.start_discoverable_authentication()?;
 
     let data = serde_json::to_value(data)?;
     let db_challenge = UserWebauthnChallenge::builder()
-        .user_id(user.id)
         .big_data(data)
-        .kind(WebauthnChallengeKind::Authenticate)
         .expires_at(
             chrono::Utc::now()
                 + chrono::Duration::seconds(global.settings.webauthn.timeout_seconds),
@@ -230,12 +219,6 @@ pub async fn flow_webauthn_start(
         .build();
 
     let mut tx = global.database.begin().await?;
-    UserWebauthnChallenge::delete_all_by_user(
-        user.id,
-        WebauthnChallengeKind::Authenticate,
-        &mut tx,
-    )
-    .await?;
     db_challenge.insert(&mut tx).await?;
     tx.commit().await?;
 

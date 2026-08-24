@@ -9,7 +9,7 @@ use crate::{
         mailer::AuthMailer,
         totp::{
             TotpCodeState, create_user_totp, decrypt_secrets, get_recovery_code_state, get_totp,
-            get_unused_recovery_codes, set_recovery_code_used,
+            get_unused_recovery_codes,
         },
     },
     database::models::{user::User, user_totp::UserTotp as DbUserTotp},
@@ -197,8 +197,7 @@ pub async fn disable_totp(
         return Err(ApiErrorCodes::TotpNotEnabled);
     }
 
-    let Ok(Some(mut db_totp)) =
-        DbUserTotp::find_one_by_user(auth.user_id(), &global.database).await
+    let Ok(Some(db_totp)) = DbUserTotp::find_one_by_user(auth.user_id(), &global.database).await
     else {
         return Err(ApiErrorCodes::TotpNotEnabled);
     };

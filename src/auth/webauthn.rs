@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
 use nom::{bytes::complete::take, error::ParseError, number::complete};
-use sqlx::{PgPool, PgTransaction};
+use sqlx::PgPool;
 use tower_cookies::{
     Cookies,
     cookie::{self},
@@ -10,7 +10,6 @@ use uuid::Uuid;
 use webauthn_rs::prelude::{AuthenticationResult, Passkey};
 
 use crate::{
-    audit::{self, AuditAction},
     auth::{create_cookie, get_cookie},
     database::{
         id::UlidId,
@@ -19,7 +18,6 @@ use crate::{
             user_webauthn_challenge::UserWebauthnChallengeId,
         },
     },
-    http::middleware::auth_manager::AuthContext,
     settings::Settings,
 };
 
@@ -31,6 +29,7 @@ struct AttestationObject<'a> {
     auth_data: &'a [u8],
 }
 
+/// Extracts the AAGUID from the raw attestation object from the webauthn registration response.
 pub fn get_aaguid(raw_attestation_object: &[u8]) -> nom::IResult<&[u8], Uuid> {
     let parsed: AttestationObject =
         serde_cbor_2::from_slice(raw_attestation_object).map_err(|e| {
