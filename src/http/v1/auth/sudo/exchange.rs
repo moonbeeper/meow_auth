@@ -276,7 +276,7 @@ pub async fn sudo_totp_exchange(
                 ApiErrorCodes::InternalServerError
             })?;
 
-        if !totp_client.check_current(&request.code).unwrap_or(false) {
+        if !totp_client.check_current(&request.code).is_some() {
             return Err(ApiErrorCodes::InvalidCode);
         }
 

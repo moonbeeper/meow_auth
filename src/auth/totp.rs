@@ -14,16 +14,14 @@ pub fn get_totp(
     account: String,
     secret: SecretKey,
     settings: &Settings,
-) -> anyhow::Result<totp_rs::TOTP> {
-    let totp = totp_rs::TOTP::new(
-        totp_rs::Algorithm::SHA1,
-        settings.totp.digits,
-        1,
-        30,
-        Secret::Raw(secret.to_vec()).to_bytes()?,
-        Some(settings.totp.issuer.clone()),
-        account,
-    )?;
+) -> anyhow::Result<totp_rs::Totp> {
+    let totp = totp_rs::Builder::new()
+        .with_algorithm(totp_rs::Algorithm::SHA1)
+        .with_digits(settings.totp.digits)
+        .with_issuer(Some(settings.totp.issuer.clone()))
+        .with_account_name(account)
+        .with_secret(Secret::from(secret.to_vec()))
+        .build()?;
 
     Ok(totp)
 }

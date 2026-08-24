@@ -24,7 +24,7 @@ impl UlidId {
     }
 
     pub fn new() -> Self {
-        UlidId(ulid::Ulid::new())
+        UlidId(ulid::Ulid::generate())
     }
 }
 

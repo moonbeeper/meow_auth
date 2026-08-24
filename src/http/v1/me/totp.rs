@@ -80,7 +80,9 @@ pub async fn enable_totp_options(
         tracing::error!("something went wrong while creating the totp client: {e}");
         ApiErrorCodes::InternalServerError
     })?;
-    let uri = totp_client.get_url();
+    let uri = totp_client
+        .to_url()
+        .map_err(|_| ApiErrorCodes::InternalServerError)?;
 
     Ok(Json(CreateTotpResponse {
         uri,
@@ -142,7 +144,7 @@ pub async fn exchange_totp_options(
         ApiErrorCodes::InternalServerError
     })?;
 
-    if !totp_client.check_current(&request.code).unwrap_or(false) {
+    if !totp_client.check_current(&request.code).is_some() {
         return Err(ApiErrorCodes::InvalidCode);
     }
 
@@ -214,7 +216,7 @@ pub async fn disable_totp(
                 ApiErrorCodes::InternalServerError
             })?;
 
-        if !totp_client.check_current(&request.code).unwrap_or(false) {
+        if !totp_client.check_current(&request.code).is_some() {
             return Err(ApiErrorCodes::InvalidCode);
         }
     } else {
@@ -293,7 +295,7 @@ pub async fn view_totp_recovery_codes(
         ApiErrorCodes::InternalServerError
     })?;
 
-    if !totp_client.check_current(&request.code).unwrap_or(false) {
+    if !totp_client.check_current(&request.code).is_some() {
         return Err(ApiErrorCodes::InvalidCode);
     }
 

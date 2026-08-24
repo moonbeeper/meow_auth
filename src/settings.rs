@@ -118,7 +118,7 @@ pub struct TotpSettings {
     #[default("meow_auth".to_string())]
     pub issuer: String,
     #[default(6)]
-    pub digits: usize,
+    pub digits: u8,
 }
 
 #[derive(Debug, SmartDefault, serde::Serialize, serde::Deserialize, Clone)]
