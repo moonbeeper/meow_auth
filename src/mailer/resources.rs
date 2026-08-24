@@ -21,7 +21,9 @@ use crate::{
 #[include = "**/*.txt"]
 struct Templates;
 
-pub static TERA: LazyLock<Tera> = LazyLock::new(|| {
+pub static TERA: LazyLock<Tera> = LazyLock::new(build_tera);
+
+pub fn build_tera() -> Tera {
     let mut tera = Tera::default();
     let mut templates = Vec::new();
 
@@ -38,10 +40,9 @@ pub static TERA: LazyLock<Tera> = LazyLock::new(|| {
     tera.add_raw_templates(templates)
         .expect("failed adding templates");
     tera.autoescape_on(vec![".html", ".txt"]);
-    // tera.register_function("get_greeting", get_greeting);
 
     tera
-});
+}
 
 const HTML_MINIFY_CFG: minify_html::Cfg = minify_html::Cfg {
     minify_css: true,
