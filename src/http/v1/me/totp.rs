@@ -7,7 +7,10 @@ use crate::{
     audit::{self, AuditAction},
     auth::{
         mailer::AuthMailer,
-        totp::{create_user_totp, decrypt_secrets, get_totp, get_unused_recovery_codes},
+        totp::{
+            TotpCodeState, create_user_totp, decrypt_secrets, get_recovery_code_state, get_totp,
+            get_unused_recovery_codes, set_recovery_code_used,
+        },
     },
     database::models::{user::User, user_totp::UserTotp as DbUserTotp},
     global::GlobalState,
@@ -21,10 +24,10 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(create_totp_options))
-        .routes(routes!(exchange_totp_creation))
+        .routes(routes!(enable_totp_options))
+        .routes(routes!(exchange_totp_options))
         .routes(routes!(disable_totp))
-        .routes(routes!(see_recovery_codes))
+        .routes(routes!(view_totp_recovery_codes))
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
@@ -46,7 +49,7 @@ pub struct CreateTotpResponse {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn create_totp_options(
+pub async fn enable_totp_options(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
 ) -> Result<Json<CreateTotpResponse>, ApiErrorCodes> {
@@ -107,7 +110,7 @@ pub struct VerifyTotpRequest {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn exchange_totp_creation(
+pub async fn exchange_totp_options(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<VerifyTotpRequest>,
@@ -192,7 +195,8 @@ pub async fn disable_totp(
         return Err(ApiErrorCodes::TotpNotEnabled);
     }
 
-    let Ok(Some(db_totp)) = DbUserTotp::find_one_by_user(auth.user_id(), &global.database).await
+    let Ok(Some(mut db_totp)) =
+        DbUserTotp::find_one_by_user(auth.user_id(), &global.database).await
     else {
         return Err(ApiErrorCodes::TotpNotEnabled);
     };
@@ -202,13 +206,22 @@ pub async fn disable_totp(
         tracing::error!("something went wrong while decrypting totp secrets: {e}");
         ApiErrorCodes::InternalServerError
     })?;
-    let totp_client = get_totp(user.name.clone(), totp.secret, &global.settings).map_err(|e| {
-        tracing::error!("something went wrong while creating the totp client: {e}");
-        ApiErrorCodes::InternalServerError
-    })?;
 
-    if !totp_client.check_current(&request.code).unwrap_or(false) {
-        return Err(ApiErrorCodes::InvalidCode);
+    if request.code.len() == 6 {
+        let totp_client =
+            get_totp(user.name.clone(), totp.secret, &global.settings).map_err(|e| {
+                tracing::error!("something went wrong while creating the totp client: {e}");
+                ApiErrorCodes::InternalServerError
+            })?;
+
+        if !totp_client.check_current(&request.code).unwrap_or(false) {
+            return Err(ApiErrorCodes::InvalidCode);
+        }
+    } else {
+        let state = get_recovery_code_state(&db_totp, &totp.recovery_secret, request.code.clone());
+        if !matches!(state, TotpCodeState::Unused(_)) {
+            return Err(ApiErrorCodes::TotpRecoveryAlreadyUsed);
+        }
     }
 
     let mut tx = global.database.begin().await?;
@@ -242,13 +255,13 @@ pub struct RecoveryCodesTotpResponse {
     tags = ["totp"],
     request_body = VerifyTotpRequest,
     responses(
-        (status = 200, description = "usable totp recovery codes"),
+        (status = 200, description = "usable totp recovery codes", body= RecoveryCodesTotpResponse),
         (status = 401, description = "invalid code or sudo not enabled", body = ApiError),
         (status = 400, description = "totp not enabled", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn see_recovery_codes(
+pub async fn view_totp_recovery_codes(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Json(request): Json<VerifyTotpRequest>,

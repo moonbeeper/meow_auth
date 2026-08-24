@@ -5,9 +5,40 @@
     import Spinner from "$comps/spinner.svelte";
     import { auth } from "$lib/auth/auth.svelte";
 
+    import TotpEnableDialog from "./totpEnableDialog.svelte";
+    import TotpPrompt, { type Props } from "./totpPrompt.svelte";
+
     let isTotpEnabled = $derived.by(() => {
         return auth.user?.has_totp ?? false;
     });
+    let isPromptOpen = $state(false);
+    let promptType = $state<Props["promptType"]>("disable");
+
+    let magicDisable = $derived.by(() => {
+        if (isTotpEnabled && isPromptOpen && promptType == "disable") {
+            return true;
+        } else {
+            return false;
+        }
+    });
+
+    let magicRecovery = $derived.by(() => {
+        if (isTotpEnabled && isPromptOpen && promptType == "viewRecoveryCodes") {
+            return true;
+        } else {
+            return false;
+        }
+    });
+
+    async function handleDisable() {
+        promptType = "disable";
+        isPromptOpen = true;
+    }
+
+    async function handleViewRecovery() {
+        promptType = "viewRecoveryCodes";
+        isPromptOpen = true;
+    }
 </script>
 
 <!-- square buttons may look better. they eat more space -->
@@ -22,14 +53,20 @@ your authentictor app to sign in"
             subtitle="You don't have 2FA set up yet! Add it in just a moment and give your account a little extra protection"
         >
             {#snippet actions()}
-                <Button primary fontSize="small">Set up 2FA</Button>
+                <!-- <Button primary fontSize="small">Set up 2FA</Button> -->
+                <TotpEnableDialog />
             {/snippet}
         </EmptyBox>
     {:else}
         <div class="actions">
-            <Button square primary><Spinner /> Disable</Button>
-            <Button square><Spinner /> View recovery codes</Button>
+            <Button square primary disabled={magicDisable} onclick={() => handleDisable()}
+                ><Spinner /> Disable</Button
+            >
+            <Button square disabled={magicRecovery} onclick={() => handleViewRecovery()}
+                ><Spinner /> View recovery codes</Button
+            >
         </div>
+        <TotpPrompt bind:open={isPromptOpen} {promptType} />
     {/if}
 </SettingsPanel>
 

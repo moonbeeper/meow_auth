@@ -301,9 +301,9 @@ pub async fn sudo_totp_exchange(
                 &global.database,
             )
             .await?;
+        } else {
+            return Err(ApiErrorCodes::TotpRecoveryAlreadyUsed);
         }
-
-        return Err(ApiErrorCodes::TotpRecoveryAlreadyUsed);
     }
 
     let mut transaction = global.database.begin().await?;

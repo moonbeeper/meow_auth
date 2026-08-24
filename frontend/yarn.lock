@@ -1908,6 +1908,7 @@ __metadata:
     orval: "npm:^8.23.0"
     oxfmt: "npm:^0.58.0"
     prettier-plugin-svelte: "npm:^4.1.0"
+    qr: "npm:^0.6.0"
     sass-embedded: "npm:^1.100.0"
     svelte: "npm:^5.56.1"
     svelte-check: "npm:^4.6.0"
@@ -2717,6 +2718,13 @@ __metadata:
   version: 6.1.0
   resolution: "pure-rand@npm:6.1.0"
   checksum: 10c0/1abe217897bf74dcb3a0c9aba3555fe975023147b48db540aa2faf507aee91c03bf54f6aef0eb2bf59cc259a16d06b28eca37f0dc426d94f4692aeff02fb0e65
+  languageName: node
+  linkType: hard
+
+"qr@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "qr@npm:0.6.0"
+  checksum: 10c0/ab23397fb4e0f8d2034af838f4b13b7c02ac0defd449a5963a1753c22c6da168837bf693120fef0daef5e93dca432cac5543561ce307b2dab875e0a859935ee7
   languageName: node
   linkType: hard
 

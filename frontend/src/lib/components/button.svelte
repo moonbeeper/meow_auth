@@ -24,7 +24,10 @@
         children: Snippet;
         shouldFill?: boolean;
         square?: boolean;
+        className?: string;
     };
+
+    export type ButtonOrLinkProps = ButtonProps | LinkProps;
 
     // smh, typescript cant infer the type without doing as. man this union is uselss.
     let {
@@ -36,9 +39,10 @@
         loading = false,
         shouldFill = false,
         square = false,
+        className,
         href,
         ...rest
-    }: ButtonProps | LinkProps = $props();
+    }: ButtonOrLinkProps = $props();
 
     let fontSizeClass = $derived.by(() => {
         return "font-" + fontSize;
@@ -47,7 +51,12 @@
 
 {#if href}
     <a
-        class={["button", fontSizeClass, { primary, negative, loading, shouldFill, square }]}
+        class={[
+            "button",
+            fontSizeClass,
+            { primary, negative, loading, shouldFill, square },
+            className
+        ]}
         aria-disabled={disabled}
         {href}
         {...rest as HTMLAnchorAttributes}
@@ -56,7 +65,12 @@
     </a>
 {:else}
     <button
-        class={["button", fontSizeClass, { primary, negative, loading, shouldFill, square }]}
+        class={[
+            "button",
+            fontSizeClass,
+            { primary, negative, loading, shouldFill, square },
+            className
+        ]}
         aria-disabled={disabled}
         {disabled}
         {...rest as HTMLButtonAttributes}
@@ -77,7 +91,7 @@
         border-radius: var(--typical-radius);
         border: var(--button-border-width, 1px) solid
             var(--button-border-color, var(--color-iron-medium));
-        padding: calc(var(--spacing) * 2) 1rem;
+        padding: var(--button-padding, calc(var(--spacing) * 2) 1rem);
         /* accent-color: var(--color-accent-medium); */
         color: var(--button-color, inherit);
         background: var(--button-background, var(--color-body));

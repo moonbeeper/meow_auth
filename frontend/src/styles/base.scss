@@ -30,6 +30,12 @@
         }
     }
 
+    // for some godddamn reason it cant be on the body (it does not work)
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #d0d0d0 transparent;
+    }
+
     #main {
         margin-inline: auto;
         inline-size: 100%;

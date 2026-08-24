@@ -55,6 +55,7 @@ export * from "./passkey.ts";
 export * from "./promptType.ts";
 export * from "./publicKeyCredentialRegistrationOptions.ts";
 export * from "./publicKeyCredentialStartOptions.ts";
+export * from "./recoveryCodesTotpResponse.ts";
 export * from "./registerPasskeyRequest.ts";
 export * from "./registerRequest.ts";
 export * from "./registrationChallengeResponse.ts";

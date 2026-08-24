@@ -13,55 +13,60 @@ import type {
     QueryClient
 } from "@tanstack/svelte-query";
 
-import type { ApiError, CreateTotpResponse, VerifyTotpRequest } from "../model";
+import type {
+    ApiError,
+    CreateTotpResponse,
+    RecoveryCodesTotpResponse,
+    VerifyTotpRequest
+} from "../model";
 
-export type createTotpOptionsResponse200 = {
+export type enableTotpOptionsResponse200 = {
     data: CreateTotpResponse;
     status: 200;
 };
 
-export type createTotpOptionsResponse400 = {
+export type enableTotpOptionsResponse400 = {
     data: ApiError;
     status: 400;
 };
 
-export type createTotpOptionsResponse401 = {
+export type enableTotpOptionsResponse401 = {
     data: ApiError;
     status: 401;
 };
 
-export type createTotpOptionsResponse500 = {
+export type enableTotpOptionsResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type createTotpOptionsResponseSuccess = createTotpOptionsResponse200 & {
+export type enableTotpOptionsResponseSuccess = enableTotpOptionsResponse200 & {
     headers: Headers;
 };
-export type createTotpOptionsResponseError = (
-    | createTotpOptionsResponse400
-    | createTotpOptionsResponse401
-    | createTotpOptionsResponse500
+export type enableTotpOptionsResponseError = (
+    | enableTotpOptionsResponse400
+    | enableTotpOptionsResponse401
+    | enableTotpOptionsResponse500
 ) & {
     headers: Headers;
 };
 
-export type createTotpOptionsResponse =
-    | createTotpOptionsResponseSuccess
-    | createTotpOptionsResponseError;
+export type enableTotpOptionsResponse =
+    | enableTotpOptionsResponseSuccess
+    | enableTotpOptionsResponseError;
 
-export const getCreateTotpOptionsUrl = () => {
+export const getEnableTotpOptionsUrl = () => {
     return `${apiUrlForOrval}/v1/me/totp`;
 };
 
 /**
  * @summary Get the TOTP enrollment necessary data
  */
-export const createTotpOptions = async (
+export const enableTotpOptions = async (
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<createTotpOptionsResponse> => {
-    const res = await (fetchFn ?? fetch)(getCreateTotpOptionsUrl(), {
+): Promise<enableTotpOptionsResponse> => {
+    const res = await (fetchFn ?? fetch)(getEnableTotpOptionsUrl(), {
         credentials: "include",
         ...options,
         method: "POST"
@@ -69,16 +74,16 @@ export const createTotpOptions = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: createTotpOptionsResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as createTotpOptionsResponse;
+    const data: enableTotpOptionsResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as enableTotpOptionsResponse;
 };
 
-export const getCreateTotpOptionsMutationOptions = <
+export const getEnableTotpOptionsMutationOptions = <
     TError = ApiError,
     TContext = unknown
 >(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof createTotpOptions>>,
+        Awaited<ReturnType<typeof enableTotpOptions>>,
         TError,
         void,
         TContext
@@ -86,12 +91,12 @@ export const getCreateTotpOptionsMutationOptions = <
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof createTotpOptions>>,
+    Awaited<ReturnType<typeof enableTotpOptions>>,
     TError,
     void,
     TContext
 > => {
-    const mutationKey = ["createTotpOptions"];
+    const mutationKey = ["enableTotpOptions"];
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -103,28 +108,28 @@ export const getCreateTotpOptionsMutationOptions = <
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof createTotpOptions>>,
+        Awaited<ReturnType<typeof enableTotpOptions>>,
         void
     > = () => {
-        return createTotpOptions(fetchOptions, fetcherFn);
+        return enableTotpOptions(fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type CreateTotpOptionsMutationResult = NonNullable<
-    Awaited<ReturnType<typeof createTotpOptions>>
+export type EnableTotpOptionsMutationResult = NonNullable<
+    Awaited<ReturnType<typeof enableTotpOptions>>
 >;
 
-export type CreateTotpOptionsMutationError = ApiError;
+export type EnableTotpOptionsMutationError = ApiError;
 
 /**
  * @summary Get the TOTP enrollment necessary data
  */
-export const createCreateTotpOptions = <TError = ApiError, TContext = unknown>(
+export const createEnableTotpOptions = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof createTotpOptions>>,
+            Awaited<ReturnType<typeof enableTotpOptions>>,
             TError,
             void,
             TContext
@@ -133,9 +138,9 @@ export const createCreateTotpOptions = <TError = ApiError, TContext = unknown>(
         fetcher?: typeof globalThis.fetch;
     },
     queryClient?: () => QueryClient
-): CreateMutationResult<Awaited<ReturnType<typeof createTotpOptions>>, TError, void, TContext> => {
+): CreateMutationResult<Awaited<ReturnType<typeof enableTotpOptions>>, TError, void, TContext> => {
     return createMutation(
-        () => ({ ...getCreateTotpOptionsMutationOptions(options?.()) }),
+        () => ({ ...getEnableTotpOptionsMutationOptions(options?.()) }),
         queryClient
     );
 };
@@ -263,48 +268,48 @@ export const createDisableTotp = <TError = ApiError, TContext = unknown>(
 > => {
     return createMutation(() => ({ ...getDisableTotpMutationOptions(options?.()) }), queryClient);
 };
-export type exchangeTotpCreationResponse200 = {
+export type exchangeTotpOptionsResponse200 = {
     data: void;
     status: 200;
 };
 
-export type exchangeTotpCreationResponse400 = {
+export type exchangeTotpOptionsResponse400 = {
     data: ApiError;
     status: 400;
 };
 
-export type exchangeTotpCreationResponse401 = {
+export type exchangeTotpOptionsResponse401 = {
     data: ApiError;
     status: 401;
 };
 
-export type exchangeTotpCreationResponse404 = {
+export type exchangeTotpOptionsResponse404 = {
     data: ApiError;
     status: 404;
 };
 
-export type exchangeTotpCreationResponse500 = {
+export type exchangeTotpOptionsResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type exchangeTotpCreationResponseSuccess = exchangeTotpCreationResponse200 & {
+export type exchangeTotpOptionsResponseSuccess = exchangeTotpOptionsResponse200 & {
     headers: Headers;
 };
-export type exchangeTotpCreationResponseError = (
-    | exchangeTotpCreationResponse400
-    | exchangeTotpCreationResponse401
-    | exchangeTotpCreationResponse404
-    | exchangeTotpCreationResponse500
+export type exchangeTotpOptionsResponseError = (
+    | exchangeTotpOptionsResponse400
+    | exchangeTotpOptionsResponse401
+    | exchangeTotpOptionsResponse404
+    | exchangeTotpOptionsResponse500
 ) & {
     headers: Headers;
 };
 
-export type exchangeTotpCreationResponse =
-    | exchangeTotpCreationResponseSuccess
-    | exchangeTotpCreationResponseError;
+export type exchangeTotpOptionsResponse =
+    | exchangeTotpOptionsResponseSuccess
+    | exchangeTotpOptionsResponseError;
 
-export const getExchangeTotpCreationUrl = () => {
+export const getExchangeTotpOptionsUrl = () => {
     return `${apiUrlForOrval}/v1/me/totp/exchange`;
 };
 
@@ -312,12 +317,12 @@ export const getExchangeTotpCreationUrl = () => {
  * This will enable TOTP for your account
  * @summary Exchange the TOTP enrollment with a generated code
  */
-export const exchangeTotpCreation = async (
+export const exchangeTotpOptions = async (
     verifyTotpRequest: VerifyTotpRequest,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<exchangeTotpCreationResponse> => {
-    const res = await (fetchFn ?? fetch)(getExchangeTotpCreationUrl(), {
+): Promise<exchangeTotpOptionsResponse> => {
+    const res = await (fetchFn ?? fetch)(getExchangeTotpOptionsUrl(), {
         credentials: "include",
         ...options,
         method: "POST",
@@ -327,16 +332,16 @@ export const exchangeTotpCreation = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: exchangeTotpCreationResponse["data"] = body ? JSON.parse(body) : undefined;
-    return { data, status: res.status, headers: res.headers } as exchangeTotpCreationResponse;
+    const data: exchangeTotpOptionsResponse["data"] = body ? JSON.parse(body) : undefined;
+    return { data, status: res.status, headers: res.headers } as exchangeTotpOptionsResponse;
 };
 
-export const getExchangeTotpCreationMutationOptions = <
+export const getExchangeTotpOptionsMutationOptions = <
     TError = ApiError,
     TContext = unknown
 >(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof exchangeTotpCreation>>,
+        Awaited<ReturnType<typeof exchangeTotpOptions>>,
         TError,
         { data: VerifyTotpRequest },
         TContext
@@ -344,12 +349,12 @@ export const getExchangeTotpCreationMutationOptions = <
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof exchangeTotpCreation>>,
+    Awaited<ReturnType<typeof exchangeTotpOptions>>,
     TError,
     { data: VerifyTotpRequest },
     TContext
 > => {
-    const mutationKey = ["exchangeTotpCreation"];
+    const mutationKey = ["exchangeTotpOptions"];
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -361,30 +366,30 @@ export const getExchangeTotpCreationMutationOptions = <
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof exchangeTotpCreation>>,
+        Awaited<ReturnType<typeof exchangeTotpOptions>>,
         { data: VerifyTotpRequest }
     > = (props) => {
         const { data } = props ?? {};
 
-        return exchangeTotpCreation(data, fetchOptions, fetcherFn);
+        return exchangeTotpOptions(data, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type ExchangeTotpCreationMutationResult = NonNullable<
-    Awaited<ReturnType<typeof exchangeTotpCreation>>
+export type ExchangeTotpOptionsMutationResult = NonNullable<
+    Awaited<ReturnType<typeof exchangeTotpOptions>>
 >;
-export type ExchangeTotpCreationMutationBody = VerifyTotpRequest;
-export type ExchangeTotpCreationMutationError = ApiError;
+export type ExchangeTotpOptionsMutationBody = VerifyTotpRequest;
+export type ExchangeTotpOptionsMutationError = ApiError;
 
 /**
  * @summary Exchange the TOTP enrollment with a generated code
  */
-export const createExchangeTotpCreation = <TError = ApiError, TContext = unknown>(
+export const createExchangeTotpOptions = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof exchangeTotpCreation>>,
+            Awaited<ReturnType<typeof exchangeTotpOptions>>,
             TError,
             { data: VerifyTotpRequest },
             TContext
@@ -394,64 +399,64 @@ export const createExchangeTotpCreation = <TError = ApiError, TContext = unknown
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof exchangeTotpCreation>>,
+    Awaited<ReturnType<typeof exchangeTotpOptions>>,
     TError,
     { data: VerifyTotpRequest },
     TContext
 > => {
     return createMutation(
-        () => ({ ...getExchangeTotpCreationMutationOptions(options?.()) }),
+        () => ({ ...getExchangeTotpOptionsMutationOptions(options?.()) }),
         queryClient
     );
 };
-export type seeRecoveryCodesResponse200 = {
-    data: void;
+export type viewTotpRecoveryCodesResponse200 = {
+    data: RecoveryCodesTotpResponse;
     status: 200;
 };
 
-export type seeRecoveryCodesResponse400 = {
+export type viewTotpRecoveryCodesResponse400 = {
     data: ApiError;
     status: 400;
 };
 
-export type seeRecoveryCodesResponse401 = {
+export type viewTotpRecoveryCodesResponse401 = {
     data: ApiError;
     status: 401;
 };
 
-export type seeRecoveryCodesResponse500 = {
+export type viewTotpRecoveryCodesResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type seeRecoveryCodesResponseSuccess = seeRecoveryCodesResponse200 & {
+export type viewTotpRecoveryCodesResponseSuccess = viewTotpRecoveryCodesResponse200 & {
     headers: Headers;
 };
-export type seeRecoveryCodesResponseError = (
-    | seeRecoveryCodesResponse400
-    | seeRecoveryCodesResponse401
-    | seeRecoveryCodesResponse500
+export type viewTotpRecoveryCodesResponseError = (
+    | viewTotpRecoveryCodesResponse400
+    | viewTotpRecoveryCodesResponse401
+    | viewTotpRecoveryCodesResponse500
 ) & {
     headers: Headers;
 };
 
-export type seeRecoveryCodesResponse =
-    | seeRecoveryCodesResponseSuccess
-    | seeRecoveryCodesResponseError;
+export type viewTotpRecoveryCodesResponse =
+    | viewTotpRecoveryCodesResponseSuccess
+    | viewTotpRecoveryCodesResponseError;
 
-export const getSeeRecoveryCodesUrl = () => {
+export const getViewTotpRecoveryCodesUrl = () => {
     return `${apiUrlForOrval}/v1/me/totp/recovery`;
 };
 
 /**
  * @summary Get your TOTP recovery codes
  */
-export const seeRecoveryCodes = async (
+export const viewTotpRecoveryCodes = async (
     verifyTotpRequest: VerifyTotpRequest,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<seeRecoveryCodesResponse> => {
-    const res = await (fetchFn ?? fetch)(getSeeRecoveryCodesUrl(), {
+): Promise<viewTotpRecoveryCodesResponse> => {
+    const res = await (fetchFn ?? fetch)(getViewTotpRecoveryCodesUrl(), {
         credentials: "include",
         ...options,
         method: "POST",
@@ -461,16 +466,16 @@ export const seeRecoveryCodes = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: seeRecoveryCodesResponse["data"] = body ? JSON.parse(body) : undefined;
-    return { data, status: res.status, headers: res.headers } as seeRecoveryCodesResponse;
+    const data: viewTotpRecoveryCodesResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as viewTotpRecoveryCodesResponse;
 };
 
-export const getSeeRecoveryCodesMutationOptions = <
+export const getViewTotpRecoveryCodesMutationOptions = <
     TError = ApiError,
     TContext = unknown
 >(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof seeRecoveryCodes>>,
+        Awaited<ReturnType<typeof viewTotpRecoveryCodes>>,
         TError,
         { data: VerifyTotpRequest },
         TContext
@@ -478,12 +483,12 @@ export const getSeeRecoveryCodesMutationOptions = <
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof seeRecoveryCodes>>,
+    Awaited<ReturnType<typeof viewTotpRecoveryCodes>>,
     TError,
     { data: VerifyTotpRequest },
     TContext
 > => {
-    const mutationKey = ["seeRecoveryCodes"];
+    const mutationKey = ["viewTotpRecoveryCodes"];
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -495,30 +500,30 @@ export const getSeeRecoveryCodesMutationOptions = <
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof seeRecoveryCodes>>,
+        Awaited<ReturnType<typeof viewTotpRecoveryCodes>>,
         { data: VerifyTotpRequest }
     > = (props) => {
         const { data } = props ?? {};
 
-        return seeRecoveryCodes(data, fetchOptions, fetcherFn);
+        return viewTotpRecoveryCodes(data, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type SeeRecoveryCodesMutationResult = NonNullable<
-    Awaited<ReturnType<typeof seeRecoveryCodes>>
+export type ViewTotpRecoveryCodesMutationResult = NonNullable<
+    Awaited<ReturnType<typeof viewTotpRecoveryCodes>>
 >;
-export type SeeRecoveryCodesMutationBody = VerifyTotpRequest;
-export type SeeRecoveryCodesMutationError = ApiError;
+export type ViewTotpRecoveryCodesMutationBody = VerifyTotpRequest;
+export type ViewTotpRecoveryCodesMutationError = ApiError;
 
 /**
  * @summary Get your TOTP recovery codes
  */
-export const createSeeRecoveryCodes = <TError = ApiError, TContext = unknown>(
+export const createViewTotpRecoveryCodes = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof seeRecoveryCodes>>,
+            Awaited<ReturnType<typeof viewTotpRecoveryCodes>>,
             TError,
             { data: VerifyTotpRequest },
             TContext
@@ -528,13 +533,13 @@ export const createSeeRecoveryCodes = <TError = ApiError, TContext = unknown>(
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof seeRecoveryCodes>>,
+    Awaited<ReturnType<typeof viewTotpRecoveryCodes>>,
     TError,
     { data: VerifyTotpRequest },
     TContext
 > => {
     return createMutation(
-        () => ({ ...getSeeRecoveryCodesMutationOptions(options?.()) }),
+        () => ({ ...getViewTotpRecoveryCodesMutationOptions(options?.()) }),
         queryClient
     );
 };

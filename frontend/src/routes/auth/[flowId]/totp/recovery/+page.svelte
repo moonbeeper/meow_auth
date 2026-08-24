@@ -108,11 +108,11 @@
                     <Pin
                         maxLength={10}
                         regex={PIN_DIGIT_AND_CHAR}
-                        {...props}
-                        {onPaste}
                         loading={$delayed}
                         bind:value={$form.code}
                         onComplete={() => rawForm.submit()}
+                        {onPaste}
+                        {...props}
                     />
                 {/snippet}
             </Control>

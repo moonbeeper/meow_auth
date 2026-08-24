@@ -64,6 +64,7 @@
         transition-timing-function: ease-out;
 
         font-size: var(--text-normal);
+        text-align: center;
         gap: calc(var(--spacing) * 2);
     }
 

@@ -3,11 +3,11 @@
     import type { FormEventHandler, HTMLInputAttributes } from "svelte/elements";
     import { fade, fly, slide } from "svelte/transition";
 
-    import Input from "./input.svelte";
+    import Input, { type FormProps } from "./input.svelte";
     // based off bits-ui pin input!
     import { PIN_DIGIT_REGEX, SPACE } from "./regex";
 
-    type PinInputProps = Omit<HTMLInputAttributes, "value"> & Props;
+    type PinInputProps = Omit<FormProps, "value"> & Props;
     type Props = {
         value?: string;
         regex?: RegExp;
