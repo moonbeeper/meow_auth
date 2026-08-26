@@ -21,8 +21,7 @@ pub struct EnumVariant {
 // probably shouldn't be doing these things this way but womp
 impl Input {
     pub fn as_derive_input(input: &syn::DeriveInput) -> darling::Result<Self> {
-        let this = Self::from_derive_input(input)?;
-        Ok(this)
+        Self::from_derive_input(input)
     }
 }
 

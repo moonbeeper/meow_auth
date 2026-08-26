@@ -2,6 +2,7 @@ use proc_macro::TokenStream;
 use quote::ToTokens as _;
 use syn::{DeriveInput, parse_macro_input};
 
+mod extract_struct_docs;
 mod flatten_enum;
 
 /// flattens an enum that has variants with tuples or structs into a new enum
@@ -16,6 +17,14 @@ pub fn flatten_enum(input: TokenStream) -> TokenStream {
         Ok(parsed) => parsed,
         Err(err) => return err.write_errors().into(),
     };
+
+    TokenStream::from(input.into_token_stream())
+}
+
+#[proc_macro_derive(ExtractStructDocs)]
+pub fn extract_struct_docs(input: TokenStream) -> TokenStream {
+    let derive_input = parse_macro_input!(input as DeriveInput);
+    let input = extract_struct_docs::impl_derive(&derive_input);
 
     TokenStream::from(input.into_token_stream())
 }
