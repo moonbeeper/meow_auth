@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "notify updated_crypto_jwks",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "e4df7fc0b12b30cf8a367068b77476e5d5c1c9037bd796f52d34ea87cdcfa6b9"
+}

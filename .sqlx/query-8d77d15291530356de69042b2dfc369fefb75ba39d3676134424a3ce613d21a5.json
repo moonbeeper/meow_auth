@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "delete from user_webauthn_challenges\n                where id = $1 and expires_at > now() and kind = $2\n                returning\n                    id,\n                    user_id,\n                    kind as \"kind: WebauthnChallengeKind\",\n                    big_data,\n                    expires_at,\n                    created_at,\n                    updated_at\n            ",
+  "query": "delete from user_webauthn_challenges\n                where id = $1 and expires_at > now() and kind = $2\n                returning\n                    id,\n                    user_id as \"user_id: UserId\",\n                    kind as \"kind: WebauthnChallengeKind\",\n                    big_data,\n                    expires_at,\n                    created_at,\n                    updated_at\n            ",
   "describe": {
     "columns": [
       {
@@ -16,7 +16,7 @@
       },
       {
         "ordinal": 1,
-        "name": "user_id",
+        "name": "user_id: UserId",
         "type_info": "Uuid",
         "origin": {
           "Table": {
@@ -111,7 +111,7 @@
     },
     "nullable": [
       false,
-      false,
+      true,
       false,
       false,
       false,
@@ -119,5 +119,5 @@
       false
     ]
   },
-  "hash": "f5c10c436a3a2a4f8bae52a6bc2432b0f97909dbca7872ea8d95e79c6569b556"
+  "hash": "8d77d15291530356de69042b2dfc369fefb75ba39d3676134424a3ce613d21a5"
 }
