@@ -212,10 +212,6 @@ pub fn get_recovery_code_state(
             TotpCodeState::Invalid
         }
     }
-    // .map_or_else(
-    //     || (0, false),
-    //     |idx| (idx, user_totp.is_recovery_code_used(idx)),
-    // )
 }
 
 /// Returns the recovery codes that are still usable for a given user
@@ -245,6 +241,32 @@ pub async fn set_recovery_code_used(
         &mut tx,
     )
     .await?;
+    tx.commit().await?;
+
+    Ok(())
+}
+
+/// Checks a TOTP code using the `totp_rs` client, and if valid, checks if the step has already been
+/// used. If the step is valid and **unused**, it updates the `last_step_used` of the db model.
+pub async fn check_current(
+    code: &str,
+    client: totp_rs::Totp,
+    model: &mut UserTotp,
+    db: &PgPool,
+) -> anyhow::Result<()> {
+    let mut tx = db.begin().await?;
+
+    let Some(step) = client.check_current(code) else {
+        return Err(anyhow::anyhow!("Invalid totp code"));
+    };
+
+    if step.cast_signed() <= model.last_step_used {
+        return Err(anyhow::anyhow!("Totp step already used"));
+    }
+
+    model.last_step_used = step.cast_signed();
+    model.update(&mut tx).await?;
+
     tx.commit().await?;
 
     Ok(())

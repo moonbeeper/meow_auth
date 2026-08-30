@@ -13,7 +13,7 @@ use crate::{
         otp::{is_flow_correct, verify_otp_code},
         session::{create_session, create_session_cookie},
         totp::{
-            TotpCodeState, decrypt_secrets, get_recovery_code_state, get_totp,
+            self, TotpCodeState, decrypt_secrets, get_recovery_code_state, get_totp,
             set_recovery_code_used,
         },
         webauthn::get_challenge_id_from_cookies,
@@ -339,13 +339,12 @@ pub async fn flow_totp_exchange(
                 ApiErrorCodes::InternalServerError
             })?;
 
-        if !totp_client.check_current(&request.code).is_some() {
+        if totp::check_current(&request.code, totp_client, &mut db_totp, &global.database)
+            .await
+            .is_err()
+        {
             return Err(ApiErrorCodes::InvalidCode);
         }
-
-        let mut tx = global.database.begin().await?;
-        db_totp.update(&mut tx).await?;
-        tx.commit().await?;
     } else {
         let state = get_recovery_code_state(&db_totp, &totp.recovery_secret, request.code.clone());
         if let TotpCodeState::Unused(idx) = state {

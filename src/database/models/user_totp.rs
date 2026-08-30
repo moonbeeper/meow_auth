@@ -17,6 +17,8 @@ pub struct UserTotp {
     pub recovery_used: i32,
     pub secret: Vec<u8>,
     pub secret_nonce: Vec<u8>,
+    #[builder(default = 0)]
+    pub last_step_used: i64,
     #[builder(default = None)]
     pub last_used_at: Option<chrono::DateTime<chrono::Utc>>,
     #[builder(default = chrono::Utc::now())]
@@ -37,12 +39,13 @@ impl UserTotp {
                 recovery_used,
                 secret,
                 secret_nonce,
+                last_step_used,
                 last_used_at,
                 created_at,
                 updated_at
                 )
              values
-                ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())",
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), now())",
             self.id as UserTotpId,
             self.user_id as UserId,
             self.recovery_secret,
@@ -50,6 +53,7 @@ impl UserTotp {
             self.recovery_used,
             self.secret,
             self.secret_nonce,
+            self.last_step_used,
             self.last_used_at.as_ref()
         )
         .execute(&mut **transaction)
@@ -62,11 +66,13 @@ impl UserTotp {
         sqlx::query!(
             "update user_totp set
                 recovery_used = $2,
+                last_step_used = $3,
                 last_used_at = now(),
                 updated_at = now()
              where id = $1",
             self.id as UserTotpId,
-            self.recovery_used
+            self.recovery_used,
+            self.last_step_used
         )
         .execute(&mut **transaction)
         .await?;
@@ -104,6 +110,7 @@ impl UserTotp {
                 recovery_used,
                 secret,
                 secret_nonce,
+                last_step_used,
                 last_used_at,
                 created_at,
                 updated_at
@@ -130,6 +137,7 @@ impl UserTotp {
                 recovery_used,
                 secret,
                 secret_nonce,
+                last_step_used,
                 last_used_at,
                 created_at,
                 updated_at
@@ -160,6 +168,7 @@ impl UserTotp {
                 recovery_used,
                 secret,
                 secret_nonce,
+                last_step_used,
                 last_used_at,
                 created_at,
                 updated_at

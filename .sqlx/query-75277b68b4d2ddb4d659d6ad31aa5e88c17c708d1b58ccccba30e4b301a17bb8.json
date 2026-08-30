@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                id,\n                user_id,\n                recovery_secret,\n                recovery_secret_nonce,\n                recovery_used,\n                secret,\n                secret_nonce,\n                last_used_at,\n                created_at,\n                updated_at\n             from user_totp where user_id = $1 limit 1",
+  "query": "select\n                id,\n                user_id,\n                recovery_secret,\n                recovery_secret_nonce,\n                recovery_used,\n                secret,\n                secret_nonce,\n                last_step_used,\n                last_used_at,\n                created_at,\n                updated_at\n             from user_totp where id = any($1)",
   "describe": {
     "columns": [
       {
@@ -82,6 +82,17 @@
       },
       {
         "ordinal": 7,
+        "name": "last_step_used",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "user_totp",
+            "name": "last_step_used"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
         "name": "last_used_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -92,7 +103,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -103,7 +114,7 @@
         }
       },
       {
-        "ordinal": 9,
+        "ordinal": 10,
         "name": "updated_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -116,10 +127,11 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "UuidArray"
       ]
     },
     "nullable": [
+      false,
       false,
       false,
       false,
@@ -132,5 +144,5 @@
       false
     ]
   },
-  "hash": "9627befc77bfc47065aefa483ea59c9dd24f8fdb0bde1aec2be42c03b8494b0f"
+  "hash": "75277b68b4d2ddb4d659d6ad31aa5e88c17c708d1b58ccccba30e4b301a17bb8"
 }

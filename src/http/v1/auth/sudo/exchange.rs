@@ -12,7 +12,7 @@ use crate::{
         otp::verify_otp_code,
         sudo::{enable_sudo_tx, has_sudo_option, is_flow_correct},
         totp::{
-            TotpCodeState, decrypt_secrets, get_recovery_code_state, get_totp,
+            self, TotpCodeState, decrypt_secrets, get_recovery_code_state, get_totp,
             set_recovery_code_used,
         },
         webauthn::update_passkey_with_authentication_result,
@@ -276,13 +276,12 @@ pub async fn sudo_totp_exchange(
                 ApiErrorCodes::InternalServerError
             })?;
 
-        if !totp_client.check_current(&request.code).is_some() {
+        if totp::check_current(&request.code, totp_client, &mut db_totp, &global.database)
+            .await
+            .is_err()
+        {
             return Err(ApiErrorCodes::InvalidCode);
         }
-
-        let mut tx = global.database.begin().await?;
-        db_totp.update(&mut tx).await?;
-        tx.commit().await?;
     } else {
         let state = get_recovery_code_state(&db_totp, &totp.recovery_secret, request.code.clone());
         if let TotpCodeState::Unused(idx) = state {

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update user_totp set\n                recovery_used = $2,\n                last_step_used = $3,\n                last_used_at = now(),\n                updated_at = now()\n             where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3cc3fb23ce626c512ee6f1f01d208a483431677fb1ec33ce522cf51d0f95c0b3"
+}
