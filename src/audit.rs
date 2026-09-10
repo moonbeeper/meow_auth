@@ -1,8 +1,11 @@
-use std::fmt::Display;
+use std::{fmt::Display, net::IpAddr};
 
 use sqlx::PgTransaction;
 
-use crate::database::models::{audit_log::AuditLog, user::UserId};
+use crate::database::{
+    id::UlidId,
+    models::{audit_log::AuditLog as DbAuditLog, user::UserId},
+};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum AuditAction {
@@ -71,22 +74,71 @@ impl Display for AuditAction {
     }
 }
 
-pub async fn log(
+#[derive(Debug)]
+pub enum ResourceType {
+    User,
+    OauthApplication,
+    OauthAuthorization,
+    Passkey,
+}
+
+impl Display for ResourceType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ResourceType::User => write!(f, "user"),
+            ResourceType::OauthApplication => write!(f, "oauth_application"),
+            ResourceType::OauthAuthorization => write!(f, "oauth_authorization"),
+            ResourceType::Passkey => write!(f, "passkey"),
+        }
+    }
+}
+
+/// Buildable audit log entry
+#[derive(Debug, typed_builder::TypedBuilder)]
+pub struct AuditEntry {
+    /// Who performed this action?
     actor_id: UserId,
+    /// Who was affected by this action?
     user_id: UserId,
+    /// ... what was the action?
     action: AuditAction,
-    metadata: Option<serde_json::Value>,
-    tx: &mut PgTransaction<'_>,
-) -> anyhow::Result<()> {
-    let metadata = metadata.unwrap_or(serde_json::json!({}));
+    /// What type of resource was affected by this action?
+    #[builder(default = None)]
+    pub resource_type: Option<ResourceType>,
+    /// What specific resource was affectede by this action?
+    #[builder(default = None)]
+    pub resource_id: Option<UlidId>,
+    /// What was the IP addr of the actor when this action was performed?
+    ///
+    /// **Note:** for privacy reasons, it won't be always be stored. Only if the actor is the same as the user.
+    /// Otherwise it will empty.
+    #[builder(default = None)]
+    pub actor_ip: Option<IpAddr>,
+    /// Any additional data that should be stored with this action?
+    #[builder(default = serde_json::json!({}))]
+    metadata: serde_json::Value,
+}
 
-    let model = AuditLog::builder()
-        .actor_id(actor_id)
-        .user_id(user_id)
-        .action(action.to_string())
-        .metadata(metadata)
-        .build();
+impl AuditEntry {
+    pub async fn save(self, tx: &mut PgTransaction<'_>) -> anyhow::Result<()> {
+        let actor_ip = if self.actor_id == self.user_id {
+            self.actor_ip
+        } else {
+            None
+        };
 
-    model.insert(tx).await?;
-    Ok(())
+        let model = DbAuditLog::builder()
+            .actor_id(self.actor_id)
+            .user_id(self.user_id)
+            .action(self.action.to_string())
+            .metadata(self.metadata)
+            .resource_id(self.resource_id)
+            .resource_type(self.resource_type.map(|v| v.to_string()))
+            .actor_ip(actor_ip.map(|v| v.to_string()))
+            .build();
+
+        model.insert(tx).await?;
+
+        Ok(())
+    }
 }

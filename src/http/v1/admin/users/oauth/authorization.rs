@@ -4,11 +4,10 @@ use axum::{
     Extension,
     extract::{Path, Query, State},
 };
-use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry, ResourceType},
     database::{
         id::UlidId,
         models::{
@@ -130,16 +129,17 @@ pub async fn admin_delete_user_oauth_authorization(
 
     let mut tx = global.database.begin().await?;
     app.delete(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        app.user_id,
-        AuditAction::OauthAuthorizationsRevoked,
-        Some(json!({
-            "app_id": app.id.to_string(),
-        })),
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(app.user_id)
+        .actor_id(auth.user_id())
+        .action(AuditAction::OauthAuthorizationsRevoked)
+        .resource_type(Some(ResourceType::OauthAuthorization))
+        .resource_id(Some(app.id))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

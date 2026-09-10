@@ -9,7 +9,7 @@ use url::Url;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     auth::flags::UserFlag,
     database::models::{
         oauth_application::OauthApplication, oauth_authorization::OauthAuthorization,
@@ -20,13 +20,13 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json as MJson,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, ip_manager::IpContext},
         v1::types::{AlrightResponse, RouteEither},
     },
     oauth::{
         cookies::get_oauth_cookie,
         error::OauthErrorCodes,
-        helpers::{action_new_authorization, action_past_authorized},
+        helpers::{AuthorizationOutcome, action_new_authorization, action_past_authorized},
         pending_authorization_checks,
         response::{OAUTH_ISSUER, OauthResponse},
         scopes::{Scope, Scopes},
@@ -61,6 +61,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 pub async fn authorize(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Extension(cookies): Extension<Cookies>,
     Form(request): Form<AuthorizationRequest>,
 ) -> OauthResponse {
@@ -210,10 +211,8 @@ pub async fn authorize(
         }
     };
 
-    // this is the part where i should make a uhh joke? idk man i ran out of parts to go.
-    let going_to;
-    if let Some(authorization) = authorization {
-        going_to = match action_past_authorized(
+    let outcome = if let Some(authorization) = authorization {
+        action_past_authorized(
             &request,
             client,
             authorization,
@@ -226,18 +225,8 @@ pub async fn authorize(
             &mut tx,
         )
         .await
-        {
-            Err(_) => {
-                return OauthResponse::new().error(
-                    OauthErrorCodes::ServerError,
-                    None,
-                    request.state.clone(),
-                );
-            }
-            Ok(v) => v,
-        };
     } else {
-        going_to = match action_new_authorization(
+        action_new_authorization(
             &request,
             client,
             requested_scopes,
@@ -250,19 +239,9 @@ pub async fn authorize(
             &mut tx,
         )
         .await
-        {
-            Err(_) => {
-                return OauthResponse::new().error(
-                    OauthErrorCodes::ServerError,
-                    None,
-                    request.state.clone(),
-                );
-            }
-            Ok(v) => v,
-        };
-    }
+    };
 
-    match tx.commit().await {
+    let outcome = match outcome {
         Ok(v) => v,
         Err(_) => {
             return OauthResponse::new().error(
@@ -271,6 +250,41 @@ pub async fn authorize(
                 request.state.clone(),
             );
         }
+    };
+
+    let action = match &outcome {
+        AuthorizationOutcome::AutoApproved(..) => AuditAction::OauthAuthorizationApproved,
+        AuthorizationOutcome::NeedsConsent(..) => AuditAction::OauthAuthorizationIntiated,
+    };
+
+    if AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(action)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await
+        .is_err()
+    {
+        return OauthResponse::new().error(
+            OauthErrorCodes::ServerError,
+            None,
+            request.state.clone(),
+        );
+    };
+
+    if tx.commit().await.is_err() {
+        return OauthResponse::new().error(
+            OauthErrorCodes::ServerError,
+            None,
+            request.state.clone(),
+        );
+    };
+
+    let going_to = match outcome {
+        AuthorizationOutcome::AutoApproved(redirect_url)
+        | AuthorizationOutcome::NeedsConsent(redirect_url) => redirect_url,
     };
 
     OauthResponse::new().redirect(going_to.to_string())
@@ -291,6 +305,7 @@ pub async fn authorize(
 pub async fn finish_authorization(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<AuthorizationDecisionRequest>,
 ) -> Result<RouteEither<OauthResponse, MJson<AlrightResponse>>, ApiErrorCodes> {
@@ -315,6 +330,16 @@ pub async fn finish_authorization(
     if !request.consent {
         let mut tx = global.database.begin().await?;
         pending_authorization.delete_all(&mut tx).await?;
+
+        AuditEntry::builder()
+            .user_id(auth.user_id())
+            .actor_id(auth.user_id())
+            .action(AuditAction::OauthAuthorizationDenied)
+            .actor_ip(Some(ip_ctx.ip_addr()))
+            .build()
+            .save(&mut tx)
+            .await?;
+
         tx.commit().await?;
 
         return Ok(RouteEither::Right(MJson(AlrightResponse::default())));
@@ -346,11 +371,10 @@ pub async fn finish_authorization(
         .scopes(requested_scopes.bits())
         .build();
 
-    let mut tx = global.database.begin().await.unwrap();
-    let mut audit_as_update = false;
+    let mut tx = global.database.begin().await?;
+
     if let Some(old_auth_id) = pending_authorization.old_authorization_id {
         OauthAuthorization::delete_by_id(old_auth_id, &mut tx).await?;
-        audit_as_update = true;
     }
     pending_authorization.delete_all(&mut tx).await?;
     new_authorization.insert(&mut tx).await?;
@@ -358,18 +382,20 @@ pub async fn finish_authorization(
     pending_token.delete_all(&mut tx).await?;
     pending_token.insert(&mut tx).await?;
 
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        if audit_as_update {
-            AuditAction::OauthAuthorizationUpdated
-        } else {
-            AuditAction::OauthAuthorizationApproved
-        },
-        None,
-        &mut tx,
-    )
-    .await?;
+    let audit_action = if pending_authorization.old_authorization_id.is_some() {
+        AuditAction::OauthAuthorizationUpdated
+    } else {
+        AuditAction::OauthAuthorizationApproved
+    };
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(audit_action)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
 
     tx.commit().await?;
 

@@ -60,16 +60,16 @@ sqlx = { version = "0.9.0", features = [
     "runtime-tokio",
 ] }
 strum = { version = "0.28.0", features = ["derive", "phf"] }
-tera = "2.2.0"
+tera = "2.3.0"
 thiserror = "2.0.20"
 tokio = { version = "1.53.1", features = ["full"] }
 tokio-util = "0.7.19"
-toml = "1.1.4"
+toml = "1.1.5"
 toml_edit = "0.25.13"
 totp-rs = { version = "6.0.0", features = ["otpauth"] }
 tower = "0.5.3"
 tower-cookies = { version = "0.11.0", features = ["private"] }
-tower-http = { version = "0.7.0", features = ["cors", "fs"] }
+tower-http = { version = "0.7.1", features = ["cors", "fs"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 typed-builder = "0.23.2"
@@ -83,15 +83,19 @@ utoipa = { version = "5.5.0", features = [
 ] }
 utoipa-axum = "0.2.0"
 utoipa-scalar = { version = "0.3.0", features = ["axum"] }
-uuid = { version = "1.25.0", features = ["v4"] }
-webauthn-rs = { version = "0.5.5", features = ["conditional-ui", "danger-allow-state-serialisation", "danger-credential-internals"] }
+uuid = { version = "1.26.1", features = ["v4"] }
+webauthn-rs = { version = "0.5.5", features = [
+    "conditional-ui",
+    "danger-allow-state-serialisation",
+    "danger-credential-internals",
+] }
 webauthn-rs-proto = "0.5.5"
 regex = "1.13.1"
 hmac = "0.13.0"
 validator = { version = "0.21.0", features = ["derive"] }
 email_address = "0.2.9"
 shadow-rs = { version = "2.0.0", default-features = false }
-compact_jwt = "0.5.7"
+compact_jwt = "0.6.0"
 arc-swap = "1.9.2"
 dashmap = "6.2.1"
 meow_macros = { path = "macros" }

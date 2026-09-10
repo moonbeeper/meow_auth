@@ -4,7 +4,7 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     auth::{
         email::{get_token, hash_token},
         flags::UserFlag,
@@ -15,7 +15,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, require_user_flag::RequireUserFlagLayer},
+        middleware::{
+            auth_manager::AuthContext, ip_manager::IpContext,
+            require_user_flag::RequireUserFlagLayer,
+        },
         v1::types::AlrightResponse,
         validator::Valid,
     },
@@ -55,6 +58,7 @@ pub struct ChangeEmailRequest {
 pub async fn change_user_email(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Valid(Json(request)): Valid<Json<ChangeEmailRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -83,14 +87,16 @@ pub async fn change_user_email(
     let mut tx = global.database.begin().await?;
     UserEmailModificationRequest::delete_all_by_user(auth.user_id(), &mut tx).await?;
     email_request.insert(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        AuditAction::EmailChangeRequested,
-        None,
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::EmailChangeRequested)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     AuthMailer::email_verification(
@@ -138,6 +144,7 @@ pub struct ExchangeChangeEmailRequest {
 pub async fn exchange_change_user_email(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Valid(Json(request)): Valid<Json<ExchangeChangeEmailRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(mut user)) = User::find_by_id(auth.user_id(), &global.database).await else {
@@ -177,14 +184,16 @@ pub async fn exchange_change_user_email(
         let mut tx = global.database.begin().await?;
         user.update(&mut tx).await?;
         email_request.delete(&mut tx).await?;
-        audit::log(
-            auth.user_id(),
-            auth.user_id(),
-            AuditAction::EmailChanged,
-            None,
-            &mut tx,
-        )
-        .await?;
+
+        AuditEntry::builder()
+            .user_id(auth.user_id())
+            .actor_id(auth.user_id())
+            .action(AuditAction::EmailChanged)
+            .actor_ip(Some(ip_ctx.ip_addr()))
+            .build()
+            .save(&mut tx)
+            .await?;
+
         tx.commit().await?;
 
         AuthMailer::email_updated(

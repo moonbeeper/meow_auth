@@ -1,4 +1,4 @@
-use sqlx::{PgPool, PgTransaction};
+use sqlx::{PgExecutor, PgPool, PgTransaction};
 use typed_builder::TypedBuilder;
 
 use crate::database::{
@@ -116,10 +116,13 @@ impl UserSession {
         Ok(())
     }
 
-    pub async fn find_by_id(
+    pub async fn find_by_id<'e, E>(
         id: UserSessionId,
-        pool: &PgPool,
-    ) -> Result<Option<Self>, DatabaseError> {
+        executor: E,
+    ) -> Result<Option<Self>, DatabaseError>
+    where
+        E: PgExecutor<'e>,
+    {
         let data = sqlx::query_as!(
             Self,
             "select
@@ -134,7 +137,7 @@ impl UserSession {
              from user_sessions where id = $1",
             id as UserSessionId
         )
-        .fetch_optional(pool)
+        .fetch_optional(executor)
         .await?;
 
         Ok(data)

@@ -184,6 +184,12 @@ pub struct AuditLog {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub actor_login: Option<String>,
     pub was_self: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resource_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub resource_id: Option<UlidId>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub actor_ip: Option<String>,
     pub metadata: serde_json::Value,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
@@ -198,6 +204,9 @@ impl From<database::models::audit_log::AuditLogLogin> for AuditLog {
             actor_id: Some(value.actor_id),
             actor_login: Some(value.actor_name),
             was_self: value.user_id == value.actor_id,
+            resource_type: value.resource_type,
+            resource_id: value.resource_id,
+            actor_ip: value.actor_ip,
             metadata: value.metadata,
             created_at: value.created_at,
         }
@@ -214,6 +223,9 @@ impl From<database::models::audit_log::AuditLog> for AuditLog {
             actor_id: None,
             actor_login: None,
             was_self: value.user_id == value.actor_id,
+            resource_type: value.resource_type,
+            resource_id: value.resource_id,
+            actor_ip: value.actor_ip,
             metadata: value.metadata,
             created_at: value.created_at,
         }

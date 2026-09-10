@@ -8,7 +8,7 @@ use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry, ResourceType},
     database::{
         id::UlidId,
         models::{
@@ -166,17 +166,20 @@ pub async fn admin_edit_user_application(
 
     let mut tx = global.database.begin().await?;
     app.update(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        app.user_id,
-        AuditAction::OauthApplicationUpdated,
-        Some(json!({
-            "app_id": app.id.to_string(),
+
+    AuditEntry::builder()
+        .user_id(app.user_id)
+        .actor_id(auth.user_id())
+        .action(AuditAction::OauthApplicationUpdated)
+        .resource_type(Some(ResourceType::OauthApplication))
+        .resource_id(Some(app.id))
+        .metadata(json!({
             "fields_changed": fields_changed,
-        })),
-        &mut tx,
-    )
-    .await?;
+        }))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
@@ -214,16 +217,17 @@ pub async fn admin_delete_user_application(
 
     let mut tx = global.database.begin().await?;
     app.delete(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        app.user_id,
-        AuditAction::OauthApplicationUpdated,
-        Some(json!({
-            "app_id": app.id.to_string(),
-        })),
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(app.user_id)
+        .actor_id(auth.user_id())
+        .action(AuditAction::OauthApplicationDeleted)
+        .resource_type(Some(ResourceType::OauthApplication))
+        .resource_id(Some(app.id))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
@@ -265,16 +269,16 @@ pub async fn admin_rotate_secret_user_application(
 
     let mut tx = global.database.begin().await?;
     app.update(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        app.user_id,
-        AuditAction::OauthApplictionKeysRotated,
-        Some(json!({
-            "app_id": app.id.to_string(),
-        })),
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(app.user_id)
+        .actor_id(auth.user_id())
+        .action(AuditAction::OauthApplictionKeysRotated)
+        .resource_type(Some(ResourceType::OauthApplication))
+        .resource_id(Some(app.id))
+        .build()
+        .save(&mut tx)
+        .await?;
 
     tx.commit().await?;
 
@@ -318,16 +322,16 @@ pub async fn admin_revoke_all_auth_user_application(
     let mut tx = global.database.begin().await?;
     app.update(&mut tx).await?;
     DbOauthAuthorization::delete_all_by_client_id(app.id, &mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        app.user_id,
-        AuditAction::OauthAuthorizationsRevoked,
-        Some(json!({
-            "app_id": app.id.to_string(),
-        })),
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(app.user_id)
+        .actor_id(auth.user_id())
+        .action(AuditAction::OauthAuthorizationsRevoked)
+        .resource_type(Some(ResourceType::OauthApplication))
+        .resource_id(Some(app.id))
+        .build()
+        .save(&mut tx)
+        .await?;
 
     tx.commit().await?;
 

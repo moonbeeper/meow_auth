@@ -10,7 +10,7 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     auth::flags::UserFlag,
     database::models::{user::User as DbUser, user_session::UserSession},
     global::GlobalState,
@@ -18,8 +18,8 @@ use crate::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
         middleware::{
-            auth_manager::AuthContext, require_auth::RequireAuthenticationLayer,
-            require_user_flag::RequireUserFlagLayer,
+            auth_manager::AuthContext, ip_manager::IpContext,
+            require_auth::RequireAuthenticationLayer, require_user_flag::RequireUserFlagLayer,
         },
         v1::types::{AlrightResponse, User},
     },
@@ -72,17 +72,20 @@ pub async fn current_user_info(
 pub async fn logout(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let mut tx = global.database.begin().await?;
     UserSession::delete_by_id(auth.session_id(), &mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        AuditAction::SessionRevoked,
-        None,
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::SessionRevoked)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
     Ok(Json(AlrightResponse::default()))
 }

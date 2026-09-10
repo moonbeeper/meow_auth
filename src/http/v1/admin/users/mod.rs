@@ -12,7 +12,7 @@ use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     auth::flags::{UserFlag, UserFlags},
     database::{id::UlidId, models::user::User as DbUser},
     global::GlobalState,
@@ -163,16 +163,18 @@ pub async fn admin_edit_user(
 
     let mut tx = global.database.begin().await?;
     user.update(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        user.id,
-        AuditAction::UserUpdated,
-        Some(json!({
+
+    AuditEntry::builder()
+        .user_id(user.id)
+        .actor_id(auth.user_id())
+        .action(AuditAction::UserUpdated)
+        .metadata(json!({
             "fields_updated": updated_fields,
-        })),
-        &mut tx,
-    )
-    .await?;
+        }))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

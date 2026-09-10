@@ -1,11 +1,10 @@
 use std::sync::OnceLock;
 
 use anyhow::Ok;
-use sqlx::PgPool;
+use sqlx::{PgPool, PgTransaction};
 use tower_cookies::{Cookies, cookie};
 
 use crate::{
-    audit::{self, AuditAction},
     auth::{create_cookie, delete_cookie, get_cookie},
     database::{
         id::UlidId,
@@ -21,7 +20,7 @@ static COOKIE_SESSION_KEY: OnceLock<cookie::Key> = OnceLock::new();
 
 pub async fn create_session(
     user_id: UserId,
-    db: &PgPool,
+    tx: &mut PgTransaction<'_>,
     settings: &Settings,
 ) -> anyhow::Result<PIDUserSessionId> {
     let expires_at =
@@ -35,10 +34,8 @@ pub async fn create_session(
         .expires_at(expires_at)
         .build();
 
-    let mut tx = db.begin().await?;
-    session.insert(&mut tx).await?;
-    audit::log(user_id, user_id, AuditAction::SessionCreated, None, &mut tx).await?;
-    tx.commit().await?;
+    session.insert(tx).await?;
+
     Ok(session.pid)
 }
 

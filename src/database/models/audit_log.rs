@@ -17,6 +17,12 @@ pub struct AuditLog {
     pub user_id: UserId,
     pub actor_id: UserId,
     pub action: String,
+    #[builder(default = None)]
+    pub resource_type: Option<String>,
+    #[builder(default = None)]
+    pub resource_id: Option<UlidId>,
+    #[builder(default = None)]
+    pub actor_ip: Option<String>,
     #[builder(default = serde_json::json!({}))]
     pub metadata: serde_json::Value,
     #[builder(default = chrono::Utc::now())]
@@ -24,6 +30,7 @@ pub struct AuditLog {
 }
 
 // i hate you. yes you, mr space birb that hecking codes as shit and makes really bad decisions
+/// This is the data showed to user with administrator flags. This was a bad decision.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AuditLogLogin {
     pub id: AuditLogId,
@@ -32,6 +39,9 @@ pub struct AuditLogLogin {
     pub actor_id: UserId,
     pub actor_name: String,
     pub action: String,
+    pub resource_type: Option<String>,
+    pub resource_id: Option<UlidId>,
+    pub actor_ip: Option<String>,
     pub metadata: serde_json::Value,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
@@ -40,13 +50,16 @@ impl AuditLog {
     pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "insert into
-                audit_logs (id, user_id, actor_id, action, metadata, created_at)
+                audit_logs (id, user_id, actor_id, action, resource_type, resource_id, actor_ip, metadata, created_at)
              values
-                ($1, $2, $3, $4, $5, now())",
+                ($1, $2, $3, $4, $5, $6, $7, $8, now())",
             self.id as AuditLogId,
             self.user_id as UserId,
             self.actor_id as UserId,
             self.action,
+            self.resource_type.as_ref(),
+            self.resource_id as Option<UlidId>,
+            self.actor_ip.as_ref(),
             self.metadata,
         )
         .execute(&mut **transaction)
@@ -58,14 +71,17 @@ impl AuditLog {
     pub async fn find_by_user(id: UserId, pool: &PgPool) -> Result<Vec<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
-            "select
+            r#"select
                 id,
                 user_id,
                 actor_id,
                 action,
+                resource_type,
+                resource_id as "resource_id?: UlidId",
+                actor_ip,
                 metadata,
                 created_at
-             from audit_logs where user_id = $1",
+             from audit_logs where user_id = $1"#,
             id as UserId
         )
         .fetch_all(pool)
@@ -87,6 +103,9 @@ impl AuditLog {
                 al.actor_id,
                 a.name as actor_name,
                 al.action,
+                al.resource_type,
+                al.resource_id as "resource_id?: UlidId",
+                al.actor_ip,
                 al.metadata,
                 al.created_at
             from audit_logs al
@@ -117,6 +136,9 @@ impl AuditLog {
                 al.actor_id,
                 a.name as actor_name,
                 al.action,
+                al.resource_type,
+                al.resource_id as "resource_id?: UlidId",
+                al.actor_ip,
                 al.metadata,
                 al.created_at
             from audit_logs al
@@ -152,6 +174,9 @@ impl AuditLog {
                 user_id,
                 actor_id,
                 action,
+                resource_type,
+                resource_id as "resource_id?: UlidId",
+                actor_ip,
                 metadata,
                 created_at
             from audit_logs where user_id = $1 and ($2::uuid is null or id::uuid < $2) order by created_at desc limit 20+1

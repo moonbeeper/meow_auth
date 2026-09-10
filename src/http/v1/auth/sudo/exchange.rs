@@ -6,7 +6,7 @@ use webauthn_rs::prelude::PasskeyAuthentication;
 use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     auth::{
         mailer::AuthMailer,
         otp::verify_otp_code,
@@ -31,7 +31,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, ip_manager::IpContext},
         v1::types::{AlrightResponse, AuthenticationPasskeyRequest},
         validator::Valid,
     },
@@ -66,6 +66,7 @@ pub struct ExchangeRequest {
 pub async fn sudo_otp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if auth.is_sudo_enabled() {
@@ -96,18 +97,28 @@ pub async fn sudo_otp_exchange(
         return Err(ApiErrorCodes::InvalidCode);
     }
 
-    // mark flow as completed
-    let mut transaction = global.database.begin().await?;
+    // mark flow as completed and enable sudo
+    let mut tx = global.database.begin().await?;
     flow.state = AuthChallengeState::Completed;
-    flow.update(&mut transaction).await?;
-    transaction.commit().await?;
+    flow.update(&mut tx).await?;
 
-    enable_sudo_tx(&auth, &global.database, &global.settings)
+    enable_sudo_tx(&auth, &mut tx, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed enabling sudo: {e}");
             ApiErrorCodes::InternalServerError
         })?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::SudoEnabled)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
+    tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
 }
@@ -128,6 +139,7 @@ pub async fn sudo_otp_exchange(
 pub async fn sudo_webauthn_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Json(request): Json<AuthenticationPasskeyRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if auth.is_sudo_enabled() {
@@ -178,14 +190,16 @@ pub async fn sudo_webauthn_exchange(
         let mut tx = global.database.begin().await?;
         passkey.enabled = false;
         passkey.update(&mut tx).await?;
-        audit::log(
-            auth.user_id(),
-            auth.user_id(),
-            AuditAction::PasskeyDisabled,
-            None,
-            &mut tx,
-        )
-        .await?;
+
+        AuditEntry::builder()
+            .user_id(auth.user_id())
+            .actor_id(auth.user_id())
+            .action(AuditAction::PasskeyDisabled)
+            .actor_ip(Some(ip_ctx.ip_addr()))
+            .build()
+            .save(&mut tx)
+            .await?;
+
         tx.commit().await?;
         AuthMailer::webauthn_compromised(
             user.name,
@@ -200,18 +214,28 @@ pub async fn sudo_webauthn_exchange(
     update_passkey_with_authentication_result(&mut passkey, &auth_result)
         .map_err(|_| ApiErrorCodes::InternalServerError)?;
 
-    // update passkey
+    // update passkey and enable sudo
     let mut tx = global.database.begin().await?;
     passkey.counter = auth_result.counter().cast_signed();
     passkey.update(&mut tx).await?;
-    tx.commit().await?;
 
-    enable_sudo_tx(&auth, &global.database, &global.settings)
+    enable_sudo_tx(&auth, &mut tx, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed enabling sudo: {e}");
             ApiErrorCodes::InternalServerError
         })?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::SudoEnabled)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
+    tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
 }
@@ -232,6 +256,7 @@ pub async fn sudo_webauthn_exchange(
 pub async fn sudo_totp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if auth.is_sudo_enabled() {
@@ -285,7 +310,8 @@ pub async fn sudo_totp_exchange(
     } else {
         let state = get_recovery_code_state(&db_totp, &totp.recovery_secret, request.code.clone());
         if let TotpCodeState::Unused(idx) = state {
-            set_recovery_code_used(idx, &mut db_totp, &global.database)
+            let mut tx = global.database.begin().await?;
+            set_recovery_code_used(idx, &mut db_totp, &mut tx)
                 .await
                 .map_err(|e| {
                     tracing::error!(
@@ -293,7 +319,7 @@ pub async fn sudo_totp_exchange(
                     );
                     ApiErrorCodes::InternalServerError
                 })?;
-
+            tx.commit().await?;
             AuthMailer::totp_recovery_code_used(
                 user.name.clone(),
                 user.email.clone(),
@@ -305,17 +331,27 @@ pub async fn sudo_totp_exchange(
         }
     }
 
-    let mut transaction = global.database.begin().await?;
+    let mut tx = global.database.begin().await?;
     flow.state = AuthChallengeState::Completed;
-    flow.update(&mut transaction).await?;
-    transaction.commit().await?;
+    flow.update(&mut tx).await?;
 
-    enable_sudo_tx(&auth, &global.database, &global.settings)
+    enable_sudo_tx(&auth, &mut tx, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed enabling sudo: {e}");
             ApiErrorCodes::InternalServerError
         })?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::SudoEnabled)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
+    tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
 }

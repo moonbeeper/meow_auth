@@ -4,14 +4,17 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     auth::flags::UserFlag,
     database::models::user::User,
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, require_user_flag::RequireUserFlagLayer},
+        middleware::{
+            auth_manager::AuthContext, ip_manager::IpContext,
+            require_user_flag::RequireUserFlagLayer,
+        },
         v1::types::AlrightResponse,
         validator::Valid,
     },
@@ -48,6 +51,7 @@ pub struct ChangeNameRequest {
 pub async fn change_user_name(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Valid(Json(request)): Valid<Json<ChangeNameRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(mut user)) = User::find_by_id(auth.user_id(), &global.database).await else {
@@ -73,14 +77,16 @@ pub async fn change_user_name(
 
     let mut tx = global.database.begin().await?;
     user.update(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        AuditAction::NameChanged,
-        None,
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::NameChanged)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

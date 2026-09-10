@@ -2,7 +2,6 @@ use sqlx::PgTransaction;
 use tower_cookies::Cookies;
 
 use crate::{
-    audit::{self, AuditAction},
     database::models::{
         oauth_application::OauthApplication, oauth_authorization::OauthAuthorization,
         oauth_pending_authorization::OauthPendingAuthorization,
@@ -18,6 +17,11 @@ use crate::{
 
 use super::types::PromptType;
 
+pub enum AuthorizationOutcome {
+    NeedsConsent(url::Url),
+    AutoApproved(url::Url),
+}
+
 #[allow(clippy::too_many_arguments)] // SHUT
 pub async fn action_past_authorized(
     request: &AuthorizationRequest,
@@ -30,7 +34,7 @@ pub async fn action_past_authorized(
     cookies: &Cookies,
     settings: &Settings,
     tx: &mut PgTransaction<'_>,
-) -> anyhow::Result<url::Url> {
+) -> anyhow::Result<AuthorizationOutcome> {
     let sanitized_authorization_scopes =
         Scopes::from_bits(authorization.scopes).sanitize(Scopes::from_bits(oauth_client.scopes));
 
@@ -70,19 +74,31 @@ pub async fn action_past_authorized(
         authorization.update(tx).await?;
         pending_auth.delete_all(tx).await?;
         pending_auth.insert(tx).await?;
-        audit::log(
-            auth_context.user_id(),
-            auth_context.user_id(),
-            AuditAction::OauthAuthorizationIntiated,
-            None,
-            tx,
-        )
-        .await?;
+
+        // AuditEntry::builder()
+        //     .user_id(auth.user_id())
+        //     .actor_id(auth.user_id())
+        //     .action(AuditAction::OauthAuthorizationIntiated)
+        //     .actor_ip(Some(ip_ctx.ip_addr()))
+        //     .build()
+        //     .save(&mut tx)
+        //     .await?;
+
+        // audit::log(
+        //     auth_context.user_id(),
+        //     auth_context.user_id(),
+        //     AuditAction::OauthAuthorizationIntiated,
+        //     None,
+        //     tx,
+        // )
+        // .await?;
 
         create_oauth_cookie(pending_auth.id, cookies, settings);
 
         // frontend would ask to the info handler for the.. info lol. That's why we are not giving it the id lol. i mean we could.
-        return Ok(settings.http.frontend.join("/oauth/consent")?);
+        return Ok(AuthorizationOutcome::NeedsConsent(
+            settings.http.frontend.join("/oauth/consent")?,
+        ));
     }
 
     let pending_token = OauthPendingToken::builder()
@@ -107,7 +123,7 @@ pub async fn action_past_authorized(
 
     pending_token.delete_all(tx).await?;
     pending_token.insert(tx).await?;
-    Ok(redirect_url)
+    Ok(AuthorizationOutcome::AutoApproved(redirect_url))
 }
 
 #[allow(clippy::too_many_arguments)] // ... i know thats like. above is 9 and this is 8. but still. shut
@@ -122,7 +138,7 @@ pub async fn action_new_authorization(
     cookies: &Cookies,
     settings: &Settings,
     tx: &mut PgTransaction<'_>,
-) -> anyhow::Result<url::Url> {
+) -> anyhow::Result<AuthorizationOutcome> {
     let pending_auth = OauthPendingAuthorization::builder()
         .client_id(oauth_client.id)
         .code_challenge(request.code_challenge.clone())
@@ -138,15 +154,17 @@ pub async fn action_new_authorization(
 
     pending_auth.delete_all(tx).await?;
     pending_auth.insert(tx).await?;
-    audit::log(
-        auth_context.user_id(),
-        auth_context.user_id(),
-        AuditAction::OauthAuthorizationIntiated,
-        None,
-        tx,
-    )
-    .await?;
+    // audit::log(
+    //     auth_context.user_id(),
+    //     auth_context.user_id(),
+    //     AuditAction::OauthAuthorizationIntiated,
+    //     None,
+    //     tx,
+    // )
+    // .await?;
     create_oauth_cookie(pending_auth.id, cookies, settings);
 
-    Ok(settings.http.frontend.join("/oauth/consent")?)
+    Ok(AuthorizationOutcome::NeedsConsent(
+        settings.http.frontend.join("/oauth/consent")?,
+    ))
 }

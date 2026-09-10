@@ -11,7 +11,7 @@ use webauthn_rs::prelude::{
 use webauthn_rs_proto::ResidentKeyRequirement;
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     auth::{mailer::AuthMailer, webauthn::get_aaguid},
     database::{
         id::UlidId,
@@ -25,7 +25,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, ip_manager::IpContext},
         v1::types::{
             AlrightResponse, Passkey, RegisterPasskeyRequest, RegistrationChallengeResponse,
         },
@@ -126,6 +126,8 @@ pub async fn register_passkey_options(
 pub async fn register_passkey_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+
     Json(request): Json<RegisterPasskeyRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -186,14 +188,16 @@ pub async fn register_passkey_exchange(
     user.has_webauthn = true;
     user.update(&mut tx).await?;
     passkey.insert(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        AuditAction::PasskeyAdded,
-        None,
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::PasskeyAdded)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     AuthMailer::webauthn_registered(user.name, passkey_name, user.email, &global.database).await?;
@@ -246,6 +250,7 @@ pub struct PasskeyQuery {
 pub async fn delete_passkey(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Path(query): Path<PasskeyQuery>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -261,14 +266,16 @@ pub async fn delete_passkey(
 
     let mut tx = global.database.begin().await?;
     session.delete(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        AuditAction::PasskeyRemoved,
-        None,
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::PasskeyRemoved)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

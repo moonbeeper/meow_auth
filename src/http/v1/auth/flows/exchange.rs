@@ -7,7 +7,7 @@ use webauthn_rs::prelude::{DiscoverableAuthentication, DiscoverableKey, Passkey}
 use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     auth::{
         mailer::AuthMailer,
         otp::{is_flow_correct, verify_otp_code},
@@ -35,7 +35,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::ratelimit_manager::RatelimitLayer,
+        middleware::{ip_manager::IpContext, ratelimit_manager::RatelimitLayer},
         v1::{
             auth::flows::FlowResponse,
             types::{AlrightResponse, AuthMethod, AuthenticationPasskeyRequest, RouteEither},
@@ -87,6 +87,7 @@ pub enum _OtpExchangeResponse {
 pub async fn flow_otp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
+    Extension(ip_ctx): Extension<IpContext>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<RouteEither<Json<FlowResponse>, Json<AlrightResponse>>, ApiErrorCodes> {
     let Ok(Some(mut flow)) =
@@ -99,17 +100,6 @@ pub async fn flow_otp_exchange(
         return Err(ApiErrorCodes::InvalidCode);
     }
 
-    let mut pre_user: Option<User> = None;
-
-    // dont short circuit if the purpose is signup. if it isn't, short circuit if the user doesn't exist
-    if flow.purpose != AuthChallengePurpose::Signup {
-        let Ok(Some(db_user)) = User::find_by_id(flow.user_id.unwrap(), &global.database).await
-        else {
-            return Err(ApiErrorCodes::InvalidCode);
-        };
-        pre_user = Some(db_user)
-    }
-
     let secret_hash = flow
         .secret
         .as_ref()
@@ -119,7 +109,7 @@ pub async fn flow_otp_exchange(
         return Err(ApiErrorCodes::InvalidCode);
     }
 
-    if flow.purpose == AuthChallengePurpose::Signup {
+    let user = if flow.purpose == AuthChallengePurpose::Signup {
         let mut tx = global.database.begin().await?;
 
         let Ok(Some(signup)) = UserSignup::take_by_id(flow.user_signup_id.unwrap(), &mut tx).await
@@ -135,43 +125,75 @@ pub async fn flow_otp_exchange(
 
         signup.delete_all_by_email(&mut tx).await?;
         user.insert(&mut tx).await?;
-        audit::log(user.id, user.id, AuditAction::AccountCreated, None, &mut tx).await?;
+
+        AuditEntry::builder()
+            .user_id(user.id)
+            .actor_id(user.id)
+            .action(AuditAction::AccountCreated)
+            .actor_ip(Some(ip_ctx.ip_addr()))
+            .build()
+            .save(&mut tx)
+            .await?;
+
+        flow.state = AuthChallengeState::Completed;
+        flow.update(&mut tx).await?;
         tx.commit().await?;
-        pre_user = Some(user);
-    }
 
-    let user = pre_user.unwrap();
+        user
+    } else {
+        let uid = flow.user_id.ok_or(ApiErrorCodes::InvalidCode)?;
+        let Ok(Some(user)) = User::find_by_id(uid, &global.database).await else {
+            return Err(ApiErrorCodes::InvalidCode);
+        };
 
-    // mark flow as completed
-    let mut transaction = global.database.begin().await?;
-    flow.state = AuthChallengeState::Completed;
-    flow.update(&mut transaction).await?;
-    transaction.commit().await?;
+        if user.totp_enabled {
+            let mut tx = global.database.begin().await?;
 
-    // swap into next step if totp is enabled
-    if user.totp_enabled {
-        let login_request = UserAuthChallenges::builder()
-            .user_id(Some(user.id))
-            .kind(AuthChallengeKind::Totp)
-            .expires_at(chrono::Utc::now() + chrono::Duration::minutes(10))
-            .build();
+            flow.state = AuthChallengeState::Completed;
+            flow.update(&mut tx).await?;
 
-        let mut transaction = global.database.begin().await?;
-        login_request.insert(&mut transaction).await?;
-        transaction.commit().await?;
+            let login_request = UserAuthChallenges::builder()
+                .user_id(Some(user.id))
+                .kind(AuthChallengeKind::Totp)
+                .expires_at(chrono::Utc::now() + chrono::Duration::minutes(10))
+                .build();
+            login_request.insert(&mut tx).await?;
 
-        return Ok(RouteEither::Left(Json(FlowResponse {
-            flow_id: login_request.id,
-            next_method: vec![AuthMethod::Totp],
-        })));
-    }
+            tx.commit().await?;
 
-    let session_id = create_session(user.id, &global.database, &global.settings)
+            return Ok(RouteEither::Left(Json(FlowResponse {
+                flow_id: login_request.id,
+                next_method: vec![AuthMethod::Totp],
+            })));
+        }
+
+        let mut tx = global.database.begin().await?;
+        flow.state = AuthChallengeState::Completed;
+        flow.update(&mut tx).await?;
+        tx.commit().await?;
+
+        user
+    };
+
+    let mut tx = global.database.begin().await?;
+
+    let session_id = create_session(user.id, &mut tx, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed creating session: {}", e);
             ApiErrorCodes::InternalServerError
         })?;
+
+    AuditEntry::builder()
+        .user_id(user.id)
+        .actor_id(user.id)
+        .action(AuditAction::SessionCreated)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
+    tx.commit().await?;
     create_session_cookie(session_id, &cookies, &global.settings);
 
     if flow.purpose == AuthChallengePurpose::Signup {
@@ -198,6 +220,7 @@ pub async fn flow_otp_exchange(
 pub async fn flow_webauthn_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
+    Extension(ip_ctx): Extension<IpContext>,
     Json(request): Json<AuthenticationPasskeyRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let request: PublicKeyCredential = request
@@ -259,21 +282,32 @@ pub async fn flow_webauthn_exchange(
         return Err(ApiErrorCodes::WebauthnCompromised);
     }
 
+    // update passkey
     passkey.update_credential(&auth_result);
     db_passkey.big_data = serde_json::to_value(passkey)?;
-
-    // update passkey
-    let mut tx = global.database.begin().await?;
     db_passkey.counter = auth_result.counter().cast_signed();
-    db_passkey.update(&mut tx).await?;
-    tx.commit().await?;
 
-    let session_id = create_session(db_passkey.user_id, &global.database, &global.settings)
+    let mut tx = global.database.begin().await?;
+    db_passkey.update(&mut tx).await?;
+
+    let session_id = create_session(user.id, &mut tx, &global.settings)
         .await
         .map_err(|e| {
-            tracing::error!("failed creating session: you opened a new{}", e);
+            tracing::error!("failed creating session: {}", e);
             ApiErrorCodes::InternalServerError
         })?;
+
+    AuditEntry::builder()
+        .user_id(user.id)
+        .actor_id(user.id)
+        .action(AuditAction::SessionCreated)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
+    tx.commit().await?;
+
     create_session_cookie(session_id, &cookies, &global.settings);
 
     AuthMailer::new_session(user.name, user.email, &global.database).await?;
@@ -297,6 +331,7 @@ pub async fn flow_webauthn_exchange(
 pub async fn flow_totp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
+    Extension(ip_ctx): Extension<IpContext>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(mut flow)) =
@@ -348,7 +383,8 @@ pub async fn flow_totp_exchange(
     } else {
         let state = get_recovery_code_state(&db_totp, &totp.recovery_secret, request.code.clone());
         if let TotpCodeState::Unused(idx) = state {
-            set_recovery_code_used(idx, &mut db_totp, &global.database)
+            let mut tx = global.database.begin().await?;
+            set_recovery_code_used(idx, &mut db_totp, &mut tx)
                 .await
                 .map_err(|e| {
                     tracing::error!(
@@ -356,7 +392,7 @@ pub async fn flow_totp_exchange(
                     );
                     ApiErrorCodes::InternalServerError
                 })?;
-
+            tx.commit().await?;
             AuthMailer::totp_recovery_code_used(
                 user.name.clone(),
                 user.email.clone(),
@@ -368,17 +404,27 @@ pub async fn flow_totp_exchange(
         }
     }
 
-    let mut transaction = global.database.begin().await?;
+    let mut tx = global.database.begin().await?;
     flow.state = AuthChallengeState::Completed;
-    flow.update(&mut transaction).await?;
-    transaction.commit().await?;
+    flow.update(&mut tx).await?;
 
-    let session_id = create_session(user.id, &global.database, &global.settings)
+    let session_id = create_session(user.id, &mut tx, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed creating session: {}", e);
             ApiErrorCodes::InternalServerError
         })?;
+
+    AuditEntry::builder()
+        .user_id(user.id)
+        .actor_id(user.id)
+        .action(AuditAction::SessionCreated)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
+    tx.commit().await?;
     create_session_cookie(session_id, &cookies, &global.settings);
 
     AuthMailer::new_session(user.name, user.email, &global.database).await?;

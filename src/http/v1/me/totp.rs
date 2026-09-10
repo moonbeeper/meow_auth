@@ -4,7 +4,7 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     auth::{
         mailer::AuthMailer,
         totp::{
@@ -17,7 +17,7 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, ip_manager::IpContext},
         v1::types::AlrightResponse,
     },
 };
@@ -115,6 +115,7 @@ pub struct VerifyTotpRequest {
 pub async fn exchange_totp_options(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Json(request): Json<VerifyTotpRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -152,14 +153,16 @@ pub async fn exchange_totp_options(
     user.totp_enabled = true;
     user.update(&mut tx).await?;
     db_totp.update(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        AuditAction::TotpEnabled,
-        None,
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::TotpEnabled)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     AuthMailer::totp_enabled(user.name, user.email, &global.database).await?;
@@ -183,6 +186,7 @@ pub async fn exchange_totp_options(
 pub async fn disable_totp(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Json(request): Json<VerifyTotpRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -229,14 +233,16 @@ pub async fn disable_totp(
     user.totp_enabled = false;
     user.update(&mut tx).await?;
     db_totp.delete(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        AuditAction::TotpDisabled,
-        None,
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::TotpDisabled)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     AuthMailer::totp_disabled(user.name, user.email, &global.database).await?;
@@ -265,6 +271,7 @@ pub struct RecoveryCodesTotpResponse {
 pub async fn view_totp_recovery_codes(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Json(request): Json<VerifyTotpRequest>,
 ) -> Result<Json<RecoveryCodesTotpResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -302,14 +309,16 @@ pub async fn view_totp_recovery_codes(
 
     let mut tx = global.database.begin().await?;
     db_totp.update(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        AuditAction::TotpRecoveryCodesSeen,
-        None,
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::TotpRecoveryCodesSeen)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     AuthMailer::totp_recovery_codes_seen(user.name, user.email, &global.database).await?;

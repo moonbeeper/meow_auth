@@ -4,11 +4,10 @@ use axum::{
     Extension,
     extract::{Path, Query, State},
 };
-use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     database::{id::UlidId, models::user_session::UserSession as DbUserSession},
     global::GlobalState,
     http::{
@@ -100,16 +99,15 @@ pub async fn admin_revoke_user_session(
 
     let mut tx = global.database.begin().await?;
     session.delete(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        session.user_id,
-        AuditAction::SessionRevoked,
-        Some(json!({
-            "session_id": session.pid
-        })),
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(session.user_id)
+        .actor_id(auth.user_id())
+        .action(AuditAction::SessionRevoked)
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
@@ -135,14 +133,15 @@ pub async fn admin_revoke_all_user_sessions(
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let mut tx = global.database.begin().await?;
     DbUserSession::delete_all_by_user_id(request.id, &mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        request.id,
-        AuditAction::SessionsRevoked,
-        None,
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(request.id)
+        .actor_id(auth.user_id())
+        .action(AuditAction::SessionsRevoked)
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

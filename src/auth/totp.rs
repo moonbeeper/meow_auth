@@ -1,9 +1,8 @@
 use anyhow::Context;
-use sqlx::PgPool;
+use sqlx::{PgPool, PgTransaction};
 use totp_rs::Secret;
 
 use crate::{
-    audit::{self, AuditAction},
     crypto::{EncryptedSecret, SecretKey, decrypt_secret, encrypt_secret, get_secret_key},
     database::models::{user::UserId, user_totp::UserTotp},
     settings::Settings,
@@ -189,9 +188,7 @@ pub fn get_recovery_code_state(
     recovery_secret: &SecretKey,
     code: String,
 ) -> TotpCodeState {
-    println!("the code is: {code}");
     let code = code.to_uppercase().replace("-", "");
-    println!("the code now is: {code}");
 
     match get_recovery_codes(recovery_secret, true)
         .into_iter()
@@ -199,18 +196,12 @@ pub fn get_recovery_code_state(
     {
         Some(idx) => {
             if userdb_totp.is_recovery_code_used(idx) {
-                println!("used code");
                 TotpCodeState::Used(idx)
             } else {
-                println!("unsued code");
-
                 TotpCodeState::Unused(idx)
             }
         }
-        None => {
-            println!("bad code");
-            TotpCodeState::Invalid
-        }
+        None => TotpCodeState::Invalid,
     }
 }
 
@@ -228,20 +219,29 @@ pub fn get_unused_recovery_codes(user_totp: &UserTotp, recovery_secret: &SecretK
 pub async fn set_recovery_code_used(
     idx: usize,
     user_totp: &mut UserTotp,
-    db: &PgPool,
+    tx: &mut PgTransaction<'_>,
 ) -> anyhow::Result<()> {
-    let mut tx = db.begin().await?;
     user_totp.mark_recovery_code_used(idx);
-    user_totp.update(&mut tx).await?;
-    audit::log(
-        user_totp.user_id,
-        user_totp.user_id,
-        AuditAction::TotpRecoveryCodesUsed,
-        None,
-        &mut tx,
-    )
-    .await?;
-    tx.commit().await?;
+    user_totp.update(tx).await?;
+
+    // AuditEntry::builder()
+    //     .user_id(user_totp.user_id)
+    //     .actor_id(user_totp.user_id)
+    //     .action(AuditAction::TotpRecoveryCodesUsed)
+    //     .actor_ip(Some(ip.ip_addr()))
+    //     .build()
+    //     .save(&mut tx)
+    //     .await?;
+
+    // audit::log(
+    //     user_totp.user_id,
+    //     user_totp.user_id,
+    //     AuditAction::TotpRecoveryCodesUsed,
+    //     None,
+    //     &mut tx,
+    // )
+    // .await?;
+    // tx.commit().await?;
 
     Ok(())
 }

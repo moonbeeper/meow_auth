@@ -4,17 +4,16 @@ use axum::{
     Extension,
     extract::{Path, Query, State},
 };
-use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{self, AuditAction},
+    audit::{AuditAction, AuditEntry},
     database::{id::UlidId, models::user_session::UserSession as DbUserSession},
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{auth_manager::AuthContext, ip_manager::IpContext},
         v1::types::{AlrightResponse, ListDataRequest, ListDataResponse, Session},
     },
 };
@@ -108,6 +107,7 @@ pub struct SessionQuery {
 pub async fn revoke_session(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
     Path(query): Path<SessionQuery>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -123,16 +123,16 @@ pub async fn revoke_session(
 
     let mut tx = global.database.begin().await?;
     session.delete(&mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        AuditAction::SessionRevoked,
-        Some(json!({
-            "session_id": session.pid
-        })),
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::SessionRevoked)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
@@ -153,6 +153,7 @@ pub async fn revoke_session(
 pub async fn revoke_all_sessions(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
@@ -166,14 +167,16 @@ pub async fn revoke_all_sessions(
 
     let mut tx = global.database.begin().await?;
     DbUserSession::delete_many_by_id(ids, &mut tx).await?;
-    audit::log(
-        auth.user_id(),
-        auth.user_id(),
-        AuditAction::SessionsRevoked,
-        None,
-        &mut tx,
-    )
-    .await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::SessionsRevoked)
+        .actor_ip(Some(ip_ctx.ip_addr()))
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
