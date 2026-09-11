@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                al.id,\n                al.user_id,\n                u.name as user_name,\n                al.actor_id,\n                a.name as actor_name,\n                al.action,\n                al.metadata,\n                al.created_at\n            from audit_logs al\n            join users u on u.id = al.user_id\n            join users a on a.id = al.actor_id\n            where user_id = $1\n            ",
+  "query": "select\n                al.id,\n                al.user_id,\n                u.name as user_name,\n                al.actor_id,\n                a.name as actor_name,\n                al.action,\n                al.resource_type,\n                al.resource_id as \"resource_id?: UlidId\",\n                al.actor_ip,\n                al.metadata,\n                al.created_at\n            from audit_logs al\n            join users u on u.id = al.user_id\n            join users a on a.id = al.actor_id\n            where user_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -71,6 +71,39 @@
       },
       {
         "ordinal": 6,
+        "name": "resource_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "audit_logs",
+            "name": "resource_type"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "resource_id?: UlidId",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "audit_logs",
+            "name": "resource_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "actor_ip",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "audit_logs",
+            "name": "actor_ip"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
         "name": "metadata",
         "type_info": "Jsonb",
         "origin": {
@@ -81,7 +114,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 10,
         "name": "created_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -104,9 +137,12 @@
       false,
       false,
       false,
+      true,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "36f3bbee5ac32dcbc9507bdeced3dedb5030161137996c932cedc5a9e42b1d59"
+  "hash": "3a490b9f1e9dbc6a4624efc81d07b566021e28862465b723f844dc7aab2253ee"
 }
