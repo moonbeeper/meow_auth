@@ -131,7 +131,7 @@ pub async fn sudo_totp_start(
 
     Ok(Json(FlowResponse {
         flow_id: login_request.id,
-        next_method: vec![AuthMethod::Otp],
+        next_method: vec![AuthMethod::Totp],
     }))
 }
 

@@ -190,6 +190,10 @@ pub struct AuditLog {
     pub resource_id: Option<UlidId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub actor_ip: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub actor_location: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub actor_user_agent: Option<String>,
     pub metadata: serde_json::Value,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
@@ -206,7 +210,9 @@ impl From<database::models::audit_log::AuditLogLogin> for AuditLog {
             was_self: value.user_id == value.actor_id,
             resource_type: value.resource_type,
             resource_id: value.resource_id,
-            actor_ip: value.actor_ip,
+            actor_ip: Some(value.actor_ip),
+            actor_location: Some(value.actor_location),
+            actor_user_agent: Some(value.actor_user_agent),
             metadata: value.metadata,
             created_at: value.created_at,
         }
@@ -215,6 +221,22 @@ impl From<database::models::audit_log::AuditLogLogin> for AuditLog {
 
 impl From<database::models::audit_log::AuditLog> for AuditLog {
     fn from(value: database::models::audit_log::AuditLog) -> Self {
+        let was_self = value.actor_id == value.user_id;
+
+        let actor_ip = if was_self { Some(value.actor_ip) } else { None };
+
+        let actor_location = if was_self {
+            Some(value.actor_location)
+        } else {
+            None
+        };
+
+        let actor_user_agent = if was_self {
+            Some(value.actor_user_agent)
+        } else {
+            None
+        };
+
         Self {
             id: value.id,
             action: value.action,
@@ -222,10 +244,12 @@ impl From<database::models::audit_log::AuditLog> for AuditLog {
             user_login: None,
             actor_id: None,
             actor_login: None,
-            was_self: value.user_id == value.actor_id,
+            was_self,
             resource_type: value.resource_type,
             resource_id: value.resource_id,
-            actor_ip: value.actor_ip,
+            actor_ip,
+            actor_location,
+            actor_user_agent,
             metadata: value.metadata,
             created_at: value.created_at,
         }

@@ -130,9 +130,9 @@ async fn do_work(request: &mut Request, header: &HeaderValue, global_state: &Arc
             return;
         }
         Ok(v) => v
-            .split_whitespace()
-            .last()
-            .unwrap_or("wtf, yeah Bearer (spaces). okay okay"),
+            .strip_prefix("Bearer ")
+            .unwrap_or("wtf, yeah Bearer (spaces). okay okay")
+            .trim(),
     };
 
     let span = tracing::info_span!("oauth_manager");

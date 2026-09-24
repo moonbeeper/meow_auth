@@ -9,7 +9,10 @@ use std::{net::SocketAddr, sync::Arc, time::Duration};
 
 use anyhow::Context;
 use axum::{
-    http::{HeaderValue, Method, header::CONTENT_TYPE},
+    http::{
+        HeaderValue, Method,
+        header::{CONTENT_TYPE, RETRY_AFTER},
+    },
     routing::get,
 };
 use tokio::net::TcpSocket;
@@ -22,10 +25,12 @@ use utoipa_scalar::{Scalar, Servable};
 use crate::{
     global::GlobalState,
     http::middleware::{
-        auth_manager::AuthManagerLayer, ip_manager::IpManagerLayer,
-        oauth_manager::OauthManagerLayer, ratelimit_manager::RatelimitLayer,
+        auth_manager::AuthManagerLayer, browser_agent_manager::UserAgentManagerLayer,
+        ip_manager::IpManagerLayer, oauth_manager::OauthManagerLayer,
+        ratelimit_manager::RatelimitLayer,
     },
     manager::WatcherChild,
+    ratelimiter,
 };
 
 #[derive(OpenApi)] // my dumb heck thought that IT was inside the derive macro where you set the attribute tags smh.
@@ -61,6 +66,7 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
         .layer(CookieManagerLayer::new())
         .layer(RatelimitLayer::new(500, chrono::Duration::seconds(1)))
         .layer(IpManagerLayer::new(global.clone()))
+        .layer(UserAgentManagerLayer::new())
         .layer(
             CorsLayer::new()
                 .allow_origin(
@@ -76,6 +82,13 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
                 )
                 .allow_credentials(true)
                 .allow_headers([CONTENT_TYPE])
+                .expose_headers([
+                    RETRY_AFTER,
+                    ratelimiter::RATELIMIT_LIMIT,
+                    ratelimiter::RATELIMIT_REMAINING,
+                    ratelimiter::RATELIMIT_RESET,
+                    ratelimiter::RATELIMIT_USED,
+                ])
                 .allow_methods([
                     Method::GET,
                     Method::POST,

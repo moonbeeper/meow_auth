@@ -3,27 +3,19 @@ mod start;
 
 use std::sync::Arc;
 
-use axum::extract::State;
-use utoipa_axum::{router::OpenApiRouter, routes};
+use utoipa_axum::router::OpenApiRouter;
 
 use crate::{
-    database::{id::UlidId, models::user::User},
+    database::id::UlidId,
     global::GlobalState,
-    http::{
-        error::{ApiError, ApiErrorCodes},
-        extractor::Json,
-        middleware::require_auth::RequireAuthenticationLayer,
-        v1::types::AuthMethod,
-    },
+    http::{middleware::require_auth::RequireAuthenticationLayer, v1::types::AuthMethod},
 };
 
-// TODO: should use correctly errors.
 // TODO: should have validation of these things
-// TODO: should let the user log in via their username, maybe by using a regex to determine if the input is an email or login
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(flow_options))
+        // .routes(routes!(flow_options))
         .nest("/start", start::routes())
         .nest("/exchange", exchange::routes())
         .layer(RequireAuthenticationLayer::new().need_auth(false))
@@ -43,37 +35,37 @@ pub struct FlowResponse {
     pub next_method: Vec<AuthMethod>,
 }
 
-#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
-pub struct FlowOptionResponse {
-    /// The available authentication methods that an user can use to authenticate
-    pub methods: Vec<AuthMethod>,
-}
+// #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+// pub struct FlowOptionResponse {
+//     /// The available authentication methods that an user can use to authenticate
+//     pub methods: Vec<AuthMethod>,
+// }
 
-/// Get the Authentication options
-///
-/// Requests what authentications methods you can use to authenticate with the given login.
-/// This is useful for determining if a user has a passkey or not
-#[utoipa::path(
-    post,
-    path = "/",
-    tags = ["auth"],
-    responses(
-        (status = 200, description = "authentication options", body = FlowOptionResponse),
-        (status = 500, description = "internal server error", body = ApiError)
-    )
-)]
-pub async fn flow_options(
-    State(global): State<Arc<GlobalState>>,
-    Json(request): Json<FlowRequest>,
-) -> Result<Json<FlowOptionResponse>, ApiErrorCodes> {
-    let mut methods = vec![AuthMethod::Otp];
+// /// Get the Authentication options
+// ///
+// /// Requests what authentications methods you can use to authenticate with the given login.
+// /// This is useful for determining if a user has a passkey or not
+// #[utoipa::path(
+//     post,
+//     path = "/",
+//     tags = ["auth"],
+//     responses(
+//         (status = 200, description = "authentication options", body = FlowOptionResponse),
+//         (status = 500, description = "internal server error", body = ApiError)
+//     )
+// )]
+// pub async fn flow_options(
+//     State(global): State<Arc<GlobalState>>,
+//     Json(request): Json<FlowRequest>,
+// ) -> Result<Json<FlowOptionResponse>, ApiErrorCodes> {
+//     let mut methods = vec![AuthMethod::Otp];
 
-    let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
-        return Ok(Json(FlowOptionResponse { methods }));
-    };
+//     let Ok(Some(user)) = User::find_by_email(request.email, &global.database).await else {
+//         return Ok(Json(FlowOptionResponse { methods }));
+//     };
 
-    if user.has_webauthn {
-        methods.push(AuthMethod::Passkey)
-    }
-    Ok(Json(FlowOptionResponse { methods }))
-}
+//     if user.has_webauthn {
+//         methods.push(AuthMethod::Passkey)
+//     }
+//     Ok(Json(FlowOptionResponse { methods }))
+// }

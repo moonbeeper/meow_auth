@@ -13,7 +13,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, ip_manager::IpContext},
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext,
+        },
         v1::types::{AlrightResponse, ListDataRequest, ListDataResponse, Session},
     },
 };
@@ -108,6 +111,7 @@ pub async fn revoke_session(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(query): Path<SessionQuery>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -128,7 +132,9 @@ pub async fn revoke_session(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::SessionRevoked)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -154,6 +160,7 @@ pub async fn revoke_all_sessions(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
@@ -172,7 +179,9 @@ pub async fn revoke_all_sessions(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::SessionsRevoked)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;

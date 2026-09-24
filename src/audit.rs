@@ -16,20 +16,22 @@ pub enum AuditAction {
     EmailChanged,
     NameChanged,
     AccountCreated,
+    // NOT IMPLEMENTED
     AccountDeleted, // TODO: THE HANDLER AAAGH GOD please dont incinerate me
     TotpEnabled,
     PasskeyAdded,
     PasskeyRemoved,
+    // NOT IMPLEMENTED
     PasskeyRenamed, // TODO: that's another one to do. easy tho
     PasskeyDisabled,
     TotpDisabled,
-    TotpRecoveryCodesUsed,
+    TotpRecoveryCodeUsed,
     TotpRecoveryCodesSeen,
     SudoEnabled, // should add metadata for what was used to enable it (like the session)
     OauthApplicationCreated,
     OauthApplicationUpdated,
     OauthApplicationDeleted,
-    OauthApplictionKeysRotated,
+    OauthApplicationKeysRotated,
     OauthAuthorizationIntiated,
     OauthAuthorizationApproved,
     OauthAuthorizationDenied,
@@ -56,13 +58,13 @@ impl Display for AuditAction {
             AuditAction::PasskeyRenamed => write!(f, "passkey_renamed"),
             AuditAction::PasskeyDisabled => write!(f, "passkey_disabled"),
             AuditAction::TotpDisabled => write!(f, "totp_disabled"),
-            AuditAction::TotpRecoveryCodesUsed => write!(f, "totp_recovery_codes_used"),
+            AuditAction::TotpRecoveryCodeUsed => write!(f, "totp_recovery_codes_used"),
             AuditAction::TotpRecoveryCodesSeen => write!(f, "totp_recovery_codes_seen"),
             AuditAction::SudoEnabled => write!(f, "sudo_enabled"),
             AuditAction::OauthApplicationCreated => write!(f, "oauth_application_created"),
             AuditAction::OauthApplicationUpdated => write!(f, "oauth_application_updated"),
             AuditAction::OauthApplicationDeleted => write!(f, "oauth_application_deleted"),
-            AuditAction::OauthApplictionKeysRotated => write!(f, "oauth_application_keys_rotated"),
+            AuditAction::OauthApplicationKeysRotated => write!(f, "oauth_application_keys_rotated"),
             AuditAction::OauthAuthorizationIntiated => write!(f, "oauth_authorization_initiated"),
             AuditAction::OauthAuthorizationApproved => write!(f, "oauth_authorization_approved"),
             AuditAction::OauthAuthorizationDenied => write!(f, "oauth_authorization_denied"),
@@ -109,11 +111,9 @@ pub struct AuditEntry {
     #[builder(default = None)]
     pub resource_id: Option<UlidId>,
     /// What was the IP addr of the actor when this action was performed?
-    ///
-    /// **Note:** for privacy reasons, it won't be always be stored. Only if the actor is the same as the user.
-    /// Otherwise it will empty.
-    #[builder(default = None)]
-    pub actor_ip: Option<IpAddr>,
+    pub actor_ip: IpAddr,
+    pub actor_location: String,
+    pub actor_user_agent: String,
     /// Any additional data that should be stored with this action?
     #[builder(default = serde_json::json!({}))]
     metadata: serde_json::Value,
@@ -121,12 +121,6 @@ pub struct AuditEntry {
 
 impl AuditEntry {
     pub async fn save(self, tx: &mut PgTransaction<'_>) -> anyhow::Result<()> {
-        let actor_ip = if self.actor_id == self.user_id {
-            self.actor_ip
-        } else {
-            None
-        };
-
         let model = DbAuditLog::builder()
             .actor_id(self.actor_id)
             .user_id(self.user_id)
@@ -134,7 +128,9 @@ impl AuditEntry {
             .metadata(self.metadata)
             .resource_id(self.resource_id)
             .resource_type(self.resource_type.map(|v| v.to_string()))
-            .actor_ip(actor_ip.map(|v| v.to_string()))
+            .actor_ip(self.actor_ip.to_string())
+            .actor_location(self.actor_location)
+            .actor_user_agent(self.actor_user_agent)
             .build();
 
         model.insert(tx).await?;

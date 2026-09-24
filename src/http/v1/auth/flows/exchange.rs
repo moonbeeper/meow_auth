@@ -35,7 +35,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{ip_manager::IpContext, ratelimit_manager::RatelimitLayer},
+        middleware::{
+            browser_agent_manager::UserAgentContext, ip_manager::IpContext,
+            ratelimit_manager::RatelimitLayer,
+        },
         v1::{
             auth::flows::FlowResponse,
             types::{AlrightResponse, AuthMethod, AuthenticationPasskeyRequest, RouteEither},
@@ -88,6 +91,7 @@ pub async fn flow_otp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<RouteEither<Json<FlowResponse>, Json<AlrightResponse>>, ApiErrorCodes> {
     let Ok(Some(mut flow)) =
@@ -130,7 +134,9 @@ pub async fn flow_otp_exchange(
             .user_id(user.id)
             .actor_id(user.id)
             .action(AuditAction::AccountCreated)
-            .actor_ip(Some(ip_ctx.ip_addr()))
+            .actor_ip(ip_ctx.ip_addr())
+            .actor_location(ip_ctx.location())
+            .actor_user_agent(user_agent.agent())
             .build()
             .save(&mut tx)
             .await?;
@@ -188,7 +194,9 @@ pub async fn flow_otp_exchange(
         .user_id(user.id)
         .actor_id(user.id)
         .action(AuditAction::SessionCreated)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -221,6 +229,7 @@ pub async fn flow_webauthn_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Json(request): Json<AuthenticationPasskeyRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let request: PublicKeyCredential = request
@@ -246,6 +255,10 @@ pub async fn flow_webauthn_exchange(
     else {
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
+
+    if !db_passkey.enabled {
+        return Err(ApiErrorCodes::WebauthnChallengeNotFound);
+    }
 
     let mut passkey: Passkey = serde_json::from_value(db_passkey.big_data.clone())?;
 
@@ -301,7 +314,9 @@ pub async fn flow_webauthn_exchange(
         .user_id(user.id)
         .actor_id(user.id)
         .action(AuditAction::SessionCreated)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -332,6 +347,7 @@ pub async fn flow_totp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(cookies): Extension<Cookies>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(mut flow)) =
@@ -392,6 +408,18 @@ pub async fn flow_totp_exchange(
                     );
                     ApiErrorCodes::InternalServerError
                 })?;
+
+            AuditEntry::builder()
+                .user_id(user.id)
+                .actor_id(user.id)
+                .action(AuditAction::TotpRecoveryCodeUsed)
+                .actor_ip(ip_ctx.ip_addr())
+                .actor_location(ip_ctx.location())
+                .actor_user_agent(user_agent.agent())
+                .build()
+                .save(&mut tx)
+                .await?;
+
             tx.commit().await?;
             AuthMailer::totp_recovery_code_used(
                 user.name.clone(),
@@ -419,7 +447,9 @@ pub async fn flow_totp_exchange(
         .user_id(user.id)
         .actor_id(user.id)
         .action(AuditAction::SessionCreated)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;

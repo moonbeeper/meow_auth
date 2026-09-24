@@ -20,7 +20,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext,
+        },
         v1::types::{
             AlrightResponse, IdParam, ListDataRequest, ListDataResponse, OauthApplication,
             TwoIdParam,
@@ -123,6 +126,8 @@ pub struct OauthApplicationDataResponse {
 pub async fn admin_edit_user_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<TwoIdParam<UlidId, UlidId>>,
     Valid(Json(data)): Valid<Json<OauthApplicationData>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
@@ -171,6 +176,9 @@ pub async fn admin_edit_user_application(
         .user_id(app.user_id)
         .actor_id(auth.user_id())
         .action(AuditAction::OauthApplicationUpdated)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .resource_type(Some(ResourceType::OauthApplication))
         .resource_id(Some(app.id))
         .metadata(json!({
@@ -204,6 +212,8 @@ pub async fn admin_edit_user_application(
 pub async fn admin_delete_user_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<TwoIdParam<UlidId, UlidId>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(app)) = DbOauthApplication::find_by_id(request.child_id, &global.database).await
@@ -222,6 +232,9 @@ pub async fn admin_delete_user_application(
         .user_id(app.user_id)
         .actor_id(auth.user_id())
         .action(AuditAction::OauthApplicationDeleted)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .resource_type(Some(ResourceType::OauthApplication))
         .resource_id(Some(app.id))
         .build()
@@ -252,6 +265,8 @@ pub async fn admin_delete_user_application(
 pub async fn admin_rotate_secret_user_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<TwoIdParam<UlidId, UlidId>>,
 ) -> Result<Json<OauthApplicationDataResponse>, ApiErrorCodes> {
     let Ok(Some(mut app)) =
@@ -273,7 +288,10 @@ pub async fn admin_rotate_secret_user_application(
     AuditEntry::builder()
         .user_id(app.user_id)
         .actor_id(auth.user_id())
-        .action(AuditAction::OauthApplictionKeysRotated)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
+        .action(AuditAction::OauthApplicationKeysRotated)
         .resource_type(Some(ResourceType::OauthApplication))
         .resource_id(Some(app.id))
         .build()
@@ -308,6 +326,8 @@ pub async fn admin_rotate_secret_user_application(
 pub async fn admin_revoke_all_auth_user_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<TwoIdParam<UlidId, UlidId>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(app)) = DbOauthApplication::find_by_id(request.child_id, &global.database).await
@@ -326,6 +346,9 @@ pub async fn admin_revoke_all_auth_user_application(
     AuditEntry::builder()
         .user_id(app.user_id)
         .actor_id(auth.user_id())
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .action(AuditAction::OauthAuthorizationsRevoked)
         .resource_type(Some(ResourceType::OauthApplication))
         .resource_id(Some(app.id))

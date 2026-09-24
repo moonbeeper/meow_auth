@@ -16,8 +16,8 @@ use crate::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
         middleware::{
-            auth_manager::AuthContext, ip_manager::IpContext,
-            require_user_flag::RequireUserFlagLayer,
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext, require_user_flag::RequireUserFlagLayer,
         },
         v1::types::AlrightResponse,
         validator::Valid,
@@ -59,6 +59,7 @@ pub async fn change_user_email(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Valid(Json(request)): Valid<Json<ChangeEmailRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -92,7 +93,9 @@ pub async fn change_user_email(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::EmailChangeRequested)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -145,8 +148,13 @@ pub async fn exchange_change_user_email(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Valid(Json(request)): Valid<Json<ExchangeChangeEmailRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
+    if !auth.is_sudo_enabled() {
+        return Err(ApiErrorCodes::SudoNotEnabled);
+    }
+
     let Ok(Some(mut user)) = User::find_by_id(auth.user_id(), &global.database).await else {
         return Err(ApiErrorCodes::InternalServerError);
     };
@@ -189,7 +197,9 @@ pub async fn exchange_change_user_email(
             .user_id(auth.user_id())
             .actor_id(auth.user_id())
             .action(AuditAction::EmailChanged)
-            .actor_ip(Some(ip_ctx.ip_addr()))
+            .actor_ip(ip_ctx.ip_addr())
+            .actor_location(ip_ctx.location())
+            .actor_user_agent(user_agent.agent())
             .build()
             .save(&mut tx)
             .await?;

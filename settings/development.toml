@@ -21,7 +21,13 @@ origin = "http://localhost:8080/"
 # The URL where the frontend is reachable. Its used for setting up CORS and Cookies
 frontend = "http://localhost:5173"
 # Whether the app is running behind Cloudflare proxy (orange cloud). When its `true`, the app will read
-# the connecting user ip from the `CF-Connecting-IP` header instead of the raw addr
+# the following:
+# - The connecting user ip from the `CF-Connecting-IP` header instead of the raw addr
+# - The connecting user city from the `cf-ipcity` header
+# - The connecting user country from the `cf-ipcountry` header
+# 
+# This requires you to configure Cloudflare to send those headers to the app. By going to your dashboard,
+# select your domain > "Rules" > "Settings" > "Managed Transforms" > Enable "Add visitor location headers"
 is_under_cloudflare = false
 
 [http.api_docs]

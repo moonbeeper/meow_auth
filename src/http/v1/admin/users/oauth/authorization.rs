@@ -19,7 +19,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext,
+        },
         v1::types::{
             AlrightResponse, IdParam, ListDataRequest, ListDataResponse, OauthApplication,
             OauthAuthorization, TwoIdParam,
@@ -116,6 +119,8 @@ pub async fn admin_list_user_oauth_authorizations(
 pub async fn admin_delete_user_oauth_authorization(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<TwoIdParam<UlidId, UlidId>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(app)) = DbOauthAuthorization::find_by_id(request.child_id, &global.database).await
@@ -133,7 +138,10 @@ pub async fn admin_delete_user_oauth_authorization(
     AuditEntry::builder()
         .user_id(app.user_id)
         .actor_id(auth.user_id())
-        .action(AuditAction::OauthAuthorizationsRevoked)
+        .action(AuditAction::OauthAuthorizationRevoked)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .resource_type(Some(ResourceType::OauthAuthorization))
         .resource_id(Some(app.id))
         .build()

@@ -21,8 +21,9 @@ pub struct AuditLog {
     pub resource_type: Option<String>,
     #[builder(default = None)]
     pub resource_id: Option<UlidId>,
-    #[builder(default = None)]
-    pub actor_ip: Option<String>,
+    pub actor_ip: String,
+    pub actor_location: String,
+    pub actor_user_agent: String,
     #[builder(default = serde_json::json!({}))]
     pub metadata: serde_json::Value,
     #[builder(default = chrono::Utc::now())]
@@ -41,7 +42,9 @@ pub struct AuditLogLogin {
     pub action: String,
     pub resource_type: Option<String>,
     pub resource_id: Option<UlidId>,
-    pub actor_ip: Option<String>,
+    pub actor_ip: String,
+    pub actor_location: String,
+    pub actor_user_agent: String,
     pub metadata: serde_json::Value,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
@@ -50,16 +53,30 @@ impl AuditLog {
     pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
             "insert into
-                audit_logs (id, user_id, actor_id, action, resource_type, resource_id, actor_ip, metadata, created_at)
+                audit_logs (
+                    id,
+                    user_id,
+                    actor_id,
+                    action,
+                    resource_type,
+                    resource_id,
+                    actor_ip,
+                    actor_location,
+                    actor_user_agent,
+                    metadata,
+                    created_at
+                )
              values
-                ($1, $2, $3, $4, $5, $6, $7, $8, now())",
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now())",
             self.id as AuditLogId,
             self.user_id as UserId,
             self.actor_id as UserId,
             self.action,
             self.resource_type.as_ref(),
             self.resource_id as Option<UlidId>,
-            self.actor_ip.as_ref(),
+            self.actor_ip,
+            self.actor_location,
+            self.actor_user_agent,
             self.metadata,
         )
         .execute(&mut **transaction)
@@ -79,6 +96,8 @@ impl AuditLog {
                 resource_type,
                 resource_id as "resource_id?: UlidId",
                 actor_ip,
+                actor_location,
+                actor_user_agent,
                 metadata,
                 created_at
              from audit_logs where user_id = $1"#,
@@ -106,6 +125,8 @@ impl AuditLog {
                 al.resource_type,
                 al.resource_id as "resource_id?: UlidId",
                 al.actor_ip,
+                al.actor_location,
+                al.actor_user_agent,
                 al.metadata,
                 al.created_at
             from audit_logs al
@@ -139,6 +160,8 @@ impl AuditLog {
                 al.resource_type,
                 al.resource_id as "resource_id?: UlidId",
                 al.actor_ip,
+                al.actor_location,
+                al.actor_user_agent,
                 al.metadata,
                 al.created_at
             from audit_logs al
@@ -177,6 +200,8 @@ impl AuditLog {
                 resource_type,
                 resource_id as "resource_id?: UlidId",
                 actor_ip,
+                actor_location,
+                actor_user_agent,
                 metadata,
                 created_at
             from audit_logs where user_id = $1 and ($2::uuid is null or id::uuid < $2) order by created_at desc limit 20+1

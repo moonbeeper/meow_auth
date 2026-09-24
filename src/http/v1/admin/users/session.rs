@@ -13,7 +13,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext,
+        },
         v1::types::{
             AlrightResponse, IdParam, ListDataRequest, ListDataResponse, Session, TwoIdParam,
         },
@@ -86,6 +89,8 @@ pub async fn admin_list_user_sessions(
 pub async fn admin_revoke_user_session(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<TwoIdParam<UlidId, UlidId>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(session)) = DbUserSession::find_by_id(request.child_id, &global.database).await
@@ -104,6 +109,9 @@ pub async fn admin_revoke_user_session(
         .user_id(session.user_id)
         .actor_id(auth.user_id())
         .action(AuditAction::SessionRevoked)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -129,6 +137,8 @@ pub async fn admin_revoke_user_session(
 pub async fn admin_revoke_all_user_sessions(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<IdParam<UlidId>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let mut tx = global.database.begin().await?;
@@ -138,6 +148,9 @@ pub async fn admin_revoke_all_user_sessions(
         .user_id(request.id)
         .actor_id(auth.user_id())
         .action(AuditAction::SessionsRevoked)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;

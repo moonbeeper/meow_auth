@@ -17,7 +17,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, ip_manager::IpContext},
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext,
+        },
         v1::types::AlrightResponse,
     },
 };
@@ -116,6 +119,7 @@ pub async fn exchange_totp_options(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Json(request): Json<VerifyTotpRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -158,7 +162,9 @@ pub async fn exchange_totp_options(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::TotpEnabled)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -187,6 +193,7 @@ pub async fn disable_totp(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Json(request): Json<VerifyTotpRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -238,7 +245,9 @@ pub async fn disable_totp(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::TotpDisabled)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -272,6 +281,7 @@ pub async fn view_totp_recovery_codes(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Json(request): Json<VerifyTotpRequest>,
 ) -> Result<Json<RecoveryCodesTotpResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -314,7 +324,9 @@ pub async fn view_totp_recovery_codes(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::TotpRecoveryCodesSeen)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;

@@ -25,7 +25,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, ip_manager::IpContext},
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext,
+        },
         v1::types::{
             AlrightResponse, Passkey, RegisterPasskeyRequest, RegistrationChallengeResponse,
         },
@@ -127,7 +130,7 @@ pub async fn register_passkey_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
-
+    Extension(user_agent): Extension<UserAgentContext>,
     Json(request): Json<RegisterPasskeyRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -193,7 +196,9 @@ pub async fn register_passkey_exchange(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::PasskeyAdded)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -251,6 +256,7 @@ pub async fn delete_passkey(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(query): Path<PasskeyQuery>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
@@ -271,7 +277,9 @@ pub async fn delete_passkey(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::PasskeyRemoved)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;

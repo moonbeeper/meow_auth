@@ -9,7 +9,7 @@ use crate::{
     },
     http::middleware::auth_manager::AuthContext,
     oauth::{
-        cookies::create_oauth_cookie, response::OAUTH_ISSUER, scopes::Scopes,
+        cookies::create_oauth_cookie, response::OAUTH_ISSUER, scopes::Scopes, secrets::hash_secret,
         types::AuthorizationRequest,
     },
     settings::Settings,
@@ -75,24 +75,6 @@ pub async fn action_past_authorized(
         pending_auth.delete_all(tx).await?;
         pending_auth.insert(tx).await?;
 
-        // AuditEntry::builder()
-        //     .user_id(auth.user_id())
-        //     .actor_id(auth.user_id())
-        //     .action(AuditAction::OauthAuthorizationIntiated)
-        //     .actor_ip(Some(ip_ctx.ip_addr()))
-        //     .build()
-        //     .save(&mut tx)
-        //     .await?;
-
-        // audit::log(
-        //     auth_context.user_id(),
-        //     auth_context.user_id(),
-        //     AuditAction::OauthAuthorizationIntiated,
-        //     None,
-        //     tx,
-        // )
-        // .await?;
-
         create_oauth_cookie(pending_auth.id, cookies, settings);
 
         // frontend would ask to the info handler for the.. info lol. That's why we are not giving it the id lol. i mean we could.
@@ -101,7 +83,9 @@ pub async fn action_past_authorized(
         ));
     }
 
+    let code = nanoid::nanoid!(32);
     let pending_token = OauthPendingToken::builder()
+        .code(hash_secret(&code, settings))
         .client_id(oauth_client.id)
         .code_challenge(request.code_challenge.clone())
         .nonce(request.nonce.clone())
@@ -114,7 +98,7 @@ pub async fn action_past_authorized(
     {
         // scoped, so mr rust isnt mad at me <:(
         let mut query_pairs = redirect_url.query_pairs_mut();
-        query_pairs.append_pair("code", &pending_token.code);
+        query_pairs.append_pair("code", &code);
         query_pairs.append_pair("iss", OAUTH_ISSUER.get().unwrap().as_ref());
         if let Some(state) = request.state.clone() {
             query_pairs.append_pair("state", &state);
@@ -154,14 +138,6 @@ pub async fn action_new_authorization(
 
     pending_auth.delete_all(tx).await?;
     pending_auth.insert(tx).await?;
-    // audit::log(
-    //     auth_context.user_id(),
-    //     auth_context.user_id(),
-    //     AuditAction::OauthAuthorizationIntiated,
-    //     None,
-    //     tx,
-    // )
-    // .await?;
     create_oauth_cookie(pending_auth.id, cookies, settings);
 
     Ok(AuthorizationOutcome::NeedsConsent(

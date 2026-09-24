@@ -64,7 +64,7 @@ pub async fn wellknown_oauth(State(global): State<Arc<GlobalState>>) -> Json<Oau
         jwks_uri: jwks_endpoint,
         scopes_supported: all_scopes,
         response_types_supported: vec![ResponseType::Code],
-        response_modes_supported: vec![ResponseModes::FormPost],
+        response_modes_supported: vec![ResponseModes::Query],
         grant_types_supported: vec![GrantType::AuthorizationCode],
         code_challenge_methods_supported: vec![CodeChallengeMethod::S256],
     })

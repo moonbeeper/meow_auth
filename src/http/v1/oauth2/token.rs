@@ -17,7 +17,7 @@ use crate::{
         openid::get_id_token_data,
         response::OauthResponse,
         scopes::Scopes,
-        secrets::{check_pkce, get_secret_pair, verify_secret},
+        secrets::{check_pkce, get_secret_pair, hash_secret, verify_secret},
         types::{GrantType, TokenRequest, TokenResponse, TokenType},
         valid_redirect_uri,
     },
@@ -70,7 +70,8 @@ pub async fn token(
         .await
         .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
 
-    let Ok(Some(pending_token)) = OauthPendingToken::take_by_id(request.code, &mut tx).await else {
+    let code_hash = hash_secret(&request.code, &global.settings);
+    let Ok(Some(pending_token)) = OauthPendingToken::take_by_code(code_hash, &mut tx).await else {
         return Err(OauthResponse::new().error(OauthErrorCodes::InvalidGrant, None, None));
     };
 
@@ -80,6 +81,11 @@ pub async fn token(
 
     // code must be for the client_id provided
     if pending_token.client_id != client.id {
+        // oh right, you have to commit the transaction so the pending token is eaten. stupid bird me
+        tx.commit()
+            .await
+            .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
+
         return Err(OauthResponse::new().error(OauthErrorCodes::InvalidGrant, None, None));
     }
 
@@ -144,8 +150,7 @@ pub async fn token(
         .await
         .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
 
-    let mut id_token = None;
-    if pending_token.is_openid {
+    let id_token = if pending_token.is_openid {
         let current_signer = global.jwks.get_current();
         let token_data = get_id_token_data(
             user,
@@ -158,8 +163,10 @@ pub async fn token(
             .signer
             .sign(&token_data)
             .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
-        id_token = Some(token.to_string());
-    }
+        Some(token.to_string())
+    } else {
+        None
+    };
 
     Ok(Json(TokenResponse {
         access_token: secret_pain.secret,

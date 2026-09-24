@@ -18,8 +18,9 @@ use crate::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
         middleware::{
-            auth_manager::AuthContext, ip_manager::IpContext,
-            require_auth::RequireAuthenticationLayer, require_user_flag::RequireUserFlagLayer,
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext, require_auth::RequireAuthenticationLayer,
+            require_user_flag::RequireUserFlagLayer,
         },
         v1::types::{AlrightResponse, User},
     },
@@ -73,6 +74,7 @@ pub async fn logout(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let mut tx = global.database.begin().await?;
     UserSession::delete_by_id(auth.session_id(), &mut tx).await?;
@@ -81,7 +83,9 @@ pub async fn logout(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::SessionRevoked)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;

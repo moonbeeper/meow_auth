@@ -5,15 +5,15 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
     audit::{AuditAction, AuditEntry},
-    auth::flags::UserFlag,
+    auth::flags::UserFlag::{self},
     database::models::user::User,
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
         middleware::{
-            auth_manager::AuthContext, ip_manager::IpContext,
-            require_user_flag::RequireUserFlagLayer,
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext, require_user_flag::RequireUserFlagLayer,
         },
         v1::types::AlrightResponse,
         validator::Valid,
@@ -52,8 +52,13 @@ pub async fn change_user_name(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Valid(Json(request)): Valid<Json<ChangeNameRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
+    if !auth.is_sudo_enabled() && !auth.user_flags().has(UserFlag::HasSetName) {
+        return Err(ApiErrorCodes::SudoNotEnabled);
+    }
+
     let Ok(Some(mut user)) = User::find_by_id(auth.user_id(), &global.database).await else {
         return Err(ApiErrorCodes::InternalServerError);
     };
@@ -82,7 +87,9 @@ pub async fn change_user_name(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::NameChanged)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;

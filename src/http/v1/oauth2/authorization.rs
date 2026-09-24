@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     Extension, Json,
-    extract::{Form, State},
+    extract::{Query, State},
 };
 use tower_cookies::Cookies;
 use url::Url;
@@ -20,7 +20,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json as MJson,
-        middleware::{auth_manager::AuthContext, ip_manager::IpContext},
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext,
+        },
         v1::types::{AlrightResponse, RouteEither},
     },
     oauth::{
@@ -30,6 +33,7 @@ use crate::{
         pending_authorization_checks,
         response::{OAUTH_ISSUER, OauthResponse},
         scopes::{Scope, Scopes},
+        secrets::hash_secret,
         types::{
             AuthorizationDecisionRequest, AuthorizationRequest, CodeChallengeMethod, PromptType,
             ResponseType,
@@ -62,8 +66,9 @@ pub async fn authorize(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Extension(cookies): Extension<Cookies>,
-    Form(request): Form<AuthorizationRequest>,
+    Query(request): Query<AuthorizationRequest>,
 ) -> OauthResponse {
     OauthResponse::set_issuer(global.settings.http.origin.clone());
 
@@ -261,7 +266,9 @@ pub async fn authorize(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(action)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await
@@ -306,6 +313,7 @@ pub async fn finish_authorization(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Extension(cookies): Extension<Cookies>,
     Json(request): Json<AuthorizationDecisionRequest>,
 ) -> Result<RouteEither<OauthResponse, MJson<AlrightResponse>>, ApiErrorCodes> {
@@ -335,7 +343,9 @@ pub async fn finish_authorization(
             .user_id(auth.user_id())
             .actor_id(auth.user_id())
             .action(AuditAction::OauthAuthorizationDenied)
-            .actor_ip(Some(ip_ctx.ip_addr()))
+            .actor_ip(ip_ctx.ip_addr())
+            .actor_location(ip_ctx.location())
+            .actor_user_agent(user_agent.agent())
             .build()
             .save(&mut tx)
             .await?;
@@ -355,7 +365,9 @@ pub async fn finish_authorization(
     let requested_scopes = Scopes::from_bits(pending_authorization.requested_scopes)
         .sanitize(Scopes::from_bits(oauth_client.scopes));
 
+    let code = nanoid::nanoid!(32);
     let pending_token = OauthPendingToken::builder()
+        .code(hash_secret(&code, &global.settings))
         .client_id(oauth_client.id)
         .code_challenge(pending_authorization.code_challenge.clone())
         .nonce(pending_authorization.nonce.clone())
@@ -392,7 +404,9 @@ pub async fn finish_authorization(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(audit_action)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -403,7 +417,7 @@ pub async fn finish_authorization(
     let mut url = Url::parse(&pending_authorization.redirect_url).unwrap();
     {
         let mut query_pairs = url.query_pairs_mut();
-        query_pairs.append_pair("code", &pending_token.code);
+        query_pairs.append_pair("code", &code);
         query_pairs.append_pair("iss", OAUTH_ISSUER.get().unwrap().as_ref());
         if let Some(state) = pending_authorization.state {
             query_pairs.append_pair("state", &state);

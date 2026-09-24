@@ -32,8 +32,16 @@ impl Scope {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Scopes(pub FlagSet<Scope>);
+
+impl Default for Scopes {
+    fn default() -> Self {
+        let mut this = FlagSet::default();
+        this |= Scope::Profile;
+        Self(this)
+    }
+}
 
 impl Scopes {
     #[allow(clippy::should_implement_trait)] // shut x2
@@ -77,6 +85,26 @@ impl Scopes {
     /// Returns a Scopes instance with all available scopes.
     pub fn all() -> Self {
         Self(FlagSet::full())
+    }
+
+    /// Returns true if there's no scopes set.
+    pub fn is_empty(self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+#[allow(clippy::suspicious_arithmetic_impl)]
+impl std::ops::Add<Scope> for Scopes {
+    type Output = Self;
+    fn add(self, rhs: Scope) -> Self::Output {
+        Self(self.0 | FlagSet::from(rhs))
+    }
+}
+
+impl std::ops::Sub<Scope> for Scopes {
+    type Output = Self;
+    fn sub(self, rhs: Scope) -> Self::Output {
+        Self(self.0 - FlagSet::from(rhs))
     }
 }
 

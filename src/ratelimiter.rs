@@ -1,10 +1,18 @@
 use std::{
     net::IpAddr,
+    sync::Arc,
     time::{Duration, Instant},
 };
 
-use axum::http::HeaderMap;
+use axum::http::{HeaderMap, HeaderName, header::RETRY_AFTER};
 use dashmap::DashMap;
+
+pub const RATELIMIT_LIMIT: HeaderName = HeaderName::from_static("x-ratelimit-limit");
+pub const RATELIMIT_USED: HeaderName = HeaderName::from_static("x-ratelimit-used");
+pub const RATELIMIT_REMAINING: HeaderName = HeaderName::from_static("x-ratelimit-remaining");
+pub const RATELIMIT_RESET: HeaderName = HeaderName::from_static("x-ratelimit-reset");
+
+type StateMap = DashMap<IpAddr, TicketState>;
 
 #[derive(Debug)]
 pub struct TicketState {
@@ -16,23 +24,36 @@ pub struct TicketState {
 pub struct Ratelimiter {
     pub max_tickets: u64,
     pub refill_after: Duration,
-    state: DashMap<IpAddr, TicketState>,
+    state: Arc<StateMap>,
+    _guard: tokio_util::sync::DropGuard,
 }
 
 pub struct RatelimiterResponse {
+    /// Whether the request is allowed to pass or not.
+    ///
+    /// Not allowed when the ip has used all of its tickets and is waiting for refill time
     pub allowed: bool,
+    /// The max amount of tickets that can be used
     limit: u64,
+    /// The amount of tickets that have been usde
     used: u64,
+    /// The amount of tickets that are remaining (limit - used)
     remaining: u64,
+    /// The amount of seconds until the tickets are refilled one by one
     reset: u64,
 }
 
 impl Ratelimiter {
     pub fn new(max_tickets: u64, refill_after: Duration) -> Self {
+        let dashmap = Arc::new(DashMap::new());
+        let guard = tokio_util::sync::CancellationToken::new();
+
+        tokio::spawn(garbage(dashmap.clone(), refill_after, guard.child_token()));
         Self {
             max_tickets,
             refill_after,
-            state: DashMap::new(),
+            state: dashmap,
+            _guard: guard.drop_guard(),
         }
     }
 
@@ -52,7 +73,7 @@ impl Ratelimiter {
             entry.tickets = entry
                 .tickets
                 .saturating_add(refill_count)
-                // god DADMMIT FUCKING SHIT PROGRAMMER I AM GODDAMIT AGH. if an user has more than the max tickets.. we still add more.
+                // god DADMMIT FUCKING SHIT bird I AM GODDAMIT AGH. if an user has more than the max tickets.. we still add more.
                 // AND if we still add more, ANDDD this is STILL a u64 NOT to be confused with a I64. We underflow it lol in the sub step below.
                 // Practically, "left number small and right number small equals negative numbers which equals to poo poo in u64"
                 .min(self.max_tickets);
@@ -82,14 +103,37 @@ impl Ratelimiter {
     }
 }
 
+// crap https://news.ycombinator.com/item?id=46618105
 impl RatelimiterResponse {
     pub fn header_map(&self) -> HeaderMap {
         let mut headers = HeaderMap::new();
 
-        headers.insert("x-ratelimit-limit", self.limit.into());
-        headers.insert("x-ratelimit-used", self.used.into());
-        headers.insert("x-ratelimit-remaining", self.remaining.into());
-        headers.insert("x-ratelimit-reset", self.reset.into());
+        headers.insert(RATELIMIT_LIMIT, self.limit.into());
+        headers.insert(RATELIMIT_USED, self.used.into());
+        headers.insert(RATELIMIT_REMAINING, self.remaining.into());
+        headers.insert(RATELIMIT_RESET, self.reset.into());
+
+        if !self.allowed {
+            headers.insert(RETRY_AFTER, self.reset.into());
+        }
         headers
+    }
+}
+
+// garbage collection for the ip state map. it just removes old entries lol
+async fn garbage(
+    dashmap: Arc<StateMap>,
+    refill_after: Duration,
+    guard: tokio_util::sync::CancellationToken,
+) {
+    let mut ticker = tokio::time::interval(Duration::from_secs(60 * 5));
+    loop {
+        tokio::select! {
+            _ = ticker.tick() => {
+                dashmap.retain(|_, v| v.last_refill_at.elapsed() < refill_after * 3);
+            }
+
+            _ = guard.cancelled() => break,
+        }
     }
 }

@@ -89,13 +89,12 @@ pub async fn enable_sudo_tx(
     Ok(())
 }
 
-pub fn is_flow_correct(flow: &UserAuthChallenges, session_id: UserSessionId) -> bool {
-    if flow.purpose != AuthChallengePurpose::Sudo {
-        return false;
-    }
-
-    let now = chrono::Utc::now();
-    if flow.expires_at < now {
+pub fn is_flow_correct(
+    flow: &UserAuthChallenges,
+    kind: AuthChallengeKind,
+    session_id: UserSessionId,
+) -> bool {
+    if !super::is_flow_correct(flow, Some(kind), Some(AuthChallengePurpose::Sudo)) {
         return false;
     }
 

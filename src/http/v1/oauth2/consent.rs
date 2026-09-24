@@ -14,10 +14,7 @@ use crate::{
         extractor::Json,
     },
     oauth::{
-        cookies::{delete_oauth_cookie, get_oauth_cookie},
-        response::OauthResponse,
-        scopes::Scopes,
-        types::ConsentMetadata,
+        cookies::get_oauth_cookie, response::OauthResponse, scopes::Scopes, types::ConsentMetadata,
     },
 };
 
@@ -48,14 +45,15 @@ pub async fn oauth_consent_info(
     let Ok(Some(pending_authorization)) =
         OauthPendingAuthorization::find_by_id(pending_id, &global.database).await
     else {
-        delete_oauth_cookie(&cookies, &global.settings);
+        // shouldnt delete cookies. Else a user refreshes becuase something got stuck and has to redo the flow,
+        // WHEN THE FLOW IS STILL VALID. bad >:( decision stupid past moon.
+        // also, get_oauth_cookie method had the delete cookie flag also set lol, so that deleting was useless
         return Err(ApiErrorCodes::FlowNotFound);
     };
 
     let Ok(Some(client)) =
         OauthApplication::find_by_id(pending_authorization.client_id, &global.database).await
     else {
-        delete_oauth_cookie(&cookies, &global.settings);
         return Err(ApiErrorCodes::FlowNotFound);
     };
 
@@ -63,15 +61,18 @@ pub async fn oauth_consent_info(
 
     let new_scopes =
         Scopes::from_bits(pending_authorization.requested_scopes).sanitize(client_scopes);
-    let old_scopes =
-        Scopes::from_bits(pending_authorization.requested_scopes).sanitize(client_scopes);
+    let old_scopes = if let Some(old) = pending_authorization.old_scopes {
+        Scopes::from_bits(old).sanitize(client_scopes)
+    } else {
+        Scopes::default()
+    };
 
     Ok(Json(ConsentMetadata {
         id: client.id,
         name: client.name,
         scopes: new_scopes.bits(),
         old_scopes: old_scopes.bits(),
-        redirect_url: client.redirect_uri,
+        redirect_url: pending_authorization.redirect_url,
         created_at: client.created_at,
     }))
 }

@@ -65,14 +65,13 @@ impl JwkKey {
     // }
 
     pub async fn delete_non_public(
-        &self,
         transaction: &mut PgTransaction<'_>,
-    ) -> Result<(), DatabaseError> {
-        sqlx::query!("delete from jwks_keys where max_public_age_at < NOW()")
+    ) -> Result<bool, DatabaseError> {
+        let affected = sqlx::query!("delete from jwks_keys where max_public_age_at < NOW()")
             .execute(&mut **transaction)
             .await?;
 
-        Ok(())
+        Ok(affected.rows_affected() > 0)
     }
 
     pub async fn get_active(pool: &PgPool) -> Result<Option<Self>, DatabaseError> {
@@ -87,7 +86,7 @@ impl JwkKey {
                 max_public_age_at,
                 updated_at,
                 created_at
-             from jwks_keys where not retired order by created_at limit 1",
+             from jwks_keys where not retired order by created_at desc limit 1",
         )
         .fetch_optional(pool)
         .await?;

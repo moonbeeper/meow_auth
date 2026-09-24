@@ -93,6 +93,10 @@ pub enum ApiErrorCodes {
     ActionBlocked,
     #[error("you have reached the rate limit for this action. try again later.")]
     RatelimitExceeded,
+    #[error("the provided redirect_uri is invalid")]
+    InvalidRedirectUri,
+    #[error("the request was blocked because you are missing your user agent")]
+    MissingUserAgent,
 }
 
 // wtf
@@ -156,6 +160,8 @@ impl ApiErrorCodes {
             ApiErrorCodes::DataNotFound(_) => StatusCode::NOT_FOUND,
             ApiErrorCodes::ActionBlocked => StatusCode::FORBIDDEN,
             ApiErrorCodes::RatelimitExceeded => StatusCode::TOO_MANY_REQUESTS,
+            ApiErrorCodes::InvalidRedirectUri => StatusCode::BAD_REQUEST,
+            ApiErrorCodes::MissingUserAgent => StatusCode::BAD_REQUEST,
         }
     }
 }

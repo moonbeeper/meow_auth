@@ -7,6 +7,7 @@ use axum::{
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
+    audit::{AuditAction, AuditEntry},
     database::{
         id::UlidId,
         models::{
@@ -18,7 +19,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext,
+        },
         v1::types::{
             AlrightResponse, ListDataRequest, ListDataResponse, OauthApplication,
             OauthAuthorization,
@@ -117,6 +121,8 @@ pub struct OauthAuthorizationIdParam {
 pub async fn delete_oauth_authorization(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<OauthAuthorizationIdParam>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(app)) = DbOauthAuthorization::find_by_id(request.id, &global.database).await else {
@@ -129,6 +135,18 @@ pub async fn delete_oauth_authorization(
 
     let mut tx = global.database.begin().await?;
     app.delete(&mut tx).await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::OauthAuthorizationRevoked)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))

@@ -21,7 +21,7 @@ use crate::{
         id::UlidId,
         models::{
             user::User,
-            user_auth_challenge::{AuthChallengeState, UserAuthChallenges},
+            user_auth_challenge::{AuthChallengeKind, AuthChallengeState, UserAuthChallenges},
             user_totp::UserTotp,
             user_webauthn::UserWebauthn,
             user_webauthn_challenge::{UserWebauthnChallenge, WebauthnChallengeKind},
@@ -31,7 +31,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, ip_manager::IpContext},
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext,
+        },
         v1::types::{AlrightResponse, AuthenticationPasskeyRequest},
         validator::Valid,
     },
@@ -67,6 +70,7 @@ pub async fn sudo_otp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if auth.is_sudo_enabled() {
@@ -79,7 +83,7 @@ pub async fn sudo_otp_exchange(
         return Err(ApiErrorCodes::InvalidCode);
     };
 
-    if !is_flow_correct(&flow, auth.session_id()) {
+    if !is_flow_correct(&flow, AuthChallengeKind::Otp, auth.session_id()) {
         return Err(ApiErrorCodes::InvalidCode);
     }
 
@@ -113,7 +117,9 @@ pub async fn sudo_otp_exchange(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::SudoEnabled)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -140,6 +146,7 @@ pub async fn sudo_webauthn_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Json(request): Json<AuthenticationPasskeyRequest>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if auth.is_sudo_enabled() {
@@ -176,6 +183,10 @@ pub async fn sudo_webauthn_exchange(
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     };
 
+    if !passkey.enabled {
+        return Err(ApiErrorCodes::WebauthnNotEnabled);
+    }
+
     if passkey.user_id != user.id {
         return Err(ApiErrorCodes::WebauthnChallengeNotFound);
     }
@@ -195,7 +206,9 @@ pub async fn sudo_webauthn_exchange(
             .user_id(auth.user_id())
             .actor_id(auth.user_id())
             .action(AuditAction::PasskeyDisabled)
-            .actor_ip(Some(ip_ctx.ip_addr()))
+            .actor_ip(ip_ctx.ip_addr())
+            .actor_location(ip_ctx.location())
+            .actor_user_agent(user_agent.agent())
             .build()
             .save(&mut tx)
             .await?;
@@ -230,7 +243,9 @@ pub async fn sudo_webauthn_exchange(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::SudoEnabled)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;
@@ -257,6 +272,7 @@ pub async fn sudo_totp_exchange(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Valid(Json(request)): Valid<Json<ExchangeRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if auth.is_sudo_enabled() {
@@ -269,7 +285,7 @@ pub async fn sudo_totp_exchange(
         return Err(ApiErrorCodes::FlowNotFound);
     };
 
-    if !is_flow_correct(&flow, auth.session_id()) {
+    if !is_flow_correct(&flow, AuthChallengeKind::Totp, auth.session_id()) {
         return Err(ApiErrorCodes::InvalidCode);
     }
 
@@ -319,6 +335,18 @@ pub async fn sudo_totp_exchange(
                     );
                     ApiErrorCodes::InternalServerError
                 })?;
+
+            AuditEntry::builder()
+                .user_id(user.id)
+                .actor_id(user.id)
+                .action(AuditAction::TotpRecoveryCodeUsed)
+                .actor_ip(ip_ctx.ip_addr())
+                .actor_location(ip_ctx.location())
+                .actor_user_agent(user_agent.agent())
+                .build()
+                .save(&mut tx)
+                .await?;
+
             tx.commit().await?;
             AuthMailer::totp_recovery_code_used(
                 user.name.clone(),
@@ -346,7 +374,9 @@ pub async fn sudo_totp_exchange(
         .user_id(auth.user_id())
         .actor_id(auth.user_id())
         .action(AuditAction::SudoEnabled)
-        .actor_ip(Some(ip_ctx.ip_addr()))
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .build()
         .save(&mut tx)
         .await?;

@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use sqlx::postgres::PgListener;
 
@@ -31,11 +31,14 @@ impl QueuedJob for JwkCycleWorker {
         }
 
         JwkKey::set_retire(&mut tx).await?;
-        tx.commit().await?;
+        if JwkKey::delete_non_public(&mut tx).await? {
+            // this now only notifies workers when we really really updated something important. Like deleting a key!
+            sqlx::query!("notify updated_crypto_jwks")
+                .execute(&mut *tx)
+                .await?;
+        }
 
-        sqlx::query!("notify updated_crypto_jwks")
-            .execute(&global.database)
-            .await?;
+        tx.commit().await?;
 
         global
             .jwks
@@ -62,7 +65,7 @@ pub async fn watch_jwk_updates(
 ) -> anyhow::Result<()> {
     tracing::info!("watching for jwk update notifications");
 
-    let mut tick = tokio::time::interval(Duration::from_secs(120));
+    // let mut tick = tokio::time::interval(Duration::from_secs(120));
     let mut listener = PgListener::connect_with(&global.database).await?;
     listener.listen("updated_crypto_jwks").await?;
 
@@ -70,7 +73,7 @@ pub async fn watch_jwk_updates(
         // this thing exits when the first thing completes.
         tokio::select! {
             _ = shutdown.cancelled() => break,
-            _ = tick.tick() => {}
+            // _ = tick.tick() => {}
             _ = listener.recv() => {}
         }
 

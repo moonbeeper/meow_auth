@@ -20,11 +20,11 @@ pub mod types;
 // TODO: add Query, Form extractors to return Oauth errors
 
 pub fn valid_redirect_uri(uri: &Url, client_uri: &Url) -> bool {
-    if uri.scheme() != client_uri.scheme() {
+    if !valid_uri(uri) || !valid_uri(client_uri) {
         return false;
     }
 
-    if uri.fragment().is_some() {
+    if uri.scheme() != client_uri.scheme() {
         return false;
     }
 
@@ -42,6 +42,29 @@ pub fn valid_redirect_uri(uri: &Url, client_uri: &Url) -> bool {
     }
 
     false
+}
+
+const VALID_URI_SCHEMES: [&str; 2] = ["http", "https"];
+
+/// validates if the provided url is a valid uri for redirecting to. IT HAS no fragments or queries.
+pub fn valid_uri(url: &Url) -> bool {
+    if !VALID_URI_SCHEMES.contains(&url.scheme()) {
+        return false;
+    }
+
+    if url.fragment().is_some() {
+        return false;
+    }
+
+    if url.query().is_some() {
+        return false;
+    }
+
+    if is_localhost(url) {
+        return true;
+    }
+
+    true
 }
 
 fn is_localhost(uri: &Url) -> bool {

@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{ops::Add, sync::Arc};
 
 use axum::{
     Extension,
@@ -7,23 +7,31 @@ use axum::{
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
+    audit::{AuditAction, AuditEntry},
     auth::flags::UserFlag,
     database::{id::UlidId, models::oauth_application::OauthApplication as DbOauthApplication},
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::{auth_manager::AuthContext, require_user_flag::RequireUserFlagLayer},
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext, require_user_flag::RequireUserFlagLayer,
+        },
         v1::types::{AlrightResponse, ListDataRequest, ListDataResponse, OauthApplication},
         validator::Valid,
     },
-    oauth::{scopes::Scopes, secrets::get_secret_pair},
+    oauth::{
+        scopes::{Scope, Scopes},
+        secrets::get_secret_pair,
+        valid_uri,
+    },
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(create_application))
-        .routes(routes!(edit_application))
+        .routes(routes!(update_application))
         .routes(routes!(delete_application))
         .routes(routes!(rotate_secret_application))
         .layer(RequireUserFlagLayer::new().forbid(UserFlag::CannotManageOauthApplications))
@@ -104,13 +112,28 @@ pub struct OauthApplicationDataResponse {
 pub async fn create_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Valid(Json(request)): Valid<Json<OauthApplicationData>>,
 ) -> Result<Json<OauthApplicationDataResponse>, ApiErrorCodes> {
-    let scopes = Scopes::from_bits(request.scopes).sanitize(Scopes::all());
+    let mut scopes = Scopes::from_bits(request.scopes).sanitize(Scopes::all());
+    if scopes.is_empty() {
+        scopes = scopes.add(Scope::Profile);
+    }
+
     let secret_pair = get_secret_pair(&global.settings);
+    let redirect_uri = match url::Url::parse(&request.redirect_uri) {
+        Ok(url) => url,
+        Err(_) => return Err(ApiErrorCodes::InvalidRedirectUri),
+    };
+
+    if !valid_uri(&redirect_uri) {
+        return Err(ApiErrorCodes::InvalidRedirectUri);
+    }
+
     let app = DbOauthApplication::builder()
         .name(request.name)
-        .redirect_uri(request.redirect_uri)
+        .redirect_uri(redirect_uri.to_string())
         .public(request.public)
         .scopes(scopes.bits())
         .secret(secret_pair.hash_bytes)
@@ -119,7 +142,18 @@ pub async fn create_application(
 
     let mut tx = global.database.begin().await?;
     app.insert(&mut tx).await?;
-    // audit::log(auth.user_id(), AuditAction::SessionDeleted, None, &mut tx).await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::OauthApplicationCreated)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(OauthApplicationDataResponse {
@@ -173,9 +207,11 @@ pub async fn get_info_application(
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn edit_application(
+pub async fn update_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<OauthApplicationIdParam>,
     Valid(Json(data)): Valid<Json<OauthApplicationData>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
@@ -188,7 +224,11 @@ pub async fn edit_application(
         return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 
-    let scopes = Scopes::from_bits(data.scopes).sanitize(Scopes::all());
+    let mut scopes = Scopes::from_bits(data.scopes).sanitize(Scopes::all());
+    if scopes.is_empty() {
+        scopes = scopes.add(Scope::Profile);
+    }
+
     app.name = data.name;
     app.redirect_uri = data.redirect_uri;
     app.public = data.public;
@@ -196,6 +236,18 @@ pub async fn edit_application(
 
     let mut tx = global.database.begin().await?;
     app.update(&mut tx).await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::OauthApplicationUpdated)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
@@ -216,6 +268,8 @@ pub async fn edit_application(
 pub async fn delete_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<OauthApplicationIdParam>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     let Ok(Some(app)) = DbOauthApplication::find_by_id(request.id, &global.database).await else {
@@ -228,6 +282,18 @@ pub async fn delete_application(
 
     let mut tx = global.database.begin().await?;
     app.delete(&mut tx).await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::OauthApplicationDeleted)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(AlrightResponse::default()))
@@ -248,6 +314,8 @@ pub async fn delete_application(
 pub async fn rotate_secret_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<OauthApplicationIdParam>,
 ) -> Result<Json<OauthApplicationDataResponse>, ApiErrorCodes> {
     let Ok(Some(mut app)) = DbOauthApplication::find_by_id(request.id, &global.database).await
@@ -264,6 +332,18 @@ pub async fn rotate_secret_application(
 
     let mut tx = global.database.begin().await?;
     app.update(&mut tx).await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::OauthApplicationKeysRotated)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
+        .build()
+        .save(&mut tx)
+        .await?;
+
     tx.commit().await?;
 
     Ok(Json(OauthApplicationDataResponse {

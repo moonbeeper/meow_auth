@@ -41,7 +41,7 @@ pub fn get_oauth_cookie(
     settings: &Settings,
 ) -> Option<OauthPendingAuthorizationId> {
     let cookie = get_cookie(
-        true,
+        false,
         &format!("{}_pending_oauth", settings.session.cookie_name),
         get_key(settings),
         cookies,

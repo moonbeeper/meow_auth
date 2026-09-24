@@ -19,7 +19,10 @@ use crate::{
     http::{
         error::{ApiError, ApiErrorCodes},
         extractor::Json,
-        middleware::auth_manager::AuthContext,
+        middleware::{
+            auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
+            ip_manager::IpContext,
+        },
         v1::types::{AlrightResponse, IdParam, ListDataRequest, ListDataResponse, User},
         validator::Valid,
     },
@@ -126,6 +129,8 @@ pub async fn admin_info_user(
 pub async fn admin_edit_user(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
     Path(request): Path<IdParam<UlidId>>,
     Valid(Json(data)): Valid<Json<UserUpdateRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
@@ -168,6 +173,9 @@ pub async fn admin_edit_user(
         .user_id(user.id)
         .actor_id(auth.user_id())
         .action(AuditAction::UserUpdated)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
         .metadata(json!({
             "fields_updated": updated_fields,
         }))

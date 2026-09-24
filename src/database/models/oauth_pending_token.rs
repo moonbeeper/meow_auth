@@ -74,8 +74,8 @@ impl OauthPendingToken {
         Ok(())
     }
 
-    pub async fn take_by_id(
-        id: OauthPendingTokenId,
+    pub async fn take_by_code(
+        code_hash: OauthPendingTokenId,
         transaction: &mut PgTransaction<'_>,
     ) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
@@ -94,7 +94,7 @@ impl OauthPendingToken {
                     expires_at,
                     created_at
             ",
-            id
+            code_hash
         )
         .fetch_optional(&mut **transaction)
         .await?;

@@ -1,4 +1,5 @@
 pub mod auth_manager;
+pub mod browser_agent_manager;
 pub mod ip_manager;
 pub mod oauth_manager;
 pub mod ratelimit_manager;
