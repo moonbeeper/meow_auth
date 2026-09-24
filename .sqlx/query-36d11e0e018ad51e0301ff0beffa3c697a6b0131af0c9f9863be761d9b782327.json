@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                id,\n                secret,\n                nonce,\n                retired,\n                retired_at,\n                max_public_age_at,\n                updated_at,\n                created_at\n             from jwks_keys where not retired order by created_at limit 1",
+  "query": "select\n                id,\n                secret,\n                nonce,\n                retired,\n                retired_at,\n                max_public_age_at,\n                updated_at,\n                created_at\n             from jwks_keys where not retired order by created_at desc limit 1",
   "describe": {
     "columns": [
       {
@@ -106,5 +106,5 @@
       false
     ]
   },
-  "hash": "c7aa4d525cb75781ab7503f23812520f43de4913490abe02f49f133b80e61d89"
+  "hash": "36d11e0e018ad51e0301ff0beffa3c697a6b0131af0c9f9863be761d9b782327"
 }

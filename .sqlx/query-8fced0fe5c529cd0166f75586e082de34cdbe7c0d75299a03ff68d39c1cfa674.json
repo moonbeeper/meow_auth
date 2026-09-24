@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                al.id,\n                al.user_id,\n                u.name as user_name,\n                al.actor_id,\n                a.name as actor_name,\n                al.action,\n                al.resource_type,\n                al.resource_id as \"resource_id?: UlidId\",\n                al.actor_ip,\n                al.metadata,\n                al.created_at\n            from audit_logs al\n            join users u on u.id = al.user_id\n            join users a on a.id = al.actor_id\n            where user_id = $1\n            ",
+  "query": "select\n                id,\n                user_id,\n                actor_id,\n                action,\n                resource_type,\n                resource_id as \"resource_id?: UlidId\",\n                actor_ip,\n                actor_location,\n                actor_user_agent,\n                metadata,\n                created_at\n            from audit_logs where user_id = $1 and ($2::uuid is null or id::uuid < $2) order by created_at desc limit 20+1\n            ",
   "describe": {
     "columns": [
       {
@@ -27,17 +27,6 @@
       },
       {
         "ordinal": 2,
-        "name": "user_name",
-        "type_info": "Varchar",
-        "origin": {
-          "Table": {
-            "table": "users",
-            "name": "name"
-          }
-        }
-      },
-      {
-        "ordinal": 3,
         "name": "actor_id",
         "type_info": "Uuid",
         "origin": {
@@ -48,18 +37,7 @@
         }
       },
       {
-        "ordinal": 4,
-        "name": "actor_name",
-        "type_info": "Varchar",
-        "origin": {
-          "Table": {
-            "table": "users",
-            "name": "name"
-          }
-        }
-      },
-      {
-        "ordinal": 5,
+        "ordinal": 3,
         "name": "action",
         "type_info": "Text",
         "origin": {
@@ -70,7 +48,7 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 4,
         "name": "resource_type",
         "type_info": "Text",
         "origin": {
@@ -81,7 +59,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 5,
         "name": "resource_id?: UlidId",
         "type_info": "Uuid",
         "origin": {
@@ -92,13 +70,35 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 6,
         "name": "actor_ip",
         "type_info": "Text",
         "origin": {
           "Table": {
             "table": "audit_logs",
             "name": "actor_ip"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "actor_location",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "audit_logs",
+            "name": "actor_location"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "actor_user_agent",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "audit_logs",
+            "name": "actor_user_agent"
           }
         }
       },
@@ -127,6 +127,7 @@
     ],
     "parameters": {
       "Left": [
+        "Uuid",
         "Uuid"
       ]
     },
@@ -135,14 +136,14 @@
       false,
       false,
       false,
+      true,
+      true,
       false,
       false,
-      true,
-      true,
-      true,
+      false,
       false,
       false
     ]
   },
-  "hash": "3a490b9f1e9dbc6a4624efc81d07b566021e28862465b723f844dc7aab2253ee"
+  "hash": "8fced0fe5c529cd0166f75586e082de34cdbe7c0d75299a03ff68d39c1cfa674"
 }

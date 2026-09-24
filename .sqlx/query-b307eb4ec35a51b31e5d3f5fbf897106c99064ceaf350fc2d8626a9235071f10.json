@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                id,\n                user_id,\n                actor_id,\n                action,\n                resource_type,\n                resource_id as \"resource_id?: UlidId\",\n                actor_ip,\n                metadata,\n                created_at\n             from audit_logs where user_id = $1",
+  "query": "select\n                id,\n                user_id,\n                actor_id,\n                action,\n                resource_type,\n                resource_id as \"resource_id?: UlidId\",\n                actor_ip,\n                actor_location,\n                actor_user_agent,\n                metadata,\n                created_at\n             from audit_logs where user_id = $1",
   "describe": {
     "columns": [
       {
@@ -82,6 +82,28 @@
       },
       {
         "ordinal": 7,
+        "name": "actor_location",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "audit_logs",
+            "name": "actor_location"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "actor_user_agent",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "audit_logs",
+            "name": "actor_user_agent"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
         "name": "metadata",
         "type_info": "Jsonb",
         "origin": {
@@ -92,7 +114,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 10,
         "name": "created_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -115,10 +137,12 @@
       false,
       true,
       true,
-      true,
+      false,
+      false,
+      false,
       false,
       false
     ]
   },
-  "hash": "2ac2296bfdf23d74e6e438b366cbeb2aeb972eb36ef981303be2fa29716c2ed5"
+  "hash": "b307eb4ec35a51b31e5d3f5fbf897106c99064ceaf350fc2d8626a9235071f10"
 }
