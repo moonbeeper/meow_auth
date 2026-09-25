@@ -21,6 +21,7 @@ pub struct GlobalState {
 
 impl GlobalState {
     pub async fn new(settings: Settings) -> anyhow::Result<Arc<Self>> {
+        tracing::info!("setting up global state");
         let database = database::setup_pg_database(&settings.database).await?;
         // build tera templates at startup to panic and exit if templates are nasty. This way... i dont get
         // a poisoned/dead shared LazyLock that cant be used anymore with mailer workers.

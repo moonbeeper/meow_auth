@@ -1,9 +1,9 @@
 #![warn(clippy::nursery, clippy::pedantic)]
-use std::time::Duration;
+use std::{io, time::Duration};
 
 use anyhow::Context as _;
-use futures_util::TryFutureExt;
 use meow_auth2::{
+    build,
     crypto::jwks::worker::{JwkCycleWorker, watch_jwk_updates},
     global::GlobalState,
     http,
@@ -13,33 +13,53 @@ use meow_auth2::{
     manager::Watcher,
     settings::{self, Settings},
 };
+use tokio::signal::unix::{SignalKind, signal};
+
+const BIG_BANNER: &str = r"
+
+                                                                            d8b
+                                                                      d8P   ?88
+                                                                   d888888P  88b
+  88bd8b,d88b  d8888b d8888b  ?88   d8P  d8P     d888b8b  ?88   d8P  ?88'    888888b
+  88P'`?8P'?8bd8b_,dPd8P' ?88 d88  d8P' d8P'    d8P' ?88  d88   88   88P     88P `?8b
+ d88  d88  88P88b    88b  d88 ?8b ,88b ,88'     88b  ,88b ?8(  d88   88b    d88   88P
+d88' d88'  88b`?888P'`?8888P' `?888P'888P'      `?88P'`88b`?88P'?8b  `?8b  d88'   88b
+";
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    println!("{BIG_BANNER}");
     println!("Hello, world!");
     settings::update_cli();
     let settings = settings::Settings::new().context("Failed to parse settings.")?;
     logger::init(&settings.logging);
 
-    tracing::info!("hi from mr app (creating global state)");
+    tracing::info!(
+        "starting meow auth v{} ({})",
+        build::PKG_VERSION,
+        build::BUILD_TIME
+    );
+    tracing::info!("hi helooo vroom vroom wawa sqweezeee");
+
     let global = GlobalState::new(settings)
         .await
         .context("Failed to create global state")?;
+
     let watcher = Watcher::new();
     let queues = QueueRegistry::new(global.clone())
         .register(MailerJob)
         .register(JwkCycleWorker);
-    spawn_service("http", http::run(global.clone(), watcher.child()));
-    spawn_service(
-        "queues",
-        queues.run(watcher.child()).map_err(|e| anyhow::anyhow!(e)),
-    );
-    spawn_service(
-        "update_jwks",
-        watch_jwk_updates(global.clone(), watcher.child()),
-    );
 
-    let _ = tokio::signal::ctrl_c().await;
+    watcher.spawn_service("http", |child| http::run(global.clone(), child));
+    watcher.spawn_service("queues", |child| queues.run(child));
+    watcher.spawn_service("update_jwks", |child| {
+        watch_jwk_updates(global.clone(), child)
+    });
+
+    tokio::select! {
+        _ = tokio::signal::ctrl_c() => {tracing::info!("ctrl-c'd! shutting down...")}
+        _ = handle_terminate() => {tracing::info!("terminate signal received! shutting down...")}
+    }
     watcher.stop();
 
     tokio::select! {
@@ -48,23 +68,9 @@ async fn main() -> anyhow::Result<()> {
         () = kill_timeout(&global.settings) => {tracing::info!("timeout reached, force shutdown")}
     }
 
-    tracing::info!("goodnight");
+    tracing::info!("goodnight, sweet bits and flying toasters with wings");
 
     Ok(())
-}
-
-fn spawn_service<F>(name: &'static str, fut: F)
-where
-    F: Future<Output = anyhow::Result<()>> + Send + 'static,
-{
-    tokio::spawn(async move {
-        let inner = tokio::spawn(fut);
-        match inner.await {
-            Ok(Ok(())) => tracing::info!("{name} exited normally"),
-            Ok(Err(e)) => tracing::error!("{name} exited with an error: {e}"),
-            Err(e) => tracing::error!("{name} panicked: {e}"),
-        }
-    });
 }
 
 async fn kill_timeout(settings: &Settings) {
@@ -83,4 +89,10 @@ async fn kill_timeout(settings: &Settings) {
 
     tracing::info!("forcing shutdown in {} seconds", timeout);
     tokio::time::sleep(Duration::from_secs(timeout)).await;
+}
+
+#[allow(clippy::missing_errors_doc)] // stfu
+pub async fn handle_terminate() -> io::Result<()> {
+    signal(SignalKind::terminate())?.recv().await;
+    Ok(())
 }

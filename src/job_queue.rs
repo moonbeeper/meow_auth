@@ -176,8 +176,10 @@ impl QueueRegistry {
         self
     }
 
-    pub async fn run(self, shutdown: WatcherChild) -> JobQueueResult<()> {
-        Self::run_each(self, Duration::from_mins(2), shutdown).await
+    pub async fn run(self, shutdown: WatcherChild) -> anyhow::Result<()> {
+        Self::run_each(self, Duration::from_mins(2), shutdown)
+            .await
+            .map_err(|e| anyhow::anyhow!(e))
     }
 
     pub async fn run_each(self, tick: Duration, shutdown: WatcherChild) -> JobQueueResult<()> {

@@ -147,7 +147,6 @@ pub async fn run(global: Arc<GlobalState>, watcher: WatcherChild) -> anyhow::Res
     )
     .with_graceful_shutdown(async move {
         watcher.cancelled().await;
-        tracing::info!("goodnight, sweet bits and flying toasters with wings");
     })
     .await
     .context("Failed starting the HTTP server")?;
