@@ -55,7 +55,7 @@ pub async fn change_user_name(
     Extension(user_agent): Extension<UserAgentContext>,
     Valid(Json(request)): Valid<Json<ChangeNameRequest>>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
-    if !auth.is_sudo_enabled() && !auth.user_flags().has(UserFlag::HasSetName) {
+    if !auth.is_sudo_enabled() && auth.user_flags().has(UserFlag::HasSetName) {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }
 
