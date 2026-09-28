@@ -19,21 +19,21 @@
         "@humanspeak/svelte-virtual-list": "^0.5.14",
         "@internationalized/date": "^3.12.4",
         "@simplewebauthn/browser": "^14.0.0",
-        "@tanstack/svelte-query": "^6.2.4",
-        "@tanstack/svelte-query-devtools": "^6.2.4",
+        "@tanstack/svelte-query": "^6.3.0",
+        "@tanstack/svelte-query-devtools": "^6.3.0",
         "bits-ui": "^2.19.3",
         "date-fns": "^4.4.0",
-        "qr": "^0.7.0"
+        "qr": "^0.7.2"
     },
     "devDependencies": {
         "@sveltejs/adapter-auto": "^7.0.1",
         "@sveltejs/adapter-static": "^3.0.10",
         "@sveltejs/kit": "^2.70.3",
         "@sveltejs/vite-plugin-svelte": "^7.3.1",
-        "@types/node": "^26.6.2",
+        "@types/node": "^26.6.3",
         "formsnap": "^2.0.1",
-        "orval": "^8.37.0",
-        "oxfmt": "^0.70.0",
+        "orval": "^8.38.0",
+        "oxfmt": "^0.71.0",
         "prettier-plugin-svelte": "^4.1.1",
         "sass-embedded": "^1.105.0",
         "svelte": "^5.57.1",
@@ -43,5 +43,5 @@
         "vite": "^8.3.1",
         "zod": "^4.6.5"
     },
-    "packageManager": "yarn@4.17.1"
+    "packageManager": "yarn@4.18.1"
 }
