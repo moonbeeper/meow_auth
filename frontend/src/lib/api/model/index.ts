@@ -52,6 +52,8 @@ export * from "./oauthMetadata.ts";
 export * from "./openIdMetadata.ts";
 export * from "./openIdUserInfo.ts";
 export * from "./passkey.ts";
+export * from "./passkeyIdentifier.ts";
+export * from "./passkeyRenameRequest.ts";
 export * from "./promptType.ts";
 export * from "./publicKeyCredentialRegistrationOptions.ts";
 export * from "./publicKeyCredentialStartOptions.ts";

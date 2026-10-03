@@ -15,7 +15,7 @@ insert into users (
     '00000000-0000-0000-0000-000000000001',
     '00000000-0000-0000-0000-000000000001',
     'system',
-    'system@meowmeowmeow.meow',
+    'system@meowauth.invalid', -- :)
     true, false, false, 0,
     now(), now(), now()
 );

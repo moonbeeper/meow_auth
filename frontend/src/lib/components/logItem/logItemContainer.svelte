@@ -1,12 +1,26 @@
 <script lang="ts">
+    import { Accordion } from "bits-ui";
     import type { Snippet } from "svelte";
 
-    let { children }: { children: Snippet } = $props();
+    type Props = {
+        children: Snippet;
+        collapsible?: boolean;
+    };
+
+    let { children, collapsible }: Props = $props();
 </script>
 
-<div class="items">
-    {@render children()}
-</div>
+{#if collapsible}
+    <div class="items">
+        <Accordion.Root type="single">
+            {@render children()}
+        </Accordion.Root>
+    </div>
+{:else}
+    <div class="items">
+        {@render children()}
+    </div>
+{/if}
 
 <style lang="scss">
     .items {

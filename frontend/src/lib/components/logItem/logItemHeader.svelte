@@ -9,7 +9,7 @@
         who,
         when,
         children
-    }: { title: string; tag?: string; who?: string; when?: string; children?: Snippet } = $props();
+    }: { title?: string; tag?: string; who?: string; when?: string; children?: Snippet } = $props();
 </script>
 
 <div class="header">

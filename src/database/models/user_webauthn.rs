@@ -61,6 +61,7 @@ impl UserWebauthn {
                 big_data = $2,
                 counter = $3,
                 enabled = $4,
+                display_name = $5,
                 last_used_at = now(),
                 updated_at = now(),
                 disabled_at = case when enabled then null else now() end
@@ -68,7 +69,8 @@ impl UserWebauthn {
             self.id as UserWebauthnId,
             self.big_data,
             self.counter,
-            self.enabled
+            self.enabled,
+            self.display_name
         )
         .execute(&mut **transaction)
         .await?;

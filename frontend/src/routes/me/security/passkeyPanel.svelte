@@ -8,6 +8,7 @@
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import { isOk } from "$lib/api/ignoreThisPlease";
     import {
+        createDeletePasskey,
         createListPasskeys,
         createRegisterPasskeyExchange,
         createRegisterPasskeyOptions,
@@ -17,6 +18,8 @@
     import { actionDate, tryCatch } from "$lib/common";
     import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/browser";
     import { startRegistration } from "@simplewebauthn/browser";
+
+    import PasskeyNewRenameDialog, { type ActionMode } from "./passkeyNewRenameDialog.svelte";
 
     const passkeysQuery = createListPasskeys();
 
@@ -35,9 +38,19 @@
         }
     }));
 
+    let actionMode = $state<ActionMode>("add");
+    let isRenaming = $state(false);
+    let renameCurrentName = $state<string | undefined>(undefined);
     let isAddingPasskey = $state(false);
+    let isNamePromptOpen = $state(false);
+    let isNamePromptReady = $state(false);
+    let passkeyIdToRename = $state<string>("01M3TQNZXMZEK2DJHDXPKMSCQW"); // placeholder ulid
+
+    let userCancelledAttestation = $state(false);
+    let userFinishedAttestation = $state(false);
     async function handleAddPasskey() {
         if (isAddingPasskey) return; // oh you can do that.
+        actionMode = "add";
         console.log("going to add passkey");
 
         const options = await getAddPasskeyOptions.mutateAsync();
@@ -61,20 +74,15 @@
 
         if (attestationResult.error) {
             console.error("failed to get attestation result: ", attestationResult.error);
+
+            if (attestationResult.error.name == "NotAllowedError") {
+                console.warn("user cancelled the attestation");
+                userCancelledAttestation = true;
+            }
             isAddingPasskey = false;
             return;
         }
 
-        // let attestationResult: Awaited<ReturnType<typeof startRegistration>>;
-        // try {
-        //     attestationResult = await startRegistration({
-        //         optionsJSON: options.data.publicKey as PublicKeyCredentialCreationOptionsJSON
-        //     });
-        // } catch (e) {
-        //     console.error("failed to get attestation result: ", e);
-        //     isAddingPasskey = false;
-        //     return;
-        // }
         console.log("got attestation result: ", attestationResult);
 
         const res = await addPasskey.mutateAsync({
@@ -93,8 +101,81 @@
             return;
         }
 
+        userFinishedAttestation = true;
+        passkeyIdToRename = res.data.id;
+        isNamePromptReady = true;
+        isNamePromptOpen = true;
         isAddingPasskey = false;
     }
+
+    let buttonText = $derived.by(() => {
+        if (isAddingPasskey) return "Adding Passkey";
+        if (userCancelledAttestation) return "Creation cancelled";
+        if (userFinishedAttestation) return "Creation finished";
+        return "Add Passkey";
+    });
+
+    const requestDeletePasskey = createDeletePasskey(() => ({
+        mutation: {
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: getListPasskeysQueryKey() });
+            }
+        }
+    }));
+
+    async function handleOnDelete(id: string) {
+        const res = await requestDeletePasskey.mutateAsync({
+            id: id
+        });
+
+        if (!isOk(res)) {
+            if (res.data.code == "SudoNotEnabled") {
+                console.error("sudo not enabled, cannot delete passkey. redirecting");
+                await goto(`/auth/sudo?redirect=${encodeURIComponent("/me/security")}`);
+            }
+
+            console.error("failed to delete passkey");
+            return;
+        }
+        console.info("deleted passkey " + id);
+    }
+
+    async function handleOnRename(id: string, name: string) {
+        actionMode = "update";
+        renameCurrentName = name;
+        passkeyIdToRename = id;
+        isRenaming = true;
+        isNamePromptReady = true;
+        isNamePromptOpen = true;
+    }
+
+    let actionBool = $derived.by(() => {
+        if (actionMode == "update") {
+            return isRenaming;
+        }
+        return isAddingPasskey;
+    });
+
+    $effect(() => {
+        if (!isNamePromptOpen) {
+            isAddingPasskey = false;
+            isRenaming = false;
+        }
+    });
+
+    $effect(() => {
+        if (userCancelledAttestation) {
+            setTimeout(() => {
+                userCancelledAttestation = false;
+            }, 1000);
+        }
+
+        if (userFinishedAttestation) {
+            setTimeout(() => {
+                userFinishedAttestation = false;
+            }, 1000);
+        }
+    });
 </script>
 
 <SettingsPanel
@@ -102,13 +183,24 @@
     description="Ah, efficient sign in. Modern and more secure!"
     contentSpacing={2}
 >
+    <PasskeyNewRenameDialog
+        id={passkeyIdToRename}
+        bind:open={isNamePromptOpen}
+        bind:actionBool
+        isReady={isNamePromptReady}
+        {actionMode}
+        currentName={renameCurrentName}
+    />
+
     {#if passkeyList.length != 0}
         <div class="actions">
             <Button
-                primary
+                primary={!userCancelledAttestation}
+                negative={userCancelledAttestation}
+                gooder={userFinishedAttestation}
                 onclick={handleAddPasskey}
                 disabled={isAddingPasskey}
-                loading={isAddingPasskey}>Add Passkey</Button
+                loading={isAddingPasskey}>{buttonText}</Button
             >
         </div>
     {/if}
@@ -121,12 +213,9 @@
         />
     {:else if passkeysQuery.isSuccess}
         {#if passkeyList.length != 0}
-            <LogItem.Container>
+            <LogItem.Container collapsible>
                 {#each passkeyList as passkey (passkey.id)}
-                    <PasskeyItem
-                        title={passkey.display_name}
-                        when={actionDate(passkey.created_at)}
-                    />
+                    <PasskeyItem onDelete={handleOnDelete} onRename={handleOnRename} {passkey} />
                 {/each}
             </LogItem.Container>
         {:else}

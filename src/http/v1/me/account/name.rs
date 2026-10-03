@@ -29,7 +29,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 #[derive(Debug, serde::Deserialize, validator::Validate, utoipa::ToSchema)]
 pub struct ChangeNameRequest {
     #[validate( // mr fmt doesnt format this aberration.
-        length(min = 3, max = 50, message = "must be between 4 letters and 64"), // counts from 0 duh
+        length(min = 3, max = 50, message = "must be between 4 letters and 50"), // counts from 0 duh
         // regex(path = *RE_AUTH_FLOW_LOGIN, message = "must be alphanumeric and can contain underscores")
     )]
     name: String,

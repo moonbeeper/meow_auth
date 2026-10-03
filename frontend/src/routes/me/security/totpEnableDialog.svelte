@@ -135,7 +135,9 @@
 
 <Dialog.Root title="Enable Two-Factor Authentication" bind:open={isDialogOpen}>
     {#snippet trigger({ props })}
-        <Button primary fontSize="small" {...props}>Set up 2FA</Button>
+        <Button primary fontSize="small" {...props} disabled={isDialogOpen} loading={isDialogOpen}
+            >Set up 2FA</Button
+        >
     {/snippet}
     {#if currentStep == 0}
         <p>

@@ -12,7 +12,8 @@
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
         "fmt": "oxfmt",
         "fmt:check": "oxfmt --check",
-        "api": "orval"
+        "api": "orval",
+        "update-aaguid": "node scripts/updateAaguidList.ts && oxfmt --write src/lib/passkey/aaguid.ts"
     },
     "dependencies": {
         "@fontsource-variable/inter": "^5.3.0",

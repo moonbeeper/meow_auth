@@ -21,8 +21,7 @@ pub enum AuditAction {
     TotpEnabled,
     PasskeyAdded,
     PasskeyRemoved,
-    // NOT IMPLEMENTED
-    PasskeyRenamed, // TODO: that's another one to do. easy tho
+    PasskeyRenamed,
     PasskeyDisabled,
     TotpDisabled,
     TotpRecoveryCodeUsed,
@@ -58,7 +57,7 @@ impl Display for AuditAction {
             AuditAction::PasskeyRenamed => write!(f, "passkey_renamed"),
             AuditAction::PasskeyDisabled => write!(f, "passkey_disabled"),
             AuditAction::TotpDisabled => write!(f, "totp_disabled"),
-            AuditAction::TotpRecoveryCodeUsed => write!(f, "totp_recovery_codes_used"),
+            AuditAction::TotpRecoveryCodeUsed => write!(f, "totp_recovery_code_used"),
             AuditAction::TotpRecoveryCodesSeen => write!(f, "totp_recovery_codes_seen"),
             AuditAction::SudoEnabled => write!(f, "sudo_enabled"),
             AuditAction::OauthApplicationCreated => write!(f, "oauth_application_created"),
@@ -107,7 +106,7 @@ pub struct AuditEntry {
     /// What type of resource was affected by this action?
     #[builder(default = None)]
     pub resource_type: Option<ResourceType>,
-    /// What specific resource was affectede by this action?
+    /// What specific resource was affected by this action?
     #[builder(default = None)]
     pub resource_id: Option<UlidId>,
     /// What was the IP addr of the actor when this action was performed?

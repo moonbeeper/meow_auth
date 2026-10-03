@@ -18,6 +18,7 @@
     type Props = {
         primary?: boolean;
         negative?: boolean;
+        gooder?: boolean;
         disabled?: boolean;
         loading?: boolean;
         fontSize?: "normal" | "medium" | "small";
@@ -34,6 +35,7 @@
         children,
         primary = false,
         negative = false,
+        gooder = false,
         fontSize = "normal",
         disabled = false,
         loading = false,
@@ -54,7 +56,7 @@
         class={[
             "button",
             fontSizeClass,
-            { primary, negative, loading, shouldFill, square },
+            { primary, negative, gooder, loading, shouldFill, square },
             className
         ]}
         aria-disabled={disabled}
@@ -68,7 +70,7 @@
         class={[
             "button",
             fontSizeClass,
-            { primary, negative, loading, shouldFill, square },
+            { primary, negative, gooder, loading, shouldFill, square },
             className
         ]}
         aria-disabled={disabled}
@@ -99,8 +101,8 @@
         font-size: var(--button-font-size);
         font-weight: 600;
         display: inline-flex;
-        transition-property: background-color, outline, border, opacity, color;
-        transition-duration: 0.1s;
+        transition-property: background-color, background, outline, border, opacity, color;
+        transition-duration: 0.3s, 0.3s, 0.1s, 0.1s, 0.1s, 0.1s;
         transition-timing-function: ease-out;
         justify-content: center;
         align-items: center;
@@ -138,6 +140,15 @@
         --button-background: var(--color-coral-medium);
         @media (prefers-color-scheme: dark) {
             --button-background: var(--color-coral-light);
+        }
+        --button-border-color: var(--color-body);
+        --button-color: var(--color-iron-inverted);
+    }
+
+    .gooder {
+        --button-background: var(--color-emerald-medium);
+        @media (prefers-color-scheme: dark) {
+            --button-background: var(--color-emerald-light);
         }
         --button-border-color: var(--color-body);
         --button-color: var(--color-iron-inverted);

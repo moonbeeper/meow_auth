@@ -34,15 +34,24 @@
     {#if auditLogQuery.isLoading || auditLogQuery.isError}
         <LoadingBox loaded={!auditLogQuery.isLoading} hasError={auditLogQuery.isError} />
     {:else if auditLogQuery.isSuccess}
-        <LogItem.Container>
+        <LogItem.Container collapsible>
             {#each recentAuditLog as logItem (logItem.id)}
-                <AuditLogItem2
-                    title={actionLabel(intoAuditAction(logItem.action))}
-                    tag={actionCategory(intoAuditAction(logItem.action))}
-                    who={logItem.was_self ? "you" : "admin"}
-                    when={actionDate(logItem.created_at)}
-                />
+                <AuditLogItem2 item={logItem} />
             {/each}
+            <LogItem.Root collapsible>
+                <LogItem.Header tag="meow" when="now" who="you" />
+                <!-- <LogItem.Actions>
+                    <span>V</span>
+                </LogItem.Actions> -->
+
+                {#snippet inner_content()}
+                    <div class="meow">
+                        <p>Resource: Application</p>
+                        <p>192.168.128.128</p>
+                        <p>Ourense, Vigo</p>
+                    </div>
+                {/snippet}
+            </LogItem.Root>
         </LogItem.Container>
     {/if}
     {#if isAuditLogLong}
@@ -56,6 +65,7 @@
     negative
 >
     <Button negative>Delete account</Button>
+
     <!-- <Dialog.Root width="large">
         {#snippet trigger({ props })}
             <Button negative {...props}>Delete account</Button>
@@ -94,3 +104,19 @@
         nulla in laoreet. Maecenas semper mi egestas, dignissim nisi et, elementum neque.
     </Dialog.Root> -->
 </SettingsPanel>
+
+<style lang="scss">
+    .meow {
+        display: flex;
+        flex-direction: row;
+        gap: calc(var(--spacing) * 2);
+        font-size: var(--text-smaller);
+        flex: 1;
+        flex-wrap: wrap;
+        align-items: center;
+
+        @media (max-width: 600px) {
+            justify-content: center;
+        }
+    }
+</style>

@@ -60,7 +60,7 @@
         {#if auditLogQuery.isLoading || auditLogQuery.isError}
             <LoadingBox loaded={!auditLogQuery.isLoading} hasError={auditLogQuery.isError} />
         {:else if auditLogQuery.isSuccess}
-            <LogItem.Container>
+            <LogItem.Container collapsible>
                 <div class="content">
                     <SvelteVirtualList
                         items={auditLogList}
@@ -69,12 +69,7 @@
                         viewportClass="vlist-viewport"
                     >
                         {#snippet renderItem(logItem)}
-                            <AuditLogItem2
-                                title={actionLabel(intoAuditAction(logItem.action))}
-                                tag={actionCategory(intoAuditAction(logItem.action))}
-                                who={logItem.was_self ? "you" : "admin"}
-                                when={actionDate(logItem.created_at)}
-                            />
+                            <AuditLogItem2 item={logItem} />
                         {/snippet}
                     </SvelteVirtualList>
                 </div>

@@ -21,6 +21,8 @@ import type {
 import type {
     ApiError,
     Passkey,
+    PasskeyIdentifier,
+    PasskeyRenameRequest,
     RegisterPasskeyRequest,
     RegistrationChallengeResponse,
     UlidId
@@ -152,7 +154,7 @@ export const createRegisterPasskeyOptions = <TError = ApiError, TContext = unkno
     );
 };
 export type registerPasskeyExchangeResponse200 = {
-    data: void;
+    data: PasskeyIdentifier;
     status: 200;
 };
 
@@ -227,7 +229,7 @@ export const registerPasskeyExchange = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: registerPasskeyExchangeResponse["data"] = body ? JSON.parse(body) : undefined;
+    const data: registerPasskeyExchangeResponse["data"] = body ? JSON.parse(body) : {};
     return { data, status: res.status, headers: res.headers } as registerPasskeyExchangeResponse;
 };
 
@@ -514,4 +516,138 @@ export const createDeletePasskey = <TError = ApiError, TContext = unknown>(
     TContext
 > => {
     return createMutation(() => ({ ...getDeletePasskeyMutationOptions(options?.()) }), queryClient);
+};
+export type renamePasskeyResponse200 = {
+    data: void;
+    status: 200;
+};
+
+export type renamePasskeyResponse500 = {
+    data: ApiError;
+    status: 500;
+};
+
+export type renamePasskeyResponseSuccess = renamePasskeyResponse200 & {
+    headers: Headers;
+};
+export type renamePasskeyResponseError = renamePasskeyResponse500 & {
+    headers: Headers;
+};
+
+export type renamePasskeyResponse = renamePasskeyResponseSuccess | renamePasskeyResponseError;
+
+export const getRenamePasskeyUrl = (id: UlidId) => {
+    return `${apiUrlForOrval}/v1/me/webauthn/${id}`;
+};
+
+/**
+ * You use the ID of one of your passkeys.
+ * @summary Update the info about one of your passkeys
+ */
+export const renamePasskey = async (
+    id: UlidId,
+    passkeyRenameRequest: PasskeyRenameRequest,
+    options?: RequestInit,
+    fetchFn?: typeof globalThis.fetch
+): Promise<renamePasskeyResponse> => {
+    const getHeaders = (
+        h?: NonNullable<RequestInit["headers"]>
+    ): Record<string, string | readonly string[]> => {
+        if (!h) return {};
+        if (h instanceof Headers) return Object.fromEntries(h.entries());
+        if (Symbol.iterator in h) {
+            return Object.fromEntries(
+                Array.from(
+                    h as Iterable<Iterable<string>>,
+                    (entry) => Array.from(entry) as [string, string]
+                )
+            );
+        }
+        const headers: Record<string, string | readonly string[]> = {};
+        for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+            if (value !== undefined) headers[name] = value;
+        }
+        return headers;
+    };
+    const res = await (fetchFn ?? fetch)(getRenamePasskeyUrl(id), {
+        credentials: "include",
+        ...options,
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+        body: JSON.stringify(passkeyRenameRequest)
+    });
+
+    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+    const data: renamePasskeyResponse["data"] = body ? JSON.parse(body) : undefined;
+    return { data, status: res.status, headers: res.headers } as renamePasskeyResponse;
+};
+
+export const getRenamePasskeyMutationKey = () => ["renamePasskey"] as const;
+
+export const getRenamePasskeyMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
+    mutation?: CreateMutationOptions<
+        Awaited<ReturnType<typeof renamePasskey>>,
+        TError,
+        RenamePasskeyMutationVariables,
+        TContext
+    >;
+    fetch?: RequestInit;
+    fetcher?: typeof globalThis.fetch;
+}): CreateMutationOptions<
+    Awaited<ReturnType<typeof renamePasskey>>,
+    TError,
+    RenamePasskeyMutationVariables,
+    TContext
+> => {
+    const mutationKey = getRenamePasskeyMutationKey();
+    const {
+        mutation: mutationOptions,
+        fetch: fetchOptions,
+        fetcher: fetcherFn
+    } = options
+        ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+            ? options
+            : { ...options, mutation: { ...options.mutation, mutationKey } }
+        : { mutation: { mutationKey }, fetch: undefined };
+
+    const mutationFn: MutationFunction<
+        Awaited<ReturnType<typeof renamePasskey>>,
+        RenamePasskeyMutationVariables
+    > = (props) => {
+        const { id, data } = props ?? {};
+
+        return renamePasskey(id, data, fetchOptions, fetcherFn);
+    };
+
+    return { mutationFn, ...mutationOptions };
+};
+
+export type RenamePasskeyMutationResult = NonNullable<Awaited<ReturnType<typeof renamePasskey>>>;
+export type RenamePasskeyMutationBody = PasskeyRenameRequest;
+export type RenamePasskeyMutationError = ApiError;
+export type RenamePasskeyMutationVariables = { id: UlidId; data: PasskeyRenameRequest };
+
+/**
+ * @summary Update the info about one of your passkeys
+ */
+export const createRenamePasskey = <TError = ApiError, TContext = unknown>(
+    options?: () => {
+        mutation?: CreateMutationOptions<
+            Awaited<ReturnType<typeof renamePasskey>>,
+            TError,
+            RenamePasskeyMutationVariables,
+            TContext
+        >;
+        fetch?: RequestInit;
+        fetcher?: typeof globalThis.fetch;
+    },
+    queryClient?: () => QueryClient
+): CreateMutationResult<
+    Awaited<ReturnType<typeof renamePasskey>>,
+    TError,
+    RenamePasskeyMutationVariables,
+    TContext
+> => {
+    return createMutation(() => ({ ...getRenamePasskeyMutationOptions(options?.()) }), queryClient);
 };

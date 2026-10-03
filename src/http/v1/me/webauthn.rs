@@ -11,7 +11,7 @@ use webauthn_rs::prelude::{
 use webauthn_rs_proto::ResidentKeyRequirement;
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{AuditAction, AuditEntry, ResourceType},
     auth::{mailer::AuthMailer, webauthn::get_aaguid},
     database::{
         id::UlidId,
@@ -32,6 +32,7 @@ use crate::{
         v1::types::{
             AlrightResponse, Passkey, RegisterPasskeyRequest, RegistrationChallengeResponse,
         },
+        validator::Valid,
     },
 };
 
@@ -41,6 +42,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(register_passkey_exchange))
         .routes(routes!(list_passkeys))
         .routes(routes!(delete_passkey))
+        .routes(routes!(rename_passkey))
 }
 
 /// Get the passkey creation options
@@ -114,13 +116,18 @@ pub async fn register_passkey_options(
     Ok(Json(client_challenge))
 }
 
+#[derive(Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct PasskeyIdentifier {
+    id: UlidId,
+}
+
 /// Exchange the passkey register result created on the browser
 #[utoipa::path(
     post,
     path = "/exchange",
     tags = ["passkeys"],
     responses(
-        (status = 200, description = "passkey creation successful"),
+        (status = 200, description = "passkey creation successful", body= PasskeyIdentifier),
         (status = 401, description = "sudo not enabled", body = ApiError),
         (status = 404, description = "webauthn challenge not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
@@ -132,7 +139,7 @@ pub async fn register_passkey_exchange(
     Extension(ip_ctx): Extension<IpContext>,
     Extension(user_agent): Extension<UserAgentContext>,
     Json(request): Json<RegisterPasskeyRequest>,
-) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
+) -> Result<Json<PasskeyIdentifier>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }
@@ -199,6 +206,8 @@ pub async fn register_passkey_exchange(
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
+        .resource_id(Some(passkey.id))
+        .resource_type(Some(ResourceType::Passkey))
         .build()
         .save(&mut tx)
         .await?;
@@ -207,7 +216,7 @@ pub async fn register_passkey_exchange(
 
     AuthMailer::webauthn_registered(user.name, passkey_name, user.email, &global.database).await?;
 
-    Ok(Json(AlrightResponse::default()))
+    Ok(Json(PasskeyIdentifier { id: passkey.pid }))
 }
 
 /// List all your created passkeys
@@ -232,11 +241,6 @@ pub async fn list_passkeys(
     Ok(Json(passkeys))
 }
 
-#[derive(Debug, serde::Deserialize)]
-pub struct PasskeyQuery {
-    id: UlidId,
-}
-
 /// Delete one of your passkeys
 ///
 /// You use the ID of one of your passkeys.
@@ -257,21 +261,21 @@ pub async fn delete_passkey(
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
     Extension(user_agent): Extension<UserAgentContext>,
-    Path(query): Path<PasskeyQuery>,
+    Path(query): Path<PasskeyIdentifier>,
 ) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
     if !auth.is_sudo_enabled() {
         return Err(ApiErrorCodes::SudoNotEnabled);
     }
 
-    let Ok(Some(session)) = UserWebauthn::find_by_pid(query.id, &global.database).await else {
+    let Ok(Some(passkey)) = UserWebauthn::find_by_pid(query.id, &global.database).await else {
         return Err(ApiErrorCodes::InternalServerError);
     };
-    if session.user_id != auth.user_id() {
+    if passkey.user_id != auth.user_id() {
         return Err(ApiErrorCodes::DataNotFound("passkey"));
     }
 
     let mut tx = global.database.begin().await?;
-    session.delete(&mut tx).await?;
+    passkey.delete(&mut tx).await?;
 
     AuditEntry::builder()
         .user_id(auth.user_id())
@@ -280,6 +284,72 @@ pub async fn delete_passkey(
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
+        .build()
+        .save(&mut tx)
+        .await?;
+
+    tx.commit().await?;
+
+    Ok(Json(AlrightResponse::default()))
+}
+
+#[derive(Debug, serde::Deserialize, validator::Validate, utoipa::ToSchema)]
+pub struct PasskeyRenameRequest {
+    #[validate( // mr fmt doesnt format this aberration.
+        length(min = 3, max = 50, message = "must be between 3 letters and 50"), // counts from 0 duh
+    )]
+    name: String,
+}
+
+/// Update the info about one of your passkeys
+///
+/// You use the ID of one of your passkeys.
+#[utoipa::path(
+    patch,
+    path = "/{id}",
+    tags = ["passkeys"],
+    params(
+        ("id" = UlidId, description = "the id of the passkey to edit")
+    ),
+    responses(
+        (status = 200, description = "successfully updated the passkey"),
+        (status = 500, description = "internal server error", body = ApiError)
+    )
+)]
+pub async fn rename_passkey(
+    State(global): State<Arc<GlobalState>>,
+    Extension(auth): Extension<AuthContext>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
+    Path(query): Path<PasskeyIdentifier>,
+    Valid(Json(request)): Valid<Json<PasskeyRenameRequest>>,
+) -> Result<Json<AlrightResponse>, ApiErrorCodes> {
+    let Ok(Some(mut passkey)) = UserWebauthn::find_by_pid(query.id, &global.database).await else {
+        return Err(ApiErrorCodes::InternalServerError);
+    };
+    let is_fresh = passkey.created_at > chrono::Utc::now() - chrono::Duration::minutes(10);
+
+    if passkey.user_id != auth.user_id() {
+        return Err(ApiErrorCodes::DataNotFound("passkey"));
+    }
+
+    if !auth.is_sudo_enabled() && !is_fresh {
+        return Err(ApiErrorCodes::SudoNotEnabled);
+    }
+
+    let mut tx = global.database.begin().await?;
+    passkey.display_name = request.name;
+    passkey.update(&mut tx).await?;
+
+    AuditEntry::builder()
+        .user_id(auth.user_id())
+        .actor_id(auth.user_id())
+        .action(AuditAction::PasskeyRenamed)
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
+        .resource_id(Some(passkey.id))
+        .resource_type(Some(ResourceType::Passkey))
         .build()
         .save(&mut tx)
         .await?;
