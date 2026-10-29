@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from oauth_pending_authorizations where user_session = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "16f9ff55033d038509047f6623649d91cb7c1d16d2802f7a06f3257ceb144179"
+}
