@@ -1,14 +1,16 @@
-<script lang="ts">
-    import { invalidateAll } from "$app/navigation";
+<script lang="ts" module>
+    import { refreshAll } from "$app/navigation";
     // Could use https://data-slot.com/
     import { page } from "$app/state";
-    import logo from "$lib/assets/logo.svg";
-    import logo_dark from "$lib/assets/logo_dark.svg";
-    import { auth } from "$lib/auth/auth.svelte";
-    import { UserFlag } from "$lib/auth/userFlags";
 
-    import Avatar from "./avatar.svelte";
-    import Button from "./button.svelte";
+    import logo from "#lib/assets/logo.svg";
+    import logo_dark from "#lib/assets/logo_dark.svg";
+    import { auth } from "#lib/auth/auth.svelte.js";
+    import { UserFlag } from "#lib/auth/userFlags.js";
+
+    import Avatar from "../avatar.svelte";
+    import Button from "../button.svelte";
+    import Link from "./link.svelte";
 
     let hasSession = $derived.by(() => {
         return auth.user != null;
@@ -19,29 +21,30 @@
     });
     // const hasSession = true;
 
-    type NavLink = {
+    export type NavLink = {
         href: string[];
         label: string;
+        includeChildren: boolean;
     };
 
     let links = $derived.by(() => {
         const links: NavLink[] = [
-            { href: ["/me", "/me/audit-log"], label: "Account" },
-            { href: ["/me/security"], label: "Security" },
-            { href: ["/me/authorized-apps"], label: "Authorized apps" },
-            { href: ["/me/my-apps"], label: "My apps" }
+            { href: ["/me", "/me/audit-log"], label: "Account", includeChildren: false },
+            { href: ["/me/security"], label: "Security", includeChildren: false },
+            { href: ["/me/authorized-apps"], label: "Authorized apps", includeChildren: false },
+            { href: ["/me/my-apps"], label: "My apps", includeChildren: true }
         ];
 
         if (isSuperAdmin) {
-            links.push({ href: ["/me/admin"], label: "Admin" }); // should only show whenn... THEY ARE AND
+            links.push({ href: ["/me/admin"], label: "Admin", includeChildren: false }); // should only show whenn... THEY ARE AND
         }
 
         return links;
     });
 
-    $effect(() => {
+    $effect.root(() => {
         if (!hasSession) {
-            invalidateAll();
+            refreshAll();
         }
     });
 </script>
@@ -66,12 +69,7 @@
 
             <div class="nav__links">
                 {#each links as link}
-                    <a
-                        href={link.href[0]}
-                        class="nav__link"
-                        aria-current={link.href.includes(page.url.pathname) ? "page" : "false"}
-                        >{link.label}</a
-                    >
+                    <Link {link} />
                 {/each}
             </div>
         {/if}
@@ -130,46 +128,6 @@
         scrollbar-width: none;
         margin-inline-start: calc(var(--spacing) * 6);
         align-items: center;
-    }
-
-    .nav__link {
-        --hover-brightness: 0.9;
-        --a-color: var(--link-color, var(--color-iron-darkest)) !important;
-        position: relative;
-        padding-block: calc(var(--spacing) * 1);
-        font-size: var(--text-normal);
-        font-weight: 500;
-        white-space: nowrap;
-        text-decoration: none;
-
-        /* hover brightness from buttons */
-        @media (any-hover: hover) {
-            &:hover {
-                filter: brightness(var(--hover-brightness));
-            }
-        }
-
-        @media (prefers-color-scheme: dark) {
-            --hover-brightness: 1.1;
-        }
-
-        &[aria-current="page"] {
-            --link-color: var(--color-accent-dark);
-            font-weight: 600;
-
-            @media (prefers-color-scheme: dark) {
-                --link-color: var(--color-accent-light);
-            }
-
-            &::after {
-                position: absolute;
-                content: "";
-                inset-inline: 0;
-                bottom: 0;
-                height: 2px;
-                background: var(--link-color);
-            }
-        }
     }
 
     @media (max-width: 768px) {
