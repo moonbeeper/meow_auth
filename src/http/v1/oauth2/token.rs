@@ -1,30 +1,41 @@
 use std::sync::Arc;
 
-use axum::{extract::Form, extract::State};
+use axum::{
+    Extension,
+    extract::{Form, State},
+};
 use compact_jwt::JwsSigner;
 use url::Url;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
+    audit::{AuditAction, AuditEntry, SYSTEM_USER_ID},
     database::models::{
         oauth_application::OauthApplication, oauth_pending_token::OauthPendingToken,
         oauth_token::OauthToken, user::User,
     },
     global::GlobalState,
-    http::{error::ApiError, extractor::Json},
+    http::{
+        error::ApiError,
+        extractor::Json,
+        middleware::{browser_agent_manager::UserAgentContext, ip_manager::IpContext},
+        v1::types::AlrightResponse,
+    },
     oauth::{
         error::OauthErrorCodes,
         openid::get_id_token_data,
         response::OauthResponse,
         scopes::Scopes,
         secrets::{check_pkce, get_secret_pair, hash_secret, verify_secret},
-        types::{GrantType, TokenRequest, TokenResponse, TokenType},
+        types::{GrantType, RevocationRequest, TokenRequest, TokenResponse, TokenType},
         valid_redirect_uri,
     },
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
-    OpenApiRouter::new().routes(routes!(token))
+    OpenApiRouter::new()
+        .routes(routes!(token))
+        .routes(routes!(token_revocation))
 }
 
 /// Exchange an authorization code for an access token
@@ -175,4 +186,103 @@ pub async fn token(
         scope: scopes.to_string(),
         id_token, // id tokens for oidc...
     }))
+}
+
+/// Revoke an access token
+#[utoipa::path(
+    post,
+    path = "/revoke",
+    tags = ["oauth_srv"],
+    responses(
+        (status = 200, description = "oauth token revoked", body = TokenResponse),
+        (status = 500, description = "internal server error", body = ApiError)
+    )
+)]
+pub async fn token_revocation(
+    State(global): State<Arc<GlobalState>>,
+    Extension(ip_ctx): Extension<IpContext>,
+    Extension(user_agent): Extension<UserAgentContext>,
+    Form(request): Form<RevocationRequest>,
+) -> Result<Json<AlrightResponse>, OauthResponse> {
+    OauthResponse::set_issuer(global.settings.http.origin.clone());
+
+    let Ok(Some(client)) = OauthApplication::find_by_id(request.client_id, &global.database).await
+    else {
+        return Err(OauthResponse::new().error(OauthErrorCodes::InvalidClient, None, None));
+    };
+
+    if client.disabled {
+        return Err(OauthResponse::new().error(
+            OauthErrorCodes::InvalidClient,
+            Some("client is disabled"),
+            None,
+        ));
+    }
+
+    // even this can't use 'AccessDenied'.. and it would look reallly great here..
+    if !verify_secret(&request.client_secret, &client.secret, &global.settings) {
+        return Err(OauthResponse::new().error(
+            OauthErrorCodes::InvalidClient,
+            Some("client_secret is invalid"),
+            None,
+        ));
+    }
+
+    let hashed_token = hash_secret(&request.token, &global.settings);
+    let Ok(token) = OauthToken::find_by_token(hashed_token, &global.database).await else {
+        return Err(OauthResponse::new().error(OauthErrorCodes::InvalidToken, None, None));
+    };
+
+    // hide muahahha
+    let Some(token) = token else {
+        return Ok(Json(AlrightResponse::default()));
+    };
+
+    if token.client_id != client.id {
+        return Ok(Json(AlrightResponse::default()));
+    }
+
+    // I still hate this.
+    let mut tx = global
+        .database
+        .begin()
+        .await
+        .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
+
+    // I AM NOT DOING A CASCADE DELETE NOOOOOOOOO manual work eggh -- past moon talked about the authorization ig lol
+    OauthToken::delete_all_by_user_and_client_id(token.user_id, client.id, &mut tx)
+        .await
+        .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
+
+    // I shouldnt revoke also the authorization. ITS the decision of the oauth client to revoke its own access token.
+    // Not to remove the entire authorization from the user.
+    //     if let Ok(Some(authorization)) =
+    //         OauthAuthorization::find_by_user_and_client_id(token.user_id, client.id, &global.database)
+    //             .await
+    //     {
+    //         OauthAuthorization::delete_by_id(authorization.id, &mut tx)
+    //             .await
+    //             .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
+    //     }
+
+    AuditEntry::builder()
+        .user_id(token.user_id)
+        .actor_id(SYSTEM_USER_ID)
+        .action(AuditAction::OauthAuthorizationRevoked)
+        // yes i am saving the ip and user agent of the revoker, not the user who authorized the app.
+        // its intentional, and it wont even be shown to the user
+        .actor_ip(ip_ctx.ip_addr())
+        .actor_location(ip_ctx.location())
+        .actor_user_agent(user_agent.agent())
+        .build()
+        .save(&mut tx)
+        .await
+        .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
+
+    // pain
+    tx.commit()
+        .await
+        .map_err(|_| OauthResponse::new().error(OauthErrorCodes::ServerError, None, None))?;
+
+    Ok(Json(AlrightResponse::default()))
 }

@@ -56,10 +56,11 @@
             outline-color: var(--focus-outline-color, var(--color-accent-light));
         }
 
-        &[disabled] {
-            cursor: not-allowed;
+        & [disabled],
+        &:disabled {
+            cursor: not-allowed !important; // yes priority. shouldnt do this.
             opacity: 0.5;
-            pointer-events: none;
+            // pointer-events: none;
         }
     }
 

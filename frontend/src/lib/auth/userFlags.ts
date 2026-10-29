@@ -1,4 +1,4 @@
-import { EnumFlags } from "./flags";
+import { EnumFlags } from "../flags";
 
 export enum UserFlag {
     // None = 0,

@@ -82,9 +82,7 @@ impl OauthPendingAuthorization {
         transaction: &mut PgTransaction<'_>,
     ) -> Result<(), DatabaseError> {
         sqlx::query!(
-            "delete from oauth_pending_authorizations where user_id = $1 and client_id = $2 and user_session = $3 and expires_at > now()",
-            self.user_id as UserId,
-            self.client_id as OauthApplicationId,
+            "delete from oauth_pending_authorizations where user_session = $1",
             self.user_session as UserSessionId
         )
         .execute(&mut **transaction)

@@ -19,7 +19,7 @@ impl Default for UlidId {
 }
 
 impl UlidId {
-    pub fn nil() -> Self {
+    pub const fn nil() -> Self {
         UlidId(ulid::Ulid::nil())
     }
 

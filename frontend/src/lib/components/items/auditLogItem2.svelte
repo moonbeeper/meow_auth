@@ -3,19 +3,8 @@
     import type { ListDataResponseAuditLogDataItem } from "$lib/api/model";
     import { actionCategory, actionLabel, intoAuditAction } from "$lib/auditLog";
     import { actionDate } from "$lib/common";
-    import { Collapsible } from "bits-ui";
-    import type { Snippet } from "svelte";
 
     type Props = {
-        // action: string;
-        // was_self: boolean;
-        // created_at: string;
-        // resource_type?: string;
-        // resource_id?: string;
-        // actor_ip?: string;
-        // actor_location?: string;
-        // actor_user_agent?: string;
-        // children?: Snippet;
         item: ListDataResponseAuditLogDataItem;
     };
 
@@ -35,11 +24,8 @@
     });
 </script>
 
-<LogItem.Root collapsible>
+<LogItem.Root collapsible={!!item.actor_ip || !!item.actor_location}>
     <LogItem.Header {title} {tag} {who} {when} />
-    <!-- <LogItem.Actions>
-        <span>V</span>
-    </LogItem.Actions> -->
 
     {#snippet inner_content()}
         <div class="meow">

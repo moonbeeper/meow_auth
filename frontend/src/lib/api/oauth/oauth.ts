@@ -21,8 +21,9 @@ import type {
 import type {
     AlrightResponse,
     ApiError,
-    ListApplicationsParams,
     ListDataResponseOauthApplication,
+    ListDataResponseOauthAuthorization,
+    ListOauthApplicationsParams,
     ListOauthAuthorizationsParams,
     OauthApplication,
     OauthApplicationData,
@@ -30,39 +31,39 @@ import type {
     UlidId
 } from "../model";
 
-export type createApplicationResponse200 = {
+export type createOauthApplicationResponse200 = {
     data: OauthApplicationDataResponse;
     status: 200;
 };
 
-export type createApplicationResponse500 = {
+export type createOauthApplicationResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type createApplicationResponseSuccess = createApplicationResponse200 & {
+export type createOauthApplicationResponseSuccess = createOauthApplicationResponse200 & {
     headers: Headers;
 };
-export type createApplicationResponseError = createApplicationResponse500 & {
+export type createOauthApplicationResponseError = createOauthApplicationResponse500 & {
     headers: Headers;
 };
 
-export type createApplicationResponse =
-    | createApplicationResponseSuccess
-    | createApplicationResponseError;
+export type createOauthApplicationResponse =
+    | createOauthApplicationResponseSuccess
+    | createOauthApplicationResponseError;
 
-export const getCreateApplicationUrl = () => {
+export const getCreateOauthApplicationUrl = () => {
     return `${apiUrlForOrval}/v1/me/oauth/application/create`;
 };
 
 /**
  * @summary Create a new oauth application
  */
-export const createApplication = async (
+export const createOauthApplication = async (
     oauthApplicationData: OauthApplicationData,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<createApplicationResponse> => {
+): Promise<createOauthApplicationResponse> => {
     const getHeaders = (
         h?: NonNullable<RequestInit["headers"]>
     ): Record<string, string | readonly string[]> => {
@@ -82,7 +83,7 @@ export const createApplication = async (
         }
         return headers;
     };
-    const res = await (fetchFn ?? fetch)(getCreateApplicationUrl(), {
+    const res = await (fetchFn ?? fetch)(getCreateOauthApplicationUrl(), {
         credentials: "include",
         ...options,
         method: "POST",
@@ -92,31 +93,31 @@ export const createApplication = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: createApplicationResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as createApplicationResponse;
+    const data: createOauthApplicationResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as createOauthApplicationResponse;
 };
 
-export const getCreateApplicationMutationKey = () => ["createApplication"] as const;
+export const getCreateOauthApplicationMutationKey = () => ["createOauthApplication"] as const;
 
-export const getCreateApplicationMutationOptions = <
+export const getCreateOauthApplicationMutationOptions = <
     TError = ApiError,
     TContext = unknown
 >(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof createApplication>>,
+        Awaited<ReturnType<typeof createOauthApplication>>,
         TError,
-        CreateApplicationMutationVariables,
+        CreateOauthApplicationMutationVariables,
         TContext
     >;
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof createApplication>>,
+    Awaited<ReturnType<typeof createOauthApplication>>,
     TError,
-    CreateApplicationMutationVariables,
+    CreateOauthApplicationMutationVariables,
     TContext
 > => {
-    const mutationKey = getCreateApplicationMutationKey();
+    const mutationKey = getCreateOauthApplicationMutationKey();
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -128,33 +129,33 @@ export const getCreateApplicationMutationOptions = <
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof createApplication>>,
-        CreateApplicationMutationVariables
+        Awaited<ReturnType<typeof createOauthApplication>>,
+        CreateOauthApplicationMutationVariables
     > = (props) => {
         const { data } = props ?? {};
 
-        return createApplication(data, fetchOptions, fetcherFn);
+        return createOauthApplication(data, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type CreateApplicationMutationResult = NonNullable<
-    Awaited<ReturnType<typeof createApplication>>
+export type CreateOauthApplicationMutationResult = NonNullable<
+    Awaited<ReturnType<typeof createOauthApplication>>
 >;
-export type CreateApplicationMutationBody = OauthApplicationData;
-export type CreateApplicationMutationError = ApiError;
-export type CreateApplicationMutationVariables = { data: OauthApplicationData };
+export type CreateOauthApplicationMutationBody = OauthApplicationData;
+export type CreateOauthApplicationMutationError = ApiError;
+export type CreateOauthApplicationMutationVariables = { data: OauthApplicationData };
 
 /**
  * @summary Create a new oauth application
  */
-export const createCreateApplication = <TError = ApiError, TContext = unknown>(
+export const createCreateOauthApplication = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof createApplication>>,
+            Awaited<ReturnType<typeof createOauthApplication>>,
             TError,
-            CreateApplicationMutationVariables,
+            CreateOauthApplicationMutationVariables,
             TContext
         >;
         fetch?: RequestInit;
@@ -162,38 +163,38 @@ export const createCreateApplication = <TError = ApiError, TContext = unknown>(
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof createApplication>>,
+    Awaited<ReturnType<typeof createOauthApplication>>,
     TError,
-    CreateApplicationMutationVariables,
+    CreateOauthApplicationMutationVariables,
     TContext
 > => {
     return createMutation(
-        () => ({ ...getCreateApplicationMutationOptions(options?.()) }),
+        () => ({ ...getCreateOauthApplicationMutationOptions(options?.()) }),
         queryClient
     );
 };
-export type listApplicationsResponse200 = {
+export type listOauthApplicationsResponse200 = {
     data: ListDataResponseOauthApplication;
     status: 200;
 };
 
-export type listApplicationsResponse500 = {
+export type listOauthApplicationsResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type listApplicationsResponseSuccess = listApplicationsResponse200 & {
+export type listOauthApplicationsResponseSuccess = listOauthApplicationsResponse200 & {
     headers: Headers;
 };
-export type listApplicationsResponseError = listApplicationsResponse500 & {
+export type listOauthApplicationsResponseError = listOauthApplicationsResponse500 & {
     headers: Headers;
 };
 
-export type listApplicationsResponse =
-    | listApplicationsResponseSuccess
-    | listApplicationsResponseError;
+export type listOauthApplicationsResponse =
+    | listOauthApplicationsResponseSuccess
+    | listOauthApplicationsResponseError;
 
-export const getListApplicationsUrl = (params?: ListApplicationsParams) => {
+export const getListOauthApplicationsUrl = (params?: ListOauthApplicationsParams) => {
     const normalizedParams = new URLSearchParams();
 
     Object.entries(params || {}).forEach(([key, value]) => {
@@ -212,12 +213,12 @@ export const getListApplicationsUrl = (params?: ListApplicationsParams) => {
 /**
  * @summary List your oauth applications
  */
-export const listApplications = async (
-    params?: ListApplicationsParams,
+export const listOauthApplications = async (
+    params?: ListOauthApplicationsParams,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<listApplicationsResponse> => {
-    const res = await (fetchFn ?? fetch)(getListApplicationsUrl(params), {
+): Promise<listOauthApplicationsResponse> => {
+    const res = await (fetchFn ?? fetch)(getListOauthApplicationsUrl(params), {
         credentials: "include",
         ...options,
         method: "GET"
@@ -225,22 +226,22 @@ export const listApplications = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: listApplicationsResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as listApplicationsResponse;
+    const data: listOauthApplicationsResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as listOauthApplicationsResponse;
 };
 
-export const getListApplicationsQueryKey = (params?: ListApplicationsParams) => {
-    return ["listApplications", ...(params ? [params] : [])] as const;
+export const getListOauthApplicationsQueryKey = (params?: ListOauthApplicationsParams) => {
+    return ["listOauthApplications", ...(params ? [params] : [])] as const;
 };
 
-export const getListApplicationsQueryOptions = <
-    TData = Awaited<ReturnType<typeof listApplications>>,
+export const getListOauthApplicationsQueryOptions = <
+    TData = Awaited<ReturnType<typeof listOauthApplications>>,
     TError = ApiError
 >(
-    params?: ListApplicationsParams,
+    params?: ListOauthApplicationsParams,
     options?: {
         query?: Partial<
-            CreateQueryOptions<Awaited<ReturnType<typeof listApplications>>, TError, TData>
+            CreateQueryOptions<Awaited<ReturnType<typeof listOauthApplications>>, TError, TData>
         >;
         fetch?: RequestInit;
         fetcher?: typeof globalThis.fetch;
@@ -248,33 +249,36 @@ export const getListApplicationsQueryOptions = <
 ) => {
     const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
 
-    const queryKey = queryOptions?.queryKey ?? getListApplicationsQueryKey(params);
+    const queryKey = queryOptions?.queryKey ?? getListOauthApplicationsQueryKey(params);
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listApplications>>> = ({ signal }) =>
-        listApplications(params, { signal, ...fetchOptions }, fetcherFn);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOauthApplications>>> = ({
+        signal
+    }) => listOauthApplications(params, { signal, ...fetchOptions }, fetcherFn);
 
     return { queryKey, queryFn, ...queryOptions } as CreateQueryOptions<
-        Awaited<ReturnType<typeof listApplications>>,
+        Awaited<ReturnType<typeof listOauthApplications>>,
         TError,
         TData
     > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type ListApplicationsQueryResult = NonNullable<Awaited<ReturnType<typeof listApplications>>>;
-export type ListApplicationsQueryError = ApiError;
+export type ListOauthApplicationsQueryResult = NonNullable<
+    Awaited<ReturnType<typeof listOauthApplications>>
+>;
+export type ListOauthApplicationsQueryError = ApiError;
 
 /**
  * @summary List your oauth applications
  */
 
-export function createListApplications<
-    TData = Awaited<ReturnType<typeof listApplications>>,
+export function createListOauthApplications<
+    TData = Awaited<ReturnType<typeof listOauthApplications>>,
     TError = ApiError
 >(
-    params?: () => ListApplicationsParams,
+    params?: () => ListOauthApplicationsParams,
     options?: () => {
         query?: Partial<
-            CreateQueryOptions<Awaited<ReturnType<typeof listApplications>>, TError, TData>
+            CreateQueryOptions<Awaited<ReturnType<typeof listOauthApplications>>, TError, TData>
         >;
         fetch?: RequestInit;
         fetcher?: typeof globalThis.fetch;
@@ -282,55 +286,55 @@ export function createListApplications<
     queryClient?: () => QueryClient
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
-        () => getListApplicationsQueryOptions(params?.(), options?.()),
+        () => getListOauthApplicationsQueryOptions(params?.(), options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
     return query;
 }
 
-export type getInfoApplicationResponse200 = {
+export type getInfoOauthApplicationResponse200 = {
     data: OauthApplication;
     status: 200;
 };
 
-export type getInfoApplicationResponse404 = {
+export type getInfoOauthApplicationResponse404 = {
     data: ApiError;
     status: 404;
 };
 
-export type getInfoApplicationResponse500 = {
+export type getInfoOauthApplicationResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type getInfoApplicationResponseSuccess = getInfoApplicationResponse200 & {
+export type getInfoOauthApplicationResponseSuccess = getInfoOauthApplicationResponse200 & {
     headers: Headers;
 };
-export type getInfoApplicationResponseError = (
-    | getInfoApplicationResponse404
-    | getInfoApplicationResponse500
+export type getInfoOauthApplicationResponseError = (
+    | getInfoOauthApplicationResponse404
+    | getInfoOauthApplicationResponse500
 ) & {
     headers: Headers;
 };
 
-export type getInfoApplicationResponse =
-    | getInfoApplicationResponseSuccess
-    | getInfoApplicationResponseError;
+export type getInfoOauthApplicationResponse =
+    | getInfoOauthApplicationResponseSuccess
+    | getInfoOauthApplicationResponseError;
 
-export const getGetInfoApplicationUrl = (id: UlidId) => {
+export const getGetInfoOauthApplicationUrl = (id: UlidId) => {
     return `${apiUrlForOrval}/v1/me/oauth/application/${id}`;
 };
 
 /**
  * @summary Get info about a specific oauth application
  */
-export const getInfoApplication = async (
+export const getInfoOauthApplication = async (
     id: UlidId,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<getInfoApplicationResponse> => {
-    const res = await (fetchFn ?? fetch)(getGetInfoApplicationUrl(id), {
+): Promise<getInfoOauthApplicationResponse> => {
+    const res = await (fetchFn ?? fetch)(getGetInfoOauthApplicationUrl(id), {
         credentials: "include",
         ...options,
         method: "GET"
@@ -338,22 +342,22 @@ export const getInfoApplication = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: getInfoApplicationResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as getInfoApplicationResponse;
+    const data: getInfoOauthApplicationResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as getInfoOauthApplicationResponse;
 };
 
-export const getGetInfoApplicationQueryKey = (id: UlidId) => {
-    return ["getInfoApplication", ...(id ? [id] : [])] as const;
+export const getGetInfoOauthApplicationQueryKey = (id: UlidId) => {
+    return ["getInfoOauthApplication", ...(id ? [id] : [])] as const;
 };
 
-export const getGetInfoApplicationQueryOptions = <
-    TData = Awaited<ReturnType<typeof getInfoApplication>>,
+export const getGetInfoOauthApplicationQueryOptions = <
+    TData = Awaited<ReturnType<typeof getInfoOauthApplication>>,
     TError = ApiError
 >(
     id: UlidId,
     options?: {
         query?: Partial<
-            CreateQueryOptions<Awaited<ReturnType<typeof getInfoApplication>>, TError, TData>
+            CreateQueryOptions<Awaited<ReturnType<typeof getInfoOauthApplication>>, TError, TData>
         >;
         fetch?: RequestInit;
         fetcher?: typeof globalThis.fetch;
@@ -361,38 +365,39 @@ export const getGetInfoApplicationQueryOptions = <
 ) => {
     const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
 
-    const queryKey = queryOptions?.queryKey ?? getGetInfoApplicationQueryKey(id);
+    const queryKey = queryOptions?.queryKey ?? getGetInfoOauthApplicationQueryKey(id);
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInfoApplication>>> = ({ signal }) =>
-        getInfoApplication(id, { signal, ...fetchOptions }, fetcherFn);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInfoOauthApplication>>> = ({
+        signal
+    }) => getInfoOauthApplication(id, { signal, ...fetchOptions }, fetcherFn);
 
     return {
         queryKey,
         queryFn,
         enabled: id !== null && id !== undefined,
         ...queryOptions
-    } as CreateQueryOptions<Awaited<ReturnType<typeof getInfoApplication>>, TError, TData> & {
+    } as CreateQueryOptions<Awaited<ReturnType<typeof getInfoOauthApplication>>, TError, TData> & {
         queryKey: DataTag<QueryKey, TData, TError>;
     };
 };
 
-export type GetInfoApplicationQueryResult = NonNullable<
-    Awaited<ReturnType<typeof getInfoApplication>>
+export type GetInfoOauthApplicationQueryResult = NonNullable<
+    Awaited<ReturnType<typeof getInfoOauthApplication>>
 >;
-export type GetInfoApplicationQueryError = ApiError;
+export type GetInfoOauthApplicationQueryError = ApiError;
 
 /**
  * @summary Get info about a specific oauth application
  */
 
-export function createGetInfoApplication<
-    TData = Awaited<ReturnType<typeof getInfoApplication>>,
+export function createGetInfoOauthApplication<
+    TData = Awaited<ReturnType<typeof getInfoOauthApplication>>,
     TError = ApiError
 >(
     id: () => UlidId,
     options?: () => {
         query?: Partial<
-            CreateQueryOptions<Awaited<ReturnType<typeof getInfoApplication>>, TError, TData>
+            CreateQueryOptions<Awaited<ReturnType<typeof getInfoOauthApplication>>, TError, TData>
         >;
         fetch?: RequestInit;
         fetcher?: typeof globalThis.fetch;
@@ -400,55 +405,55 @@ export function createGetInfoApplication<
     queryClient?: () => QueryClient
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
-        () => getGetInfoApplicationQueryOptions(id(), options?.()),
+        () => getGetInfoOauthApplicationQueryOptions(id(), options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
     return query;
 }
 
-export type deleteApplicationResponse200 = {
+export type deleteOauthApplicationResponse200 = {
     data: void;
     status: 200;
 };
 
-export type deleteApplicationResponse404 = {
+export type deleteOauthApplicationResponse404 = {
     data: ApiError;
     status: 404;
 };
 
-export type deleteApplicationResponse500 = {
+export type deleteOauthApplicationResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type deleteApplicationResponseSuccess = deleteApplicationResponse200 & {
+export type deleteOauthApplicationResponseSuccess = deleteOauthApplicationResponse200 & {
     headers: Headers;
 };
-export type deleteApplicationResponseError = (
-    | deleteApplicationResponse404
-    | deleteApplicationResponse500
+export type deleteOauthApplicationResponseError = (
+    | deleteOauthApplicationResponse404
+    | deleteOauthApplicationResponse500
 ) & {
     headers: Headers;
 };
 
-export type deleteApplicationResponse =
-    | deleteApplicationResponseSuccess
-    | deleteApplicationResponseError;
+export type deleteOauthApplicationResponse =
+    | deleteOauthApplicationResponseSuccess
+    | deleteOauthApplicationResponseError;
 
-export const getDeleteApplicationUrl = (id: UlidId) => {
+export const getDeleteOauthApplicationUrl = (id: UlidId) => {
     return `${apiUrlForOrval}/v1/me/oauth/application/${id}`;
 };
 
 /**
  * @summary Delete an existing oauth application
  */
-export const deleteApplication = async (
+export const deleteOauthApplication = async (
     id: UlidId,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<deleteApplicationResponse> => {
-    const res = await (fetchFn ?? fetch)(getDeleteApplicationUrl(id), {
+): Promise<deleteOauthApplicationResponse> => {
+    const res = await (fetchFn ?? fetch)(getDeleteOauthApplicationUrl(id), {
         credentials: "include",
         ...options,
         method: "DELETE"
@@ -456,31 +461,31 @@ export const deleteApplication = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: deleteApplicationResponse["data"] = body ? JSON.parse(body) : undefined;
-    return { data, status: res.status, headers: res.headers } as deleteApplicationResponse;
+    const data: deleteOauthApplicationResponse["data"] = body ? JSON.parse(body) : undefined;
+    return { data, status: res.status, headers: res.headers } as deleteOauthApplicationResponse;
 };
 
-export const getDeleteApplicationMutationKey = () => ["deleteApplication"] as const;
+export const getDeleteOauthApplicationMutationKey = () => ["deleteOauthApplication"] as const;
 
-export const getDeleteApplicationMutationOptions = <
+export const getDeleteOauthApplicationMutationOptions = <
     TError = ApiError,
     TContext = unknown
 >(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof deleteApplication>>,
+        Awaited<ReturnType<typeof deleteOauthApplication>>,
         TError,
-        DeleteApplicationMutationVariables,
+        DeleteOauthApplicationMutationVariables,
         TContext
     >;
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof deleteApplication>>,
+    Awaited<ReturnType<typeof deleteOauthApplication>>,
     TError,
-    DeleteApplicationMutationVariables,
+    DeleteOauthApplicationMutationVariables,
     TContext
 > => {
-    const mutationKey = getDeleteApplicationMutationKey();
+    const mutationKey = getDeleteOauthApplicationMutationKey();
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -492,33 +497,33 @@ export const getDeleteApplicationMutationOptions = <
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof deleteApplication>>,
-        DeleteApplicationMutationVariables
+        Awaited<ReturnType<typeof deleteOauthApplication>>,
+        DeleteOauthApplicationMutationVariables
     > = (props) => {
         const { id } = props ?? {};
 
-        return deleteApplication(id, fetchOptions, fetcherFn);
+        return deleteOauthApplication(id, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type DeleteApplicationMutationResult = NonNullable<
-    Awaited<ReturnType<typeof deleteApplication>>
+export type DeleteOauthApplicationMutationResult = NonNullable<
+    Awaited<ReturnType<typeof deleteOauthApplication>>
 >;
 
-export type DeleteApplicationMutationError = ApiError;
-export type DeleteApplicationMutationVariables = { id: UlidId };
+export type DeleteOauthApplicationMutationError = ApiError;
+export type DeleteOauthApplicationMutationVariables = { id: UlidId };
 
 /**
  * @summary Delete an existing oauth application
  */
-export const createDeleteApplication = <TError = ApiError, TContext = unknown>(
+export const createDeleteOauthApplication = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof deleteApplication>>,
+            Awaited<ReturnType<typeof deleteOauthApplication>>,
             TError,
-            DeleteApplicationMutationVariables,
+            DeleteOauthApplicationMutationVariables,
             TContext
         >;
         fetch?: RequestInit;
@@ -526,58 +531,58 @@ export const createDeleteApplication = <TError = ApiError, TContext = unknown>(
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof deleteApplication>>,
+    Awaited<ReturnType<typeof deleteOauthApplication>>,
     TError,
-    DeleteApplicationMutationVariables,
+    DeleteOauthApplicationMutationVariables,
     TContext
 > => {
     return createMutation(
-        () => ({ ...getDeleteApplicationMutationOptions(options?.()) }),
+        () => ({ ...getDeleteOauthApplicationMutationOptions(options?.()) }),
         queryClient
     );
 };
-export type updateApplicationResponse200 = {
+export type updateOauthApplicationResponse200 = {
     data: AlrightResponse;
     status: 200;
 };
 
-export type updateApplicationResponse404 = {
+export type updateOauthApplicationResponse404 = {
     data: ApiError;
     status: 404;
 };
 
-export type updateApplicationResponse500 = {
+export type updateOauthApplicationResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type updateApplicationResponseSuccess = updateApplicationResponse200 & {
+export type updateOauthApplicationResponseSuccess = updateOauthApplicationResponse200 & {
     headers: Headers;
 };
-export type updateApplicationResponseError = (
-    | updateApplicationResponse404
-    | updateApplicationResponse500
+export type updateOauthApplicationResponseError = (
+    | updateOauthApplicationResponse404
+    | updateOauthApplicationResponse500
 ) & {
     headers: Headers;
 };
 
-export type updateApplicationResponse =
-    | updateApplicationResponseSuccess
-    | updateApplicationResponseError;
+export type updateOauthApplicationResponse =
+    | updateOauthApplicationResponseSuccess
+    | updateOauthApplicationResponseError;
 
-export const getUpdateApplicationUrl = (id: UlidId) => {
+export const getUpdateOauthApplicationUrl = (id: UlidId) => {
     return `${apiUrlForOrval}/v1/me/oauth/application/${id}`;
 };
 
 /**
  * @summary Update an existing oauth application
  */
-export const updateApplication = async (
+export const updateOauthApplication = async (
     id: UlidId,
     oauthApplicationData: OauthApplicationData,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<updateApplicationResponse> => {
+): Promise<updateOauthApplicationResponse> => {
     const getHeaders = (
         h?: NonNullable<RequestInit["headers"]>
     ): Record<string, string | readonly string[]> => {
@@ -597,7 +602,7 @@ export const updateApplication = async (
         }
         return headers;
     };
-    const res = await (fetchFn ?? fetch)(getUpdateApplicationUrl(id), {
+    const res = await (fetchFn ?? fetch)(getUpdateOauthApplicationUrl(id), {
         credentials: "include",
         ...options,
         method: "PATCH",
@@ -607,31 +612,31 @@ export const updateApplication = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: updateApplicationResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as updateApplicationResponse;
+    const data: updateOauthApplicationResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as updateOauthApplicationResponse;
 };
 
-export const getUpdateApplicationMutationKey = () => ["updateApplication"] as const;
+export const getUpdateOauthApplicationMutationKey = () => ["updateOauthApplication"] as const;
 
-export const getUpdateApplicationMutationOptions = <
+export const getUpdateOauthApplicationMutationOptions = <
     TError = ApiError,
     TContext = unknown
 >(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof updateApplication>>,
+        Awaited<ReturnType<typeof updateOauthApplication>>,
         TError,
-        UpdateApplicationMutationVariables,
+        UpdateOauthApplicationMutationVariables,
         TContext
     >;
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof updateApplication>>,
+    Awaited<ReturnType<typeof updateOauthApplication>>,
     TError,
-    UpdateApplicationMutationVariables,
+    UpdateOauthApplicationMutationVariables,
     TContext
 > => {
-    const mutationKey = getUpdateApplicationMutationKey();
+    const mutationKey = getUpdateOauthApplicationMutationKey();
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -643,33 +648,33 @@ export const getUpdateApplicationMutationOptions = <
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof updateApplication>>,
-        UpdateApplicationMutationVariables
+        Awaited<ReturnType<typeof updateOauthApplication>>,
+        UpdateOauthApplicationMutationVariables
     > = (props) => {
         const { id, data } = props ?? {};
 
-        return updateApplication(id, data, fetchOptions, fetcherFn);
+        return updateOauthApplication(id, data, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type UpdateApplicationMutationResult = NonNullable<
-    Awaited<ReturnType<typeof updateApplication>>
+export type UpdateOauthApplicationMutationResult = NonNullable<
+    Awaited<ReturnType<typeof updateOauthApplication>>
 >;
-export type UpdateApplicationMutationBody = OauthApplicationData;
-export type UpdateApplicationMutationError = ApiError;
-export type UpdateApplicationMutationVariables = { id: UlidId; data: OauthApplicationData };
+export type UpdateOauthApplicationMutationBody = OauthApplicationData;
+export type UpdateOauthApplicationMutationError = ApiError;
+export type UpdateOauthApplicationMutationVariables = { id: UlidId; data: OauthApplicationData };
 
 /**
  * @summary Update an existing oauth application
  */
-export const createUpdateApplication = <TError = ApiError, TContext = unknown>(
+export const createUpdateOauthApplication = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof updateApplication>>,
+            Awaited<ReturnType<typeof updateOauthApplication>>,
             TError,
-            UpdateApplicationMutationVariables,
+            UpdateOauthApplicationMutationVariables,
             TContext
         >;
         fetch?: RequestInit;
@@ -677,58 +682,59 @@ export const createUpdateApplication = <TError = ApiError, TContext = unknown>(
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof updateApplication>>,
+    Awaited<ReturnType<typeof updateOauthApplication>>,
     TError,
-    UpdateApplicationMutationVariables,
+    UpdateOauthApplicationMutationVariables,
     TContext
 > => {
     return createMutation(
-        () => ({ ...getUpdateApplicationMutationOptions(options?.()) }),
+        () => ({ ...getUpdateOauthApplicationMutationOptions(options?.()) }),
         queryClient
     );
 };
-export type rotateSecretApplicationResponse200 = {
+export type rotateSecretOauthApplicationResponse200 = {
     data: OauthApplicationDataResponse;
     status: 200;
 };
 
-export type rotateSecretApplicationResponse404 = {
+export type rotateSecretOauthApplicationResponse404 = {
     data: ApiError;
     status: 404;
 };
 
-export type rotateSecretApplicationResponse500 = {
+export type rotateSecretOauthApplicationResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type rotateSecretApplicationResponseSuccess = rotateSecretApplicationResponse200 & {
-    headers: Headers;
-};
-export type rotateSecretApplicationResponseError = (
-    | rotateSecretApplicationResponse404
-    | rotateSecretApplicationResponse500
+export type rotateSecretOauthApplicationResponseSuccess =
+    rotateSecretOauthApplicationResponse200 & {
+        headers: Headers;
+    };
+export type rotateSecretOauthApplicationResponseError = (
+    | rotateSecretOauthApplicationResponse404
+    | rotateSecretOauthApplicationResponse500
 ) & {
     headers: Headers;
 };
 
-export type rotateSecretApplicationResponse =
-    | rotateSecretApplicationResponseSuccess
-    | rotateSecretApplicationResponseError;
+export type rotateSecretOauthApplicationResponse =
+    | rotateSecretOauthApplicationResponseSuccess
+    | rotateSecretOauthApplicationResponseError;
 
-export const getRotateSecretApplicationUrl = (id: UlidId) => {
+export const getRotateSecretOauthApplicationUrl = (id: UlidId) => {
     return `${apiUrlForOrval}/v1/me/oauth/application/${id}/rotate_keys`;
 };
 
 /**
  * @summary Rotate the secret of an existing oauth application
  */
-export const rotateSecretApplication = async (
+export const rotateSecretOauthApplication = async (
     id: UlidId,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<rotateSecretApplicationResponse> => {
-    const res = await (fetchFn ?? fetch)(getRotateSecretApplicationUrl(id), {
+): Promise<rotateSecretOauthApplicationResponse> => {
+    const res = await (fetchFn ?? fetch)(getRotateSecretOauthApplicationUrl(id), {
         credentials: "include",
         ...options,
         method: "PATCH"
@@ -736,31 +742,36 @@ export const rotateSecretApplication = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: rotateSecretApplicationResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as rotateSecretApplicationResponse;
+    const data: rotateSecretOauthApplicationResponse["data"] = body ? JSON.parse(body) : {};
+    return {
+        data,
+        status: res.status,
+        headers: res.headers
+    } as rotateSecretOauthApplicationResponse;
 };
 
-export const getRotateSecretApplicationMutationKey = () => ["rotateSecretApplication"] as const;
+export const getRotateSecretOauthApplicationMutationKey = () =>
+    ["rotateSecretOauthApplication"] as const;
 
-export const getRotateSecretApplicationMutationOptions = <
+export const getRotateSecretOauthApplicationMutationOptions = <
     TError = ApiError,
     TContext = unknown
 >(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof rotateSecretApplication>>,
+        Awaited<ReturnType<typeof rotateSecretOauthApplication>>,
         TError,
-        RotateSecretApplicationMutationVariables,
+        RotateSecretOauthApplicationMutationVariables,
         TContext
     >;
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof rotateSecretApplication>>,
+    Awaited<ReturnType<typeof rotateSecretOauthApplication>>,
     TError,
-    RotateSecretApplicationMutationVariables,
+    RotateSecretOauthApplicationMutationVariables,
     TContext
 > => {
-    const mutationKey = getRotateSecretApplicationMutationKey();
+    const mutationKey = getRotateSecretOauthApplicationMutationKey();
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -772,33 +783,33 @@ export const getRotateSecretApplicationMutationOptions = <
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof rotateSecretApplication>>,
-        RotateSecretApplicationMutationVariables
+        Awaited<ReturnType<typeof rotateSecretOauthApplication>>,
+        RotateSecretOauthApplicationMutationVariables
     > = (props) => {
         const { id } = props ?? {};
 
-        return rotateSecretApplication(id, fetchOptions, fetcherFn);
+        return rotateSecretOauthApplication(id, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type RotateSecretApplicationMutationResult = NonNullable<
-    Awaited<ReturnType<typeof rotateSecretApplication>>
+export type RotateSecretOauthApplicationMutationResult = NonNullable<
+    Awaited<ReturnType<typeof rotateSecretOauthApplication>>
 >;
 
-export type RotateSecretApplicationMutationError = ApiError;
-export type RotateSecretApplicationMutationVariables = { id: UlidId };
+export type RotateSecretOauthApplicationMutationError = ApiError;
+export type RotateSecretOauthApplicationMutationVariables = { id: UlidId };
 
 /**
  * @summary Rotate the secret of an existing oauth application
  */
-export const createRotateSecretApplication = <TError = ApiError, TContext = unknown>(
+export const createRotateSecretOauthApplication = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof rotateSecretApplication>>,
+            Awaited<ReturnType<typeof rotateSecretOauthApplication>>,
             TError,
-            RotateSecretApplicationMutationVariables,
+            RotateSecretOauthApplicationMutationVariables,
             TContext
         >;
         fetch?: RequestInit;
@@ -806,18 +817,18 @@ export const createRotateSecretApplication = <TError = ApiError, TContext = unkn
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof rotateSecretApplication>>,
+    Awaited<ReturnType<typeof rotateSecretOauthApplication>>,
     TError,
-    RotateSecretApplicationMutationVariables,
+    RotateSecretOauthApplicationMutationVariables,
     TContext
 > => {
     return createMutation(
-        () => ({ ...getRotateSecretApplicationMutationOptions(options?.()) }),
+        () => ({ ...getRotateSecretOauthApplicationMutationOptions(options?.()) }),
         queryClient
     );
 };
 export type listOauthAuthorizationsResponse200 = {
-    data: ListDataResponseOauthApplication;
+    data: ListDataResponseOauthAuthorization;
     status: 200;
 };
 
@@ -936,48 +947,48 @@ export function createListOauthAuthorizations<
     return query;
 }
 
-export type deleteOauthAuthorizationResponse200 = {
+export type revokeOauthAuthorizationResponse200 = {
     data: AlrightResponse;
     status: 200;
 };
 
-export type deleteOauthAuthorizationResponse404 = {
+export type revokeOauthAuthorizationResponse404 = {
     data: ApiError;
     status: 404;
 };
 
-export type deleteOauthAuthorizationResponse500 = {
+export type revokeOauthAuthorizationResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type deleteOauthAuthorizationResponseSuccess = deleteOauthAuthorizationResponse200 & {
+export type revokeOauthAuthorizationResponseSuccess = revokeOauthAuthorizationResponse200 & {
     headers: Headers;
 };
-export type deleteOauthAuthorizationResponseError = (
-    | deleteOauthAuthorizationResponse404
-    | deleteOauthAuthorizationResponse500
+export type revokeOauthAuthorizationResponseError = (
+    | revokeOauthAuthorizationResponse404
+    | revokeOauthAuthorizationResponse500
 ) & {
     headers: Headers;
 };
 
-export type deleteOauthAuthorizationResponse =
-    | deleteOauthAuthorizationResponseSuccess
-    | deleteOauthAuthorizationResponseError;
+export type revokeOauthAuthorizationResponse =
+    | revokeOauthAuthorizationResponseSuccess
+    | revokeOauthAuthorizationResponseError;
 
-export const getDeleteOauthAuthorizationUrl = (id: UlidId) => {
+export const getRevokeOauthAuthorizationUrl = (id: UlidId) => {
     return `${apiUrlForOrval}/v1/me/oauth/authorization/${id}`;
 };
 
 /**
  * @summary Revoke an oauth authorization
  */
-export const deleteOauthAuthorization = async (
+export const revokeOauthAuthorization = async (
     id: UlidId,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<deleteOauthAuthorizationResponse> => {
-    const res = await (fetchFn ?? fetch)(getDeleteOauthAuthorizationUrl(id), {
+): Promise<revokeOauthAuthorizationResponse> => {
+    const res = await (fetchFn ?? fetch)(getRevokeOauthAuthorizationUrl(id), {
         credentials: "include",
         ...options,
         method: "DELETE"
@@ -985,31 +996,31 @@ export const deleteOauthAuthorization = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: deleteOauthAuthorizationResponse["data"] = body ? JSON.parse(body) : {};
-    return { data, status: res.status, headers: res.headers } as deleteOauthAuthorizationResponse;
+    const data: revokeOauthAuthorizationResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as revokeOauthAuthorizationResponse;
 };
 
-export const getDeleteOauthAuthorizationMutationKey = () => ["deleteOauthAuthorization"] as const;
+export const getRevokeOauthAuthorizationMutationKey = () => ["revokeOauthAuthorization"] as const;
 
-export const getDeleteOauthAuthorizationMutationOptions = <
+export const getRevokeOauthAuthorizationMutationOptions = <
     TError = ApiError,
     TContext = unknown
 >(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof deleteOauthAuthorization>>,
+        Awaited<ReturnType<typeof revokeOauthAuthorization>>,
         TError,
-        DeleteOauthAuthorizationMutationVariables,
+        RevokeOauthAuthorizationMutationVariables,
         TContext
     >;
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof deleteOauthAuthorization>>,
+    Awaited<ReturnType<typeof revokeOauthAuthorization>>,
     TError,
-    DeleteOauthAuthorizationMutationVariables,
+    RevokeOauthAuthorizationMutationVariables,
     TContext
 > => {
-    const mutationKey = getDeleteOauthAuthorizationMutationKey();
+    const mutationKey = getRevokeOauthAuthorizationMutationKey();
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -1021,33 +1032,33 @@ export const getDeleteOauthAuthorizationMutationOptions = <
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof deleteOauthAuthorization>>,
-        DeleteOauthAuthorizationMutationVariables
+        Awaited<ReturnType<typeof revokeOauthAuthorization>>,
+        RevokeOauthAuthorizationMutationVariables
     > = (props) => {
         const { id } = props ?? {};
 
-        return deleteOauthAuthorization(id, fetchOptions, fetcherFn);
+        return revokeOauthAuthorization(id, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type DeleteOauthAuthorizationMutationResult = NonNullable<
-    Awaited<ReturnType<typeof deleteOauthAuthorization>>
+export type RevokeOauthAuthorizationMutationResult = NonNullable<
+    Awaited<ReturnType<typeof revokeOauthAuthorization>>
 >;
 
-export type DeleteOauthAuthorizationMutationError = ApiError;
-export type DeleteOauthAuthorizationMutationVariables = { id: UlidId };
+export type RevokeOauthAuthorizationMutationError = ApiError;
+export type RevokeOauthAuthorizationMutationVariables = { id: UlidId };
 
 /**
  * @summary Revoke an oauth authorization
  */
-export const createDeleteOauthAuthorization = <TError = ApiError, TContext = unknown>(
+export const createRevokeOauthAuthorization = <TError = ApiError, TContext = unknown>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof deleteOauthAuthorization>>,
+            Awaited<ReturnType<typeof revokeOauthAuthorization>>,
             TError,
-            DeleteOauthAuthorizationMutationVariables,
+            RevokeOauthAuthorizationMutationVariables,
             TContext
         >;
         fetch?: RequestInit;
@@ -1055,13 +1066,13 @@ export const createDeleteOauthAuthorization = <TError = ApiError, TContext = unk
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof deleteOauthAuthorization>>,
+    Awaited<ReturnType<typeof revokeOauthAuthorization>>,
     TError,
-    DeleteOauthAuthorizationMutationVariables,
+    RevokeOauthAuthorizationMutationVariables,
     TContext
 > => {
     return createMutation(
-        () => ({ ...getDeleteOauthAuthorizationMutationOptions(options?.()) }),
+        () => ({ ...getRevokeOauthAuthorizationMutationOptions(options?.()) }),
         queryClient
     );
 };

@@ -13,6 +13,7 @@ use crate::{
         models::{
             oauth_application::OauthApplication as DbOauthApplication,
             oauth_authorization::OauthAuthorization as DbOauthAuthorization,
+            oauth_token::OauthToken,
         },
     },
     global::GlobalState,
@@ -23,10 +24,7 @@ use crate::{
             auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
             ip_manager::IpContext,
         },
-        v1::types::{
-            AlrightResponse, ListDataRequest, ListDataResponse, OauthApplication,
-            OauthAuthorization,
-        },
+        v1::types::{AlrightResponse, ListDataRequest, ListDataResponse, OauthAuthorization},
     },
     oauth::scopes::Scopes,
 };
@@ -34,7 +32,7 @@ use crate::{
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
         .routes(routes!(list_oauth_authorizations))
-        .routes(routes!(delete_oauth_authorization))
+        .routes(routes!(revoke_oauth_authorization))
 }
 
 /// List your oauth authorizations
@@ -44,7 +42,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     path = "/list",
     tags = ["oauth"],
     responses(
-        (status = 200, description = "list of oauth authorizations", body = ListDataResponse<OauthApplication>),
+        (status = 200, description = "list of oauth authorizations", body = ListDataResponse<OauthAuthorization>),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
@@ -118,7 +116,7 @@ pub struct OauthAuthorizationIdParam {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn delete_oauth_authorization(
+pub async fn revoke_oauth_authorization(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
@@ -135,6 +133,7 @@ pub async fn delete_oauth_authorization(
 
     let mut tx = global.database.begin().await?;
     app.delete(&mut tx).await?;
+    OauthToken::delete_all_by_user_and_client_id(auth.user_id(), app.client_id, &mut tx).await?;
 
     AuditEntry::builder()
         .user_id(auth.user_id())

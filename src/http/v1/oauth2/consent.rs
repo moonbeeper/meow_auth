@@ -30,7 +30,8 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     path = "/consent",
     tags = ["oauth_srv"],
     responses(
-        (status = 200, description = "current oauth pending authorization consent info", body = ConsentMetadata),
+        (status = 200, description = "current pending authorization flow consent info", body = ConsentMetadata),
+        (status = 404, description = "pending authorization flow not found", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]

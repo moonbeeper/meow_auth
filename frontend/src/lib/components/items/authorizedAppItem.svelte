@@ -1,18 +1,81 @@
 <script lang="ts">
+    import Button from "$comps/button.svelte";
     import * as LogItem from "$comps/logItem/index";
-    // "Complex binding patterns require an initialization value" when lang="ts" is not set... OH CMON!
-    import Tag from "$comps/tag.svelte";
+    import type { ListDataResponseOauthAuthorizationDataItem } from "$lib/api/model";
+    import { actionDate } from "$lib/common";
+    import { OauthScope, OauthScopes } from "$lib/oauthScopes";
 
-    let {
-        title = "goggle",
-        tag = "External",
-        when = "Authorized 10 years ago"
-    }: { title?: string; tag?: string; when?: string } = $props();
+    type Props = {
+        item: ListDataResponseOauthAuthorizationDataItem;
+        onRevoke: (item: ListDataResponseOauthAuthorizationDataItem) => void;
+    };
+
+    let { item, onRevoke }: Props = $props();
+
+    let title = $derived.by(() => {
+        return item.name;
+    });
+    let tag = $derived.by(() => {
+        return "External";
+    });
+    let when = $derived.by(() => {
+        return "last used " + actionDate(item.last_used_at ?? item.created_at);
+    });
+
+    let scopes = $derived.by(() => {
+        return new OauthScopes(item.scopes).remove(OauthScope.OpenId).toStrings();
+    });
 </script>
 
-<LogItem.Root>
+<LogItem.Root collapsible>
     <LogItem.Header {title} {tag} {when} />
-    <LogItem.Actions>
-        <span>T</span>
-    </LogItem.Actions>
+    {#snippet inner_content()}
+        <div class="meow">
+            <div class="access">
+                <p class="can">Can read:</p>
+                <ul class="scopes">
+                    {#each scopes as scope}
+                        <li>{scope}</li>
+                    {/each}
+                </ul>
+            </div>
+            <Button negative fontSize="small" onclick={() => onRevoke(item)}>Revoke access</Button>
+        </div>
+    {/snippet}
 </LogItem.Root>
+
+<style lang="scss">
+    .meow {
+        inline-size: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        gap: calc(var(--spacing) * 2);
+        font-size: var(--text-small);
+    }
+
+    .access {
+        text-align: start;
+        inline-size: 100%;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: calc(var(--spacing) * 2);
+
+        @media (max-width: 600px) {
+            justify-content: center;
+            grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr;
+        }
+    }
+
+    .scopes {
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--spacing) * 2);
+        margin: 0;
+        margin-left: calc(var(--spacing) * 6);
+        margin-bottom: calc(var(--spacing) * 2);
+        padding-inline-start: 0;
+        align-items: start;
+    }
+</style>

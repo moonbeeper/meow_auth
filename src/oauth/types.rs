@@ -100,6 +100,7 @@ pub struct OauthMetadata {
     pub issuer: String,
     pub authorization_endpoint: String,
     pub token_endpoint: String,
+    pub revocation_endpoint: String,
     pub jwks_uri: String,
     pub scopes_supported: Vec<String>,
     pub response_types_supported: Vec<ResponseType>,
@@ -167,6 +168,7 @@ pub struct OpenIdMetadata {
     pub authorization_endpoint: String,
     pub token_endpoint: String,
     pub userinfo_endpoint: String,
+    pub revocation_endpoint: String,
     pub jwks_uri: String,
     pub subject_types_supported: Vec<SubjectTypes>,
     /// The signing algorithms supported (JWKs) for the Id token to be signed with
@@ -235,4 +237,12 @@ pub struct ConsentMetadata {
     pub old_scopes: i64,
     pub redirect_url: String,
     pub created_at: chrono::DateTime<Utc>,
+}
+
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub struct RevocationRequest {
+    pub client_id: UlidId,
+    pub client_secret: String,
+    pub token: String,
 }

@@ -14,10 +14,10 @@ enabled = true
 level = "info"
 
 [http]
-bind = "127.0.0.1:8080"
+bind = "127.0.0.1:8081"
 # The URL where this app is reachable. Its used to build absolute URLs (for OAuth), so it has
 # to match the reachable URL exactly
-origin = "http://localhost:8080/"
+origin = "http://localhost:8081/"
 # The URL where the frontend is reachable. Its used for setting up CORS and Cookies
 frontend = "http://localhost:5173"
 # Whether the app is running behind Cloudflare proxy (orange cloud). When its `true`, the app will read

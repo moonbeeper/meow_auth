@@ -4,18 +4,21 @@
 
     type Props = {
         title?: string;
+        preventClosing?: boolean;
     };
 
-    let { title = "wawa prompt" }: Props = $props();
+    let { title = "wawa prompt", preventClosing = false }: Props = $props();
 </script>
 
 <div class="dialog--header">
-    <Dialog.Title>{title}</Dialog.Title>
-    <Dialog.Close>
-        {#snippet child({ props })}
-            <Button className="dialog--close-icon" {...props}>X</Button>
-        {/snippet}
-    </Dialog.Close>
+    <Dialog.Title class="dialog--title">{title}</Dialog.Title>
+    {#if !preventClosing}
+        <Dialog.Close>
+            {#snippet child({ props })}
+                <Button className="dialog--close-icon" {...props}>X</Button>
+            {/snippet}
+        </Dialog.Close>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -33,6 +36,9 @@
         font-weight: 600;
     }
 
+    :global(.dialog--title) {
+        padding: calc(var(--spacing) * 1.5) 0;
+    }
     :global(.dialog--close-icon) {
         --button-padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
     }

@@ -17,6 +17,7 @@
         width?: "normal" | "large";
         fullScreenMobile?: boolean;
         role?: "dialog" | "alertdialog";
+        preventClosing?: boolean;
     };
     type DialogProps = WithoutChild<Dialog.RootProps> & Props;
 
@@ -31,6 +32,7 @@
         width = "normal",
         role = "dialog",
         fullScreenMobile = false,
+        preventClosing = false,
         ...rest
     }: DialogProps = $props();
 
@@ -69,13 +71,15 @@
             forceMount
             class={["dialog--content-container", widthClass, { fullScreenMobile }]}
             preventScroll
+            interactOutsideBehavior={preventClosing ? "ignore" : "close"}
+            escapeKeydownBehavior={preventClosing ? "ignore" : "close"}
             {role}
             {...contentProps}
         >
             {#snippet child({ open, props })}
                 {#if open}
                     <div {...props} transition:scale={{ duration: 200 }}>
-                        <DialogHeader {title} />
+                        <DialogHeader {title} {preventClosing} />
                         <DialogContent>
                             {@render children()}
                         </DialogContent>

@@ -59,10 +59,10 @@ your authentictor app to sign in"
         </EmptyBox>
     {:else}
         <div class="actions">
-            <Button square primary disabled={magicDisable} onclick={() => handleDisable()}
+            <Button square primary mute disabled={magicDisable} onclick={() => handleDisable()}
                 ><Spinner /> Disable</Button
             >
-            <Button square disabled={magicRecovery} onclick={() => handleViewRecovery()}
+            <Button square mute disabled={magicRecovery} onclick={() => handleViewRecovery()}
                 ><Spinner /> View recovery codes</Button
             >
         </div>

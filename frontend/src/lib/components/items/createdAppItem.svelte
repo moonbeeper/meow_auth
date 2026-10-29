@@ -1,17 +1,29 @@
 <script lang="ts">
+    import { goto } from "$app/navigation";
     import * as LogItem from "$comps/logItem/index";
-    // "Complex binding patterns require an initialization value" when lang="ts" is not set... OH CMON!
-    import Tag from "$comps/tag.svelte";
+    import type { ListDataResponseOauthApplicationDataItem } from "$lib/api/model";
+    import { actionDate } from "$lib/common";
 
-    let {
-        title = "my cool appy",
-        when = "Created 68 days ago"
-    }: { title?: string; when?: string } = $props();
+    type Props = {
+        item: ListDataResponseOauthApplicationDataItem;
+    };
+    let { item }: Props = $props();
+
+    let title = $derived.by(() => {
+        return item.name;
+    });
+    let when = $derived.by(() => {
+        return "created " + actionDate(item.created_at);
+    });
+
+    let redirect = $derived.by(() => {
+        return "/me/my-apps/" + item.id;
+    });
 </script>
 
-<LogItem.Root>
+<LogItem.Root asButton onclick={() => goto(redirect)}>
     <LogItem.Header {title} {when} />
     <LogItem.Actions>
-        <span>T</span>
+        <span>></span>
     </LogItem.Actions>
 </LogItem.Root>

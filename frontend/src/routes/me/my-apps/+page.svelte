@@ -1,25 +1,20 @@
 <script lang="ts">
+    import { goto } from "$app/navigation";
+    import Button from "$comps/button.svelte";
     import EmptyBox from "$comps/emptyBox.svelte";
     import CreatedAppItem from "$comps/items/createdAppItem.svelte";
-    import SessionItem from "$comps/items/sessionItem.svelte";
     import LoadingBox from "$comps/loadingBox.svelte";
     import * as LogItem from "$comps/logItem";
     import SettingsPanel from "$comps/settingsPanel.svelte";
-    import {
-        getListApplicationsQueryKey,
-        getListOauthAuthorizationsQueryKey,
-        listApplications
-    } from "$lib/api/oauth/oauth";
-    import { getListSessionsQueryKey, listSessions } from "$lib/api/sessions/sessions";
-    import { actionDate } from "$lib/common";
+    import { getListOauthApplicationsQueryKey, listOauthApplications } from "$lib/api";
     import type { SvelteVirtualListRangeInfo } from "@humanspeak/svelte-virtual-list";
     import SvelteVirtualList from "@humanspeak/svelte-virtual-list";
     import { createInfiniteQuery } from "@tanstack/svelte-query";
 
     const createdAppsQuery = createInfiniteQuery(() => ({
-        queryKey: [...getListApplicationsQueryKey(), "infinite"],
+        queryKey: [...getListOauthApplicationsQueryKey(), "infinite"],
         queryFn: ({ pageParam, signal }) =>
-            listApplications({ from: pageParam, want_total: true }, { signal }),
+            listOauthApplications({ from: pageParam, want_total: true }, { signal }),
         initialPageParam: undefined as string | undefined,
         getNextPageParam: (lastPage) => {
             if (lastPage.status !== 200) return undefined;
@@ -49,6 +44,10 @@
 </script>
 
 <SettingsPanel title="Created Apps" description={panelDescription} contentSpacing={2}>
+    <div class="actions">
+        <Button primary onclick={() => goto("/me/my-apps/create")}>Create App</Button>
+    </div>
+
     {#if createdAppsQuery.isLoading || createdAppsQuery.isError}
         <LoadingBox
             what="created apps"
@@ -59,16 +58,22 @@
         {#if createdAppsList.length != 0}
             <LogItem.Container>
                 <div class="content">
-                    <SvelteVirtualList
-                        items={createdAppsList}
-                        onRangeChange={handleRangeChange}
-                        containerClass="vlist-container"
-                        viewportClass="vlist-viewport"
-                    >
-                        {#snippet renderItem(app)}
-                            <CreatedAppItem />
-                        {/snippet}
-                    </SvelteVirtualList>
+                    {#if createdAppsList.length > 8}
+                        <SvelteVirtualList
+                            items={createdAppsList}
+                            onRangeChange={handleRangeChange}
+                            containerClass="vlist-container"
+                            viewportClass="vlist-viewport"
+                        >
+                            {#snippet renderItem(app)}
+                                <CreatedAppItem item={app} />
+                            {/snippet}
+                        </SvelteVirtualList>
+                    {:else}
+                        {#each createdAppsList as app}
+                            <CreatedAppItem item={app} />
+                        {/each}
+                    {/if}
                 </div>
             </LogItem.Container>
         {:else}
@@ -83,5 +88,11 @@
 <style lang="scss">
     .content {
         --vlist-viewport-height: 80dvh;
+    }
+    .actions {
+        display: flex;
+        inline-size: 100%;
+        justify-content: end;
+        align-items: center;
     }
 </style>

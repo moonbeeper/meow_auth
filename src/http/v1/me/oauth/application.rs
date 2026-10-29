@@ -30,13 +30,13 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     OpenApiRouter::new()
-        .routes(routes!(create_application))
-        .routes(routes!(update_application))
-        .routes(routes!(delete_application))
-        .routes(routes!(rotate_secret_application))
+        .routes(routes!(create_oauth_application))
+        .routes(routes!(update_oauth_application))
+        .routes(routes!(delete_oauth_application))
+        .routes(routes!(rotate_secret_oauth_application))
         .layer(RequireUserFlagLayer::new().forbid(UserFlag::CannotManageOauthApplications))
-        .routes(routes!(list_applications))
-        .routes(routes!(get_info_application))
+        .routes(routes!(list_oauth_applications))
+        .routes(routes!(get_info_oauth_application))
 }
 
 /// List your oauth applications
@@ -50,7 +50,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn list_applications(
+pub async fn list_oauth_applications(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Query(request): Query<ListDataRequest>,
@@ -109,7 +109,7 @@ pub struct OauthApplicationDataResponse {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn create_application(
+pub async fn create_oauth_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
@@ -179,7 +179,7 @@ pub struct OauthApplicationIdParam {
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn get_info_application(
+pub async fn get_info_oauth_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Path(request): Path<OauthApplicationIdParam>,
@@ -207,7 +207,7 @@ pub async fn get_info_application(
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn update_application(
+pub async fn update_oauth_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
@@ -265,7 +265,7 @@ pub async fn update_application(
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn delete_application(
+pub async fn delete_oauth_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
@@ -311,7 +311,7 @@ pub async fn delete_application(
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn rotate_secret_application(
+pub async fn rotate_secret_oauth_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,

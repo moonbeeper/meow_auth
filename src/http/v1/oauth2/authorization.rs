@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{
-    Extension, Json,
+    Extension, Form,
     extract::{Query, State},
 };
 use tower_cookies::Cookies;
@@ -48,7 +48,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(authorize))
 }
 
-/// Authorize an oauth application.
+/// Authorize an oauth application
 ///
 /// This endpoint is used to authorize an oauth application.
 /// It will redirect to the consent screen if the current user has not authorized this application
@@ -57,6 +57,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     get,
     path = "/authorize",
     tags = ["oauth_srv"],
+    request_body = AuthorizationRequest,
     responses(
         (status = 303, description = "redirect to consent screen or redirect_uri with code"),
         (status = 500, description = "internal server error", body = ApiError)
@@ -136,11 +137,13 @@ pub async fn authorize(
 
         // if requesting too many scopes stop
         if !requested_scopes.contains(requested) {
-            return OauthResponse::new().error(
-                OauthErrorCodes::InvalidScope,
-                None, // custom message?
-                request.state.clone(),
-            );
+            return OauthResponse::new()
+                .error(
+                    OauthErrorCodes::InvalidScope,
+                    None, // custom message?
+                    request.state.clone(),
+                )
+                .redirect(redirect_url.to_string());
         }
 
         requested_scopes = requested;
@@ -179,6 +182,7 @@ pub async fn authorize(
         OauthAuthorization::find_by_user_and_client_id(auth.user_id(), client.id, &global.database)
             .await
     else {
+        println!("error finding existing authorization");
         return OauthResponse::new().error(
             OauthErrorCodes::ServerError,
             None,
@@ -208,6 +212,7 @@ pub async fn authorize(
     let mut tx = match global.database.begin().await {
         Ok(v) => v,
         Err(_) => {
+            println!("error create tx before outcome");
             return OauthResponse::new().error(
                 OauthErrorCodes::ServerError,
                 None,
@@ -217,6 +222,7 @@ pub async fn authorize(
     };
 
     let outcome = if let Some(authorization) = authorization {
+        println!("past authorizaiton");
         action_past_authorized(
             &request,
             client,
@@ -231,6 +237,7 @@ pub async fn authorize(
         )
         .await
     } else {
+        println!("new authorizaiton");
         action_new_authorization(
             &request,
             client,
@@ -248,7 +255,9 @@ pub async fn authorize(
 
     let outcome = match outcome {
         Ok(v) => v,
-        Err(_) => {
+        Err(e) => {
+            println!("error matching outcome");
+            println!("error: {:?}", e);
             return OauthResponse::new().error(
                 OauthErrorCodes::ServerError,
                 None,
@@ -274,6 +283,7 @@ pub async fn authorize(
         .await
         .is_err()
     {
+        println!("error making audit entry");
         return OauthResponse::new().error(
             OauthErrorCodes::ServerError,
             None,
@@ -282,6 +292,7 @@ pub async fn authorize(
     };
 
     if tx.commit().await.is_err() {
+        println!("error committing tx");
         return OauthResponse::new().error(
             OauthErrorCodes::ServerError,
             None,
@@ -297,7 +308,7 @@ pub async fn authorize(
     OauthResponse::new().redirect(going_to.to_string())
 }
 
-/// Give consent to a pending oauth authorization.
+/// Give consent to a pending oauth authorization
 #[utoipa::path(
     post,
     path = "/consent",
@@ -315,7 +326,7 @@ pub async fn finish_authorization(
     Extension(ip_ctx): Extension<IpContext>,
     Extension(user_agent): Extension<UserAgentContext>,
     Extension(cookies): Extension<Cookies>,
-    Json(request): Json<AuthorizationDecisionRequest>,
+    Form(request): Form<AuthorizationDecisionRequest>,
 ) -> Result<RouteEither<OauthResponse, MJson<AlrightResponse>>, ApiErrorCodes> {
     OauthResponse::set_issuer(global.settings.http.origin.clone());
     if !auth.is_authenticated() {

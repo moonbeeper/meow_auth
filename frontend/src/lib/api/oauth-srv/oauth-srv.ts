@@ -21,11 +21,13 @@ import type {
 import type {
     ApiError,
     AuthorizationDecisionRequest,
+    AuthorizationRequest,
     ConsentMetadata,
     JwkKeySet,
     OauthMetadata,
     OpenIdMetadata,
     OpenIdUserInfo,
+    RevocationRequest,
     TokenRequest,
     TokenResponse
 } from "../model";
@@ -46,7 +48,7 @@ export const getWellknownOauthUrl = () => {
 };
 
 /**
- * @summary Get the oauth server's metadata
+ * @summary Get the oauth server metadata
  */
 export const wellknownOauth = async (
     options?: RequestInit,
@@ -94,7 +96,7 @@ export type WellknownOauthQueryResult = NonNullable<Awaited<ReturnType<typeof we
 export type WellknownOauthQueryError = unknown;
 
 /**
- * @summary Get the oauth server's metadata
+ * @summary Get the oauth server metadata
  */
 
 export function createWellknownOauth<
@@ -134,7 +136,7 @@ export const getWellknownOpenidUrl = () => {
 };
 
 /**
- * @summary Get the openid server's metadata
+ * @summary Get the openid server metadata
  */
 export const wellknownOpenid = async (
     options?: RequestInit,
@@ -182,7 +184,7 @@ export type WellknownOpenidQueryResult = NonNullable<Awaited<ReturnType<typeof w
 export type WellknownOpenidQueryError = unknown;
 
 /**
- * @summary Get the openid server's metadata
+ * @summary Get the openid server metadata
  */
 
 export function createWellknownOpenid<
@@ -229,16 +231,38 @@ export const getAuthorizeUrl = () => {
  * This endpoint is used to authorize an oauth application.
  * It will redirect to the consent screen if the current user has not authorized this application
  * else it will redirect to the application's redirect_uri with typical oauth stuff.
- * @summary Authorize an oauth application.
+ * @summary Authorize an oauth application
  */
 export const authorize = async (
+    authorizationRequest: AuthorizationRequest,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
 ): Promise<authorizeResponse> => {
+    const getHeaders = (
+        h?: NonNullable<RequestInit["headers"]>
+    ): Record<string, string | readonly string[]> => {
+        if (!h) return {};
+        if (h instanceof Headers) return Object.fromEntries(h.entries());
+        if (Symbol.iterator in h) {
+            return Object.fromEntries(
+                Array.from(
+                    h as Iterable<Iterable<string>>,
+                    (entry) => Array.from(entry) as [string, string]
+                )
+            );
+        }
+        const headers: Record<string, string | readonly string[]> = {};
+        for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+            if (value !== undefined) headers[name] = value;
+        }
+        return headers;
+    };
     const res = await (fetchFn ?? fetch)(getAuthorizeUrl(), {
         credentials: "include",
         ...options,
-        method: "GET"
+        method: "GET",
+        headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+        body: JSON.stringify(authorizationRequest)
     });
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
@@ -247,24 +271,31 @@ export const authorize = async (
     return { data, status: res.status, headers: res.headers } as authorizeResponse;
 };
 
-export const getAuthorizeQueryKey = () => {
-    return ["authorize"] as const;
+export const getAuthorizeQueryKey = (authorizationRequest?: AuthorizationRequest) => {
+    return [
+        "authorize",
+        ...(authorizationRequest ? [authorizationRequest] : []),
+        authorizationRequest
+    ] as const;
 };
 
 export const getAuthorizeQueryOptions = <
     TData = Awaited<ReturnType<typeof authorize>>,
     TError = void | ApiError
->(options?: {
-    query?: Partial<CreateQueryOptions<Awaited<ReturnType<typeof authorize>>, TError, TData>>;
-    fetch?: RequestInit;
-    fetcher?: typeof globalThis.fetch;
-}) => {
+>(
+    authorizationRequest: AuthorizationRequest,
+    options?: {
+        query?: Partial<CreateQueryOptions<Awaited<ReturnType<typeof authorize>>, TError, TData>>;
+        fetch?: RequestInit;
+        fetcher?: typeof globalThis.fetch;
+    }
+) => {
     const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
 
-    const queryKey = queryOptions?.queryKey ?? getAuthorizeQueryKey();
+    const queryKey = queryOptions?.queryKey ?? getAuthorizeQueryKey(authorizationRequest);
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof authorize>>> = ({ signal }) =>
-        authorize({ signal, ...fetchOptions }, fetcherFn);
+        authorize(authorizationRequest, { signal, ...fetchOptions }, fetcherFn);
 
     return { queryKey, queryFn, ...queryOptions } as CreateQueryOptions<
         Awaited<ReturnType<typeof authorize>>,
@@ -277,13 +308,14 @@ export type AuthorizeQueryResult = NonNullable<Awaited<ReturnType<typeof authori
 export type AuthorizeQueryError = void | ApiError;
 
 /**
- * @summary Authorize an oauth application.
+ * @summary Authorize an oauth application
  */
 
 export function createAuthorize<
     TData = Awaited<ReturnType<typeof authorize>>,
     TError = void | ApiError
 >(
+    authorizationRequest: () => AuthorizationRequest,
     options?: () => {
         query?: Partial<CreateQueryOptions<Awaited<ReturnType<typeof authorize>>, TError, TData>>;
         fetch?: RequestInit;
@@ -292,7 +324,7 @@ export function createAuthorize<
     queryClient?: () => QueryClient
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
-        () => getAuthorizeQueryOptions(options?.()),
+        () => getAuthorizeQueryOptions(authorizationRequest(), options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -304,6 +336,11 @@ export type oauthConsentInfoResponse200 = {
     status: 200;
 };
 
+export type oauthConsentInfoResponse404 = {
+    data: ApiError;
+    status: 404;
+};
+
 export type oauthConsentInfoResponse500 = {
     data: ApiError;
     status: 500;
@@ -312,7 +349,10 @@ export type oauthConsentInfoResponse500 = {
 export type oauthConsentInfoResponseSuccess = oauthConsentInfoResponse200 & {
     headers: Headers;
 };
-export type oauthConsentInfoResponseError = oauthConsentInfoResponse500 & {
+export type oauthConsentInfoResponseError = (
+    | oauthConsentInfoResponse404
+    | oauthConsentInfoResponse500
+) & {
     headers: Headers;
 };
 
@@ -433,13 +473,17 @@ export const getFinishAuthorizationUrl = () => {
 };
 
 /**
- * @summary Give consent to a pending oauth authorization.
+ * @summary Give consent to a pending oauth authorization
  */
 export const finishAuthorization = async (
     authorizationDecisionRequest: AuthorizationDecisionRequest,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
 ): Promise<finishAuthorizationResponse> => {
+    const formUrlEncoded = new URLSearchParams();
+    formUrlEncoded.append(`client_id`, authorizationDecisionRequest.client_id);
+    formUrlEncoded.append(`consent`, authorizationDecisionRequest.consent.toString());
+
     const getHeaders = (
         h?: NonNullable<RequestInit["headers"]>
     ): Record<string, string | readonly string[]> => {
@@ -463,8 +507,11 @@ export const finishAuthorization = async (
         credentials: "include",
         ...options,
         method: "POST",
-        headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
-        body: JSON.stringify(authorizationDecisionRequest)
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            ...getHeaders(options?.headers)
+        },
+        body: formUrlEncoded
     });
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
@@ -524,7 +571,7 @@ export type FinishAuthorizationMutationError = void | ApiError;
 export type FinishAuthorizationMutationVariables = { data: AuthorizationDecisionRequest };
 
 /**
- * @summary Give consent to a pending oauth authorization.
+ * @summary Give consent to a pending oauth authorization
  */
 export const createFinishAuthorization = <TError = void | ApiError, TContext = unknown>(
     options?: () => {
@@ -565,7 +612,7 @@ export const getOauthDiscoveryJwksUrl = () => {
 };
 
 /**
- * @summary Get the oauth server's public keys (JWKs)
+ * @summary Get the oauth server public keys (JWKs)
  */
 export const oauthDiscoveryJwks = async (
     options?: RequestInit,
@@ -617,7 +664,7 @@ export type OauthDiscoveryJwksQueryResult = NonNullable<
 export type OauthDiscoveryJwksQueryError = unknown;
 
 /**
- * @summary Get the oauth server's public keys (JWKs)
+ * @summary Get the oauth server public keys (JWKs)
  */
 
 export function createOauthDiscoveryJwks<
@@ -641,6 +688,151 @@ export function createOauthDiscoveryJwks<
     return query;
 }
 
+export type tokenRevocationResponse200 = {
+    data: TokenResponse;
+    status: 200;
+};
+
+export type tokenRevocationResponse500 = {
+    data: ApiError;
+    status: 500;
+};
+
+export type tokenRevocationResponseSuccess = tokenRevocationResponse200 & {
+    headers: Headers;
+};
+export type tokenRevocationResponseError = tokenRevocationResponse500 & {
+    headers: Headers;
+};
+
+export type tokenRevocationResponse = tokenRevocationResponseSuccess | tokenRevocationResponseError;
+
+export const getTokenRevocationUrl = () => {
+    return `${apiUrlForOrval}/v1/oauth2/revoke`;
+};
+
+/**
+ * @summary Revoke an access token
+ */
+export const tokenRevocation = async (
+    revocationRequest: RevocationRequest,
+    options?: RequestInit,
+    fetchFn?: typeof globalThis.fetch
+): Promise<tokenRevocationResponse> => {
+    const formUrlEncoded = new URLSearchParams();
+    formUrlEncoded.append(`client_id`, revocationRequest.client_id);
+    formUrlEncoded.append(`client_secret`, revocationRequest.client_secret);
+    formUrlEncoded.append(`token`, revocationRequest.token);
+
+    const getHeaders = (
+        h?: NonNullable<RequestInit["headers"]>
+    ): Record<string, string | readonly string[]> => {
+        if (!h) return {};
+        if (h instanceof Headers) return Object.fromEntries(h.entries());
+        if (Symbol.iterator in h) {
+            return Object.fromEntries(
+                Array.from(
+                    h as Iterable<Iterable<string>>,
+                    (entry) => Array.from(entry) as [string, string]
+                )
+            );
+        }
+        const headers: Record<string, string | readonly string[]> = {};
+        for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+            if (value !== undefined) headers[name] = value;
+        }
+        return headers;
+    };
+    const res = await (fetchFn ?? fetch)(getTokenRevocationUrl(), {
+        credentials: "include",
+        ...options,
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            ...getHeaders(options?.headers)
+        },
+        body: formUrlEncoded
+    });
+
+    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+    const data: tokenRevocationResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as tokenRevocationResponse;
+};
+
+export const getTokenRevocationMutationKey = () => ["tokenRevocation"] as const;
+
+export const getTokenRevocationMutationOptions = <TError = ApiError, TContext = unknown>(options?: {
+    mutation?: CreateMutationOptions<
+        Awaited<ReturnType<typeof tokenRevocation>>,
+        TError,
+        TokenRevocationMutationVariables,
+        TContext
+    >;
+    fetch?: RequestInit;
+    fetcher?: typeof globalThis.fetch;
+}): CreateMutationOptions<
+    Awaited<ReturnType<typeof tokenRevocation>>,
+    TError,
+    TokenRevocationMutationVariables,
+    TContext
+> => {
+    const mutationKey = getTokenRevocationMutationKey();
+    const {
+        mutation: mutationOptions,
+        fetch: fetchOptions,
+        fetcher: fetcherFn
+    } = options
+        ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+            ? options
+            : { ...options, mutation: { ...options.mutation, mutationKey } }
+        : { mutation: { mutationKey }, fetch: undefined };
+
+    const mutationFn: MutationFunction<
+        Awaited<ReturnType<typeof tokenRevocation>>,
+        TokenRevocationMutationVariables
+    > = (props) => {
+        const { data } = props ?? {};
+
+        return tokenRevocation(data, fetchOptions, fetcherFn);
+    };
+
+    return { mutationFn, ...mutationOptions };
+};
+
+export type TokenRevocationMutationResult = NonNullable<
+    Awaited<ReturnType<typeof tokenRevocation>>
+>;
+export type TokenRevocationMutationBody = RevocationRequest;
+export type TokenRevocationMutationError = ApiError;
+export type TokenRevocationMutationVariables = { data: RevocationRequest };
+
+/**
+ * @summary Revoke an access token
+ */
+export const createTokenRevocation = <TError = ApiError, TContext = unknown>(
+    options?: () => {
+        mutation?: CreateMutationOptions<
+            Awaited<ReturnType<typeof tokenRevocation>>,
+            TError,
+            TokenRevocationMutationVariables,
+            TContext
+        >;
+        fetch?: RequestInit;
+        fetcher?: typeof globalThis.fetch;
+    },
+    queryClient?: () => QueryClient
+): CreateMutationResult<
+    Awaited<ReturnType<typeof tokenRevocation>>,
+    TError,
+    TokenRevocationMutationVariables,
+    TContext
+> => {
+    return createMutation(
+        () => ({ ...getTokenRevocationMutationOptions(options?.()) }),
+        queryClient
+    );
+};
 export type tokenResponse200 = {
     data: TokenResponse;
     status: 200;
@@ -801,7 +993,7 @@ export const getOpenidUserinfoUrl = () => {
 
 /**
  * This handler requires that the token has the `openid` scope.
- * @summary Get the openid userinfo for the token's user.
+ * @summary Get the openid userinfo for the token's user
  */
 export const openidUserinfo = async (
     options?: RequestInit,
@@ -849,7 +1041,7 @@ export type OpenidUserinfoQueryResult = NonNullable<Awaited<ReturnType<typeof op
 export type OpenidUserinfoQueryError = unknown;
 
 /**
- * @summary Get the openid userinfo for the token's user.
+ * @summary Get the openid userinfo for the token's user
  */
 
 export function createOpenidUserinfo<

@@ -4,6 +4,7 @@
     import LoadingBox from "$comps/loadingBox.svelte";
     import * as LogItem from "$comps/logItem";
     import SettingsPanel from "$comps/settingsPanel.svelte";
+    import type { ListDataResponseOauthAuthorizationDataItem } from "$lib/api/model";
     import {
         getListOauthAuthorizationsQueryKey,
         listOauthAuthorizations
@@ -11,6 +12,8 @@
     import type { SvelteVirtualListRangeInfo } from "@humanspeak/svelte-virtual-list";
     import SvelteVirtualList from "@humanspeak/svelte-virtual-list";
     import { createInfiniteQuery } from "@tanstack/svelte-query";
+
+    import RevokePrompt from "./revokePrompt.svelte";
 
     const authorizedAppsQuery = createInfiniteQuery(() => ({
         queryKey: [...getListOauthAuthorizationsQueryKey(), "infinite"],
@@ -46,8 +49,16 @@
             authorizedAppsQuery.fetchNextPage();
         }
     }
+
+    let revokePromptOpen = $state(false);
+    let revokePromptItem = $state<ListDataResponseOauthAuthorizationDataItem | null>(null);
+    function handleRevoke(item: ListDataResponseOauthAuthorizationDataItem) {
+        revokePromptItem = item;
+        revokePromptOpen = true;
+    }
 </script>
 
+<RevokePrompt item={revokePromptItem} bind:open={revokePromptOpen} />
 <SettingsPanel title="Authorized Apps" description={panelDescription}>
     {#if authorizedAppsQuery.isLoading || authorizedAppsQuery.isError}
         <LoadingBox
@@ -57,18 +68,24 @@
         />
     {:else if authorizedAppsQuery.isSuccess}
         {#if authorizedAppsList.length != 0}
-            <LogItem.Container>
+            <LogItem.Container collapsible>
                 <div class="content">
-                    <SvelteVirtualList
-                        items={authorizedAppsList}
-                        onRangeChange={handleRangeChange}
-                        containerClass="vlist-container"
-                        viewportClass="vlist-viewport"
-                    >
-                        {#snippet renderItem(app)}
-                            <AuthorizedAppItem />
-                        {/snippet}
-                    </SvelteVirtualList>
+                    {#if authorizedAppsList.length > 8}
+                        <SvelteVirtualList
+                            items={authorizedAppsList}
+                            onRangeChange={handleRangeChange}
+                            containerClass="vlist-container"
+                            viewportClass="vlist-viewport"
+                        >
+                            {#snippet renderItem(app)}
+                                <AuthorizedAppItem item={app} onRevoke={handleRevoke} />
+                            {/snippet}
+                        </SvelteVirtualList>
+                    {:else}
+                        {#each authorizedAppsList as app}
+                            <AuthorizedAppItem item={app} onRevoke={handleRevoke} />
+                        {/each}
+                    {/if}
                 </div>
             </LogItem.Container>
         {:else}

@@ -15,6 +15,8 @@ use meow_auth2::{
 };
 use tokio::signal::unix::{SignalKind, signal};
 
+// TODO: add setting to fail on http bind error
+
 const BIG_BANNER: &str = r"
 
                                                                             d8b

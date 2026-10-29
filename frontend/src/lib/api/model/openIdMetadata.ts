@@ -23,6 +23,7 @@ export interface OpenIdMetadata {
     /** The way the client can send the response to related endpoints */
     response_modes_supported: ResponseModes[];
     response_types_supported: ResponseType[];
+    revocation_endpoint: string;
     scopes_supported: string[];
     subject_types_supported: SubjectTypes[];
     token_endpoint: string;

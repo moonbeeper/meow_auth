@@ -13,9 +13,9 @@ const FILE_HEADER = `// hi, this file is generate by mr script/updateAaguidList.
 export type AuthenticatorMetadata = {
     name: string;
     /** SVG base64 encoded as a data URI */
-    icon_dark: string | undefined;
+    icon_dark?: string | null;
     /** SVG base64 encoded as a data URI */
-    icon_light: string | undefined;
+    icon_light?: string | null;
 };
 
 export const authenticatorAAGUIDs: Record<string, AuthenticatorMetadata> = {

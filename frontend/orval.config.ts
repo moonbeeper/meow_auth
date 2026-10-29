@@ -24,7 +24,11 @@ export default defineConfig({
             }
         },
         input: {
-            target: ["./meow_auth.yaml", "http://127.0.0.1:8080/api-docs/openapi.json"]
+            target: [
+                "./meow_auth.yaml",
+                "http://127.0.0.1:8080/api-docs/openapi.json",
+                "http://127.0.0.1:8081/api-docs/openapi.json"
+            ]
         },
         hooks: {
             afterAllFilesWrite: "oxfmt"

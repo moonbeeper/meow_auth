@@ -11,6 +11,7 @@
         children: Snippet;
         collapsible?: boolean;
         collapsible_bg?: boolean;
+        asButton?: boolean;
         inner_content?: Snippet;
     };
 
@@ -18,6 +19,7 @@
         children,
         collapsible = false,
         collapsible_bg = true,
+        asButton = false,
         inner_content,
         ...rest
     }: CollapsibleProps | Props = $props();
@@ -47,6 +49,10 @@
             </Accordion.Content>
         {/if}
     </Accordion.Item>
+{:else if asButton}
+    <button class="panel" {...rest}>
+        {@render children()}
+    </button>
 {:else}
     <div class="panel">
         {@render children()}
@@ -124,5 +130,11 @@
         background: var(--content-background, var(--color-body));
         border-radius: calc(var(--typical-radius) * 0.6);
         padding: calc(var(--spacing) * 2);
+    }
+
+    button {
+        &.panel {
+            cursor: pointer;
+        }
     }
 </style>

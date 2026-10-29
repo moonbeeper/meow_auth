@@ -7,6 +7,8 @@ use crate::database::{
     models::{audit_log::AuditLog as DbAuditLog, user::UserId},
 };
 
+pub const SYSTEM_USER_ID: UserId = UserId::nil();
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum AuditAction {
     SessionCreated, // should add metadata for what was used to create it (webauthn or otp)

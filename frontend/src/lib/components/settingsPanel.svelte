@@ -2,25 +2,34 @@
     // TODO: i dont like the red colors ive chosen :(
     import type { Snippet } from "svelte";
 
+    type Props = {
+        children: Snippet;
+        title?: string;
+        description?: string;
+        negative?: boolean;
+        gooder?: boolean;
+        contentSpacing?: number;
+        headerChildren?: Snippet;
+    };
     let {
         children,
         title = "Section Title",
         description = "i love space birbs. and hate space cats. i love space birbs (once again).",
         negative = false,
-        contentSpacing
-    }: {
-        children: Snippet;
-        title: string;
-        description: string;
-        negative?: boolean;
-        contentSpacing?: number;
-    } = $props();
+        gooder = false,
+        contentSpacing,
+        headerChildren
+    }: Props = $props();
 </script>
 
-<section class={["panel", { negative }]} style:--panel-content-spacing={contentSpacing}>
+<section class={["panel", { negative, gooder }]} style:--panel-content-spacing={contentSpacing}>
     <header class="header">
-        <h2>{title}</h2>
-        <p>{description}</p>
+        {#if headerChildren}
+            {@render headerChildren()}
+        {:else}
+            <h2>{title}</h2>
+            <p>{description}</p>
+        {/if}
     </header>
     <div class="content">
         {@render children()}
@@ -72,6 +81,14 @@
                     color: var(--color-coral-light);
                 }
             }
+
+            .panel.gooder & {
+                color: var(--color-emerald-medium);
+
+                @media (prefers-color-scheme: dark) {
+                    color: var(--color-emerald-light);
+                }
+            }
         }
 
         p {
@@ -83,6 +100,14 @@
 
                 @media (prefers-color-scheme: dark) {
                     color: var(--color-coral-lighter);
+                }
+            }
+
+            .panel.gooder & {
+                color: var(--color-emerald-darker);
+
+                @media (prefers-color-scheme: dark) {
+                    color: var(--color-emerald-lighter);
                 }
             }
         }

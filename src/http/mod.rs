@@ -11,13 +11,16 @@ use anyhow::Context;
 use axum::{
     http::{
         HeaderValue, Method,
-        header::{CONTENT_TYPE, RETRY_AFTER},
+        header::{AUTHORIZATION, CONTENT_TYPE, RETRY_AFTER},
     },
     routing::get,
 };
 use tokio::net::TcpSocket;
 use tower_cookies::CookieManagerLayer;
-use tower_http::{cors::CorsLayer, services::ServeDir};
+use tower_http::{
+    cors::{self, CorsLayer},
+    services::ServeDir,
+};
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable};
@@ -58,8 +61,7 @@ struct ApiDocs;
 fn router(global: Arc<GlobalState>) -> OpenApiRouter {
     let openapi = ApiDocs::openapi();
     OpenApiRouter::with_openapi(openapi)
-        .nest("/v1", v1::routes())
-        // .routes(routes!(v1::oauth2::well_known::wellknown_oauth))
+        .nest("/v1", v1::routes(global.clone()))
         .nest_service("/assets", ServeDir::new("assets"))
         .layer(AuthManagerLayer::new(global.clone()))
         .layer(OauthManagerLayer::new(global.clone()))
@@ -67,37 +69,6 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
         .layer(RatelimitLayer::new(500, chrono::Duration::seconds(1)))
         .layer(IpManagerLayer::new(global.clone()))
         .layer(UserAgentManagerLayer::new())
-        .layer(
-            CorsLayer::new()
-                .allow_origin(
-                    global
-                        .settings
-                        .http
-                        .frontend
-                        .as_str()
-                        // url::Url forces trailing slashes. frontend Cors does not like it.
-                        .trim_end_matches('/')
-                        .parse::<HeaderValue>()
-                        .unwrap(),
-                )
-                .allow_credentials(true)
-                .allow_headers([CONTENT_TYPE])
-                .expose_headers([
-                    RETRY_AFTER,
-                    ratelimiter::RATELIMIT_LIMIT,
-                    ratelimiter::RATELIMIT_REMAINING,
-                    ratelimiter::RATELIMIT_RESET,
-                    ratelimiter::RATELIMIT_USED,
-                ])
-                .allow_methods([
-                    Method::GET,
-                    Method::POST,
-                    Method::PUT,
-                    Method::DELETE,
-                    Method::PATCH,
-                ])
-                .max_age(Duration::from_secs(7200)),
-        )
         // below the auth manager layer so we don't gotta check for auth (useless) on these static handlers
         .merge(root::routes())
         .with_state(global)
@@ -152,4 +123,40 @@ pub async fn run(global: Arc<GlobalState>, watcher: WatcherChild) -> anyhow::Res
     .context("Failed starting the HTTP server")?;
 
     Ok(())
+}
+
+pub fn oauth_cors() -> CorsLayer {
+    CorsLayer::new()
+        .allow_origin(cors::Any)
+        .allow_headers([CONTENT_TYPE, AUTHORIZATION])
+        .allow_methods([Method::GET, Method::POST])
+        .expose_headers([
+            RETRY_AFTER,
+            ratelimiter::RATELIMIT_LIMIT,
+            ratelimiter::RATELIMIT_REMAINING,
+            ratelimiter::RATELIMIT_RESET,
+            ratelimiter::RATELIMIT_USED,
+        ])
+}
+
+pub fn cors(origin: &str) -> CorsLayer {
+    CorsLayer::new()
+        .allow_origin(origin.parse::<HeaderValue>().unwrap())
+        .allow_credentials(true)
+        .allow_headers([CONTENT_TYPE, AUTHORIZATION])
+        .expose_headers([
+            RETRY_AFTER,
+            ratelimiter::RATELIMIT_LIMIT,
+            ratelimiter::RATELIMIT_REMAINING,
+            ratelimiter::RATELIMIT_RESET,
+            ratelimiter::RATELIMIT_USED,
+        ])
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::DELETE,
+            Method::PATCH,
+        ])
+        .max_age(Duration::from_secs(7200))
 }
