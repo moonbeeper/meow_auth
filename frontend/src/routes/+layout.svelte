@@ -1,14 +1,13 @@
 <script lang="ts">
     import { version } from "$app/env";
     import Header from "$comps/header.svelte";
-    import queryClient from "$lib/api/tanstackClient";
-    import { createCurrentUserInfo } from "$lib/api/user/user";
-    import { auth } from "$lib/auth/auth.svelte";
+    import { QueryClientProvider } from "@tanstack/svelte-query";
+    import { SvelteQueryDevtools } from "@tanstack/svelte-query-devtools";
+
+    import queryClient from "#lib/api/tanstackClient.js";
 
     import "../styles/_global.scss";
     import "@fontsource-variable/inter/wght.css";
-    import { QueryClient, QueryClientProvider } from "@tanstack/svelte-query";
-    import { SvelteQueryDevtools } from "@tanstack/svelte-query-devtools";
 
     let { children } = $props();
     let build_date = new Date(Number(version)).toTimeString();

@@ -18,9 +18,6 @@ export default defineConfig({
                 runes: ({ filename }) =>
                     filename.split(/[/\\]/).includes("node_modules") ? undefined : true
             },
-            experimental: {
-                explicitEnvironmentVariables: true
-            },
             alias: {
                 $comps: "src/lib/components"
             },

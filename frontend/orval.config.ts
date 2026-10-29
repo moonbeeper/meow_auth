@@ -9,7 +9,7 @@ export default defineConfig({
             client: "svelte-query",
             baseUrl: {
                 runtime: "apiUrlForOrval",
-                imports: [{ name: "apiUrlForOrval", importPath: "$lib/api/ignoreThisPlease" }]
+                imports: [{ name: "apiUrlForOrval", importPath: "#lib/api/ignoreThisPlease.js" }]
             },
             override: {
                 fetch: {

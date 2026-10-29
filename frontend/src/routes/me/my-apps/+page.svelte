@@ -6,10 +6,11 @@
     import LoadingBox from "$comps/loadingBox.svelte";
     import * as LogItem from "$comps/logItem";
     import SettingsPanel from "$comps/settingsPanel.svelte";
-    import { getListOauthApplicationsQueryKey, listOauthApplications } from "$lib/api";
     import type { SvelteVirtualListRangeInfo } from "@humanspeak/svelte-virtual-list";
     import SvelteVirtualList from "@humanspeak/svelte-virtual-list";
     import { createInfiniteQuery } from "@tanstack/svelte-query";
+
+    import { getListOauthApplicationsQueryKey, listOauthApplications } from "#lib/api/index.js";
 
     const createdAppsQuery = createInfiniteQuery(() => ({
         queryKey: [...getListOauthApplicationsQueryKey(), "infinite"],

@@ -18,14 +18,18 @@
     import Input from "$comps/form/input.svelte";
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import UploadBox from "$comps/uploadBox.svelte";
-    import { createCreateOauthApplication, getListOauthApplicationsQueryKey } from "$lib/api";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import type { OauthApplicationDataResponse } from "$lib/api/model";
-    import queryClient from "$lib/api/tanstackClient";
-    import { OauthScope, OauthScopes } from "$lib/oauthScopes";
     import { Control, Field } from "formsnap";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import {
+        createCreateOauthApplication,
+        getListOauthApplicationsQueryKey
+    } from "#lib/api/index.js";
+    import type { OauthApplicationDataResponse } from "#lib/api/model/index.js";
+    import queryClient from "#lib/api/tanstackClient.js";
+    import { OauthScope, OauthScopes } from "#lib/oauthScopes.js";
 
     import AfterCreationDialog from "./afterCreationDialog.svelte";
 

@@ -6,18 +6,19 @@
     import LoadingBox from "$comps/loadingBox.svelte";
     import * as LogItem from "$comps/logItem";
     import SettingsPanel from "$comps/settingsPanel.svelte";
-    import { isOk } from "$lib/api/ignoreThisPlease";
+    import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/browser";
+    import { startRegistration } from "@simplewebauthn/browser";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
     import {
         createDeletePasskey,
         createListPasskeys,
         createRegisterPasskeyExchange,
         createRegisterPasskeyOptions,
         getListPasskeysQueryKey
-    } from "$lib/api/passkeys/passkeys";
-    import queryClient from "$lib/api/tanstackClient";
-    import { actionDate, tryCatch } from "$lib/common";
-    import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/browser";
-    import { startRegistration } from "@simplewebauthn/browser";
+    } from "#lib/api/passkeys/passkeys.js";
+    import queryClient from "#lib/api/tanstackClient.js";
+    import { actionDate, tryCatch } from "#lib/common.js";
 
     import PasskeyNewRenameDialog, { type ActionMode } from "./passkeyNewRenameDialog.svelte";
 

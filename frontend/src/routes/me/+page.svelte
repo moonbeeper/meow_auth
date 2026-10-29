@@ -5,9 +5,10 @@
     import LoadingBox from "$comps/loadingBox.svelte";
     import * as LogItem from "$comps/logItem";
     import SettingsPanel from "$comps/settingsPanel.svelte";
-    import { createCurrentUserAuditLog } from "$lib/api/user/user";
-    import { actionCategory, actionLabel, intoAuditAction } from "$lib/auditLog";
-    import { actionDate } from "$lib/common";
+
+    import { createCurrentUserAuditLog } from "#lib/api/user/user.js";
+    import { actionCategory, actionLabel, intoAuditAction } from "#lib/auditLog.js";
+    import { actionDate } from "#lib/common.js";
 
     import ProfilePanel from "./profilePanel.svelte";
 

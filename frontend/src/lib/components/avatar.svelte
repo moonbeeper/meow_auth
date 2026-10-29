@@ -1,9 +1,10 @@
 <script lang="ts">
-    import { goto, invalidateAll } from "$app/navigation";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import { logout } from "$lib/api/user/user";
-    import { auth } from "$lib/auth/auth.svelte";
+    import { goto, refreshAll } from "$app/navigation";
     import { Avatar } from "bits-ui";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import { logout } from "#lib/api/user/user.js";
+    import { auth } from "#lib/auth/auth.svelte.js";
 
     import * as Dropdown from "./dropdown";
 
@@ -30,7 +31,7 @@
                 console.error("failed to log out");
                 return;
             }
-            await invalidateAll();
+            await refreshAll();
             await goto("/");
             console.log("logged out");
         } finally {

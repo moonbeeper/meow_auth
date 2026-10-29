@@ -3,7 +3,8 @@
     import Button from "$comps/button.svelte";
     import * as Dialog from "$comps/dialog";
     import DialogClose from "$comps/dialog/dialogClose.svelte";
-    import type { OauthApplicationDataResponse } from "$lib/api/model";
+
+    import type { OauthApplicationDataResponse } from "#lib/api/model/index.js";
 
     export type Props = {
         item: OauthApplicationDataResponse | null;

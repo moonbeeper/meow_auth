@@ -6,17 +6,18 @@
 </script>
 
 <script lang="ts">
-    import { goto, invalidateAll } from "$app/navigation";
+    import { goto, refreshAll } from "$app/navigation";
     import * as AuthBox from "$comps/authBox";
     import InputError from "$comps/form/inputError.svelte";
     import Pin from "$comps/form/pin.svelte";
     import { PIN_DIGIT_AND_CHAR } from "$comps/form/regex";
-    import { flowTotpExchange } from "$lib/api/auth/auth";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import { sudoTotpExchange } from "$lib/api/sudo/sudo";
     import { Control, Field } from "formsnap";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { flowTotpExchange } from "#lib/api/auth/auth.js";
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import { sudoTotpExchange } from "#lib/api/sudo/sudo.js";
 
     import type { PageProps } from "./$types";
 
@@ -84,7 +85,7 @@
                 }
             }
             console.log("finalized authentication");
-            await invalidateAll();
+            await refreshAll();
             await goto(data.redirect ?? "/me");
         }
     });

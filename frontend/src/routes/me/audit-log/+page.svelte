@@ -6,14 +6,15 @@
     import LoadingBox from "$comps/loadingBox.svelte";
     import * as LogItem from "$comps/logItem";
     import SettingsPanel from "$comps/settingsPanel.svelte";
-    import { currentUserAuditLog, getCurrentUserAuditLogQueryKey } from "$lib/api/user/user";
-    import { actionCategory, actionLabel, intoAuditAction } from "$lib/auditLog";
-    import { actionDate } from "$lib/common";
-    import { KeysThatMatter } from "$lib/stupidKeymap";
     import SvelteVirtualList, {
         type SvelteVirtualListRangeInfo
     } from "@humanspeak/svelte-virtual-list";
     import { createInfiniteQuery } from "@tanstack/svelte-query";
+
+    import { currentUserAuditLog, getCurrentUserAuditLogQueryKey } from "#lib/api/user/user.js";
+    import { actionCategory, actionLabel, intoAuditAction } from "#lib/auditLog.js";
+    import { actionDate } from "#lib/common.js";
+    import { KeysThatMatter } from "#lib/stupidKeymap.js";
 
     const auditLogQuery = createInfiniteQuery(() => ({
         queryKey: [...getCurrentUserAuditLogQueryKey(), "infinite"],

@@ -17,13 +17,14 @@
     import InputError from "$comps/form/inputError.svelte";
     import Pin from "$comps/form/pin.svelte";
     import { PIN_DIGIT_AND_CHAR, PIN_DIGIT_REGEX } from "$comps/form/regex";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import queryClient from "$lib/api/tanstackClient";
-    import { createDisableTotp, createViewTotpRecoveryCodes } from "$lib/api/totp/totp";
-    import { getCurrentUserInfoQueryKey } from "$lib/api/user/user";
     import { Control, Field } from "formsnap";
     import { defaults, setError, superForm, type SuperValidated } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import queryClient from "#lib/api/tanstackClient.js";
+    import { createDisableTotp, createViewTotpRecoveryCodes } from "#lib/api/totp/totp.js";
+    import { getCurrentUserInfoQueryKey } from "#lib/api/user/user.js";
 
     import TotpRecoveryCodes from "./totpRecoveryCodes.svelte";
 

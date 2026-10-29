@@ -14,14 +14,15 @@
     import InputProxy from "$comps/form/inputProxy.svelte";
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import UploadBox from "$comps/uploadBox.svelte";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import queryClient from "$lib/api/tanstackClient";
-    import { createChangeUserName, getCurrentUserInfoQueryKey } from "$lib/api/user/user";
-    import { auth } from "$lib/auth/auth.svelte";
     import { Control, Field } from "formsnap";
     import { slide } from "svelte/transition";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import queryClient from "#lib/api/tanstackClient.js";
+    import { createChangeUserName, getCurrentUserInfoQueryKey } from "#lib/api/user/user.js";
+    import { auth } from "#lib/auth/auth.svelte.js";
 
     const changeUserName = createChangeUserName(() => ({
         mutation: {

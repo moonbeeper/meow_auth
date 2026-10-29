@@ -13,12 +13,13 @@
     import * as Dialog from "$comps/dialog";
     import Input from "$comps/form/input.svelte";
     import InputError from "$comps/form/inputError.svelte";
-    import { createRenamePasskey, getListPasskeysQueryKey } from "$lib/api";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import queryClient from "$lib/api/tanstackClient";
     import { Control, Field } from "formsnap";
     import { defaults, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import { createRenamePasskey, getListPasskeysQueryKey } from "#lib/api/index.js";
+    import queryClient from "#lib/api/tanstackClient.js";
 
     export type Props = {
         id: string;

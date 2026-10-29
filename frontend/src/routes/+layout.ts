@@ -1,6 +1,7 @@
-import { auth } from "$lib/auth/auth.svelte";
-import { getRedirectUrl } from "$lib/redirect";
 import { redirect } from "@sveltejs/kit";
+
+import { auth } from "#lib/auth/auth.svelte.js";
+import { getRedirectUrl } from "#lib/redirect.js";
 
 export const ssr = false;
 

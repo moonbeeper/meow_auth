@@ -1,7 +1,8 @@
-import { isOk } from "$lib/api/ignoreThisPlease";
-import { sudoEnableOptions, sudoOtpStart } from "$lib/api/sudo/sudo";
-import { tryCatch } from "$lib/common";
 import { redirect } from "@sveltejs/kit";
+
+import { isOk } from "#lib/api/ignoreThisPlease.js";
+import { sudoEnableOptions, sudoOtpStart } from "#lib/api/sudo/sudo.js";
+import { tryCatch } from "#lib/common.js";
 
 import type { PageLoad } from "./$types";
 

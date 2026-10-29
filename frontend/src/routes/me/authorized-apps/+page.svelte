@@ -4,14 +4,15 @@
     import LoadingBox from "$comps/loadingBox.svelte";
     import * as LogItem from "$comps/logItem";
     import SettingsPanel from "$comps/settingsPanel.svelte";
-    import type { ListDataResponseOauthAuthorizationDataItem } from "$lib/api/model";
-    import {
-        getListOauthAuthorizationsQueryKey,
-        listOauthAuthorizations
-    } from "$lib/api/oauth/oauth";
     import type { SvelteVirtualListRangeInfo } from "@humanspeak/svelte-virtual-list";
     import SvelteVirtualList from "@humanspeak/svelte-virtual-list";
     import { createInfiniteQuery } from "@tanstack/svelte-query";
+
+    import type { ListDataResponseOauthAuthorizationDataItem } from "#lib/api/model/index.js";
+    import {
+        getListOauthAuthorizationsQueryKey,
+        listOauthAuthorizations
+    } from "#lib/api/oauth/oauth.js";
 
     import RevokePrompt from "./revokePrompt.svelte";
 

@@ -13,10 +13,6 @@
     import Input from "$comps/form/input.svelte";
     import InputError from "$comps/form/inputError.svelte";
     import Separator from "$comps/separator.svelte";
-    import { flowOtpStart, flowWebauthnExchange, flowWebauthnStart } from "$lib/api/auth/auth";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import { auth } from "$lib/auth/auth.svelte";
-    import { tryCatch } from "$lib/common";
     import {
         startAuthentication,
         WebAuthnAbortService,
@@ -27,6 +23,11 @@
     import { onMount } from "svelte";
     import { defaults, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { flowOtpStart, flowWebauthnExchange, flowWebauthnStart } from "#lib/api/auth/auth.js";
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import { auth } from "#lib/auth/auth.svelte.js";
+    import { tryCatch } from "#lib/common.js";
 
     import type { PageProps } from "./$types";
 

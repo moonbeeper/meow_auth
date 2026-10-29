@@ -1,6 +1,7 @@
-import { auth } from "$lib/auth/auth.svelte";
 import { error, redirect } from "@sveltejs/kit";
 import z from "zod";
+
+import { auth } from "#lib/auth/auth.svelte.js";
 
 import type { LayoutLoad } from "./$types";
 

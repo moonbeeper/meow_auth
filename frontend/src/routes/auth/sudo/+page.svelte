@@ -2,13 +2,14 @@
     import { goto } from "$app/navigation";
     import * as AuthBox from "$comps/authBox";
     import Button from "$comps/button.svelte";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import { sudoOtpStart, sudoWebauthnExchange, sudoWebauthnStart } from "$lib/api/sudo/sudo";
-    import { tryCatch } from "$lib/common";
     import {
         startAuthentication,
         type PublicKeyCredentialRequestOptionsJSON
     } from "@simplewebauthn/browser";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import { sudoOtpStart, sudoWebauthnExchange, sudoWebauthnStart } from "#lib/api/sudo/sudo.js";
+    import { tryCatch } from "#lib/common.js";
 
     import type { PageProps } from "./$types";
 

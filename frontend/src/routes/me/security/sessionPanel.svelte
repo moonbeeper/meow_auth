@@ -4,11 +4,12 @@
     import LoadingBox from "$comps/loadingBox.svelte";
     import * as LogItem from "$comps/logItem";
     import SettingsPanel from "$comps/settingsPanel.svelte";
-    import { getListSessionsQueryKey, listSessions } from "$lib/api/sessions/sessions";
-    import { actionDate } from "$lib/common";
     import type { SvelteVirtualListRangeInfo } from "@humanspeak/svelte-virtual-list";
     import SvelteVirtualList from "@humanspeak/svelte-virtual-list";
     import { createInfiniteQuery } from "@tanstack/svelte-query";
+
+    import { getListSessionsQueryKey, listSessions } from "#lib/api/sessions/sessions.js";
+    import { actionDate } from "#lib/common.js";
 
     const sessionQuery = createInfiniteQuery(() => ({
         queryKey: [...getListSessionsQueryKey(), "infinite"],

@@ -12,12 +12,13 @@
     import Button from "$comps/button.svelte";
     import Input from "$comps/form/input.svelte";
     import InputError from "$comps/form/inputError.svelte";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import queryClient from "$lib/api/tanstackClient";
-    import { createChangeUserName, getCurrentUserInfoQueryKey } from "$lib/api/user/user";
     import { Control, Field } from "formsnap";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import queryClient from "#lib/api/tanstackClient.js";
+    import { createChangeUserName, getCurrentUserInfoQueryKey } from "#lib/api/user/user.js";
 
     import type { PageProps } from "./$types";
 

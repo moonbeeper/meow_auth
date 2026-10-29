@@ -1,9 +1,10 @@
 <script lang="ts">
     import Button from "$comps/button.svelte";
     import * as LogItem from "$comps/logItem/index";
-    import type { ListDataResponseOauthAuthorizationDataItem } from "$lib/api/model";
-    import { actionDate } from "$lib/common";
-    import { OauthScope, OauthScopes } from "$lib/oauthScopes";
+
+    import type { ListDataResponseOauthAuthorizationDataItem } from "#lib/api/model/index.js";
+    import { actionDate } from "#lib/common.js";
+    import { OauthScope, OauthScopes } from "#lib/oauthScopes.js";
 
     type Props = {
         item: ListDataResponseOauthAuthorizationDataItem;

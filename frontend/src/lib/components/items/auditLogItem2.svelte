@@ -1,8 +1,9 @@
 <script lang="ts">
     import * as LogItem from "$comps/logItem/index";
-    import type { ListDataResponseAuditLogDataItem } from "$lib/api/model";
-    import { actionCategory, actionLabel, intoAuditAction } from "$lib/auditLog";
-    import { actionDate } from "$lib/common";
+
+    import type { ListDataResponseAuditLogDataItem } from "#lib/api/model/index.js";
+    import { actionCategory, actionLabel, intoAuditAction } from "#lib/auditLog.js";
+    import { actionDate } from "#lib/common.js";
 
     type Props = {
         item: ListDataResponseAuditLogDataItem;

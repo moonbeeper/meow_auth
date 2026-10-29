@@ -3,10 +3,14 @@
     import Button from "$comps/button.svelte";
     import * as Dialog from "$comps/dialog";
     import DialogClose from "$comps/dialog/dialogClose.svelte";
-    import { createRotateSecretOauthApplication, getListOauthApplicationsQueryKey } from "$lib/api";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import type { OauthApplication } from "$lib/api/model";
-    import queryClient from "$lib/api/tanstackClient";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import {
+        createRotateSecretOauthApplication,
+        getListOauthApplicationsQueryKey
+    } from "#lib/api/index.js";
+    import type { OauthApplication } from "#lib/api/model/index.js";
+    import queryClient from "#lib/api/tanstackClient.js";
 
     export type Props = {
         item: OauthApplication;

@@ -6,20 +6,21 @@
 </script>
 
 <script lang="ts">
-    import { goto, invalidateAll } from "$app/navigation";
+    import { goto, refreshAll } from "$app/navigation";
     import * as AuthBox from "$comps/authBox";
     import Button from "$comps/button.svelte";
     import InputError from "$comps/form/inputError.svelte";
     import Pin from "$comps/form/pin.svelte";
     import { PIN_DIGIT_AND_CHAR } from "$comps/form/regex";
-    import { flowOtpExchange, flowOtpStart } from "$lib/api/auth/auth";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import { sudoOtpExchange, sudoOtpStart } from "$lib/api/sudo/sudo";
-    import { auth } from "$lib/auth/auth.svelte";
     import { Control, Field } from "formsnap";
     import { fly } from "svelte/transition";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { flowOtpExchange, flowOtpStart } from "#lib/api/auth/auth.js";
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import { sudoOtpExchange, sudoOtpStart } from "#lib/api/sudo/sudo.js";
+    import { auth } from "#lib/auth/auth.svelte.js";
 
     import type { PageProps } from "./$types";
 
@@ -79,7 +80,7 @@
                 }
             }
             console.log("finalized authentication");
-            await invalidateAll();
+            await refreshAll();
             await goto(data.redirect ?? "/me");
         }
     });

@@ -1,10 +1,11 @@
 <script lang="ts">
     import * as AuthBox from "$comps/authBox";
     import Button from "$comps/button.svelte";
-    import { finishAuthorization, getFinishAuthorizationUrl } from "$lib/api";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import { OauthScope, OauthScopes } from "$lib/oauthScopes";
     import { onMount } from "svelte";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import { finishAuthorization, getFinishAuthorizationUrl } from "#lib/api/index.js";
+    import { OauthScope, OauthScopes } from "#lib/oauthScopes.js";
 
     import type { PageProps } from "./$types";
 

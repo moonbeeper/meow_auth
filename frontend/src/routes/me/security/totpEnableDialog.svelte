@@ -13,15 +13,16 @@
     import Pin from "$comps/form/pin.svelte";
     import { PIN_DIGIT_REGEX } from "$comps/form/regex";
     import LoadingBox from "$comps/loadingBox.svelte";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import type { CreateTotpResponse } from "$lib/api/model";
-    import queryClient from "$lib/api/tanstackClient";
-    import { createEnableTotpOptions, createExchangeTotpOptions } from "$lib/api/totp/totp";
-    import { getCurrentUserInfoQueryKey } from "$lib/api/user/user";
     import { Control, Field } from "formsnap";
     import encodeQR from "qr";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import type { CreateTotpResponse } from "#lib/api/model/index.js";
+    import queryClient from "#lib/api/tanstackClient.js";
+    import { createEnableTotpOptions, createExchangeTotpOptions } from "#lib/api/totp/totp.js";
+    import { getCurrentUserInfoQueryKey } from "#lib/api/user/user.js";
 
     import TotpRecoveryCodes from "./totpRecoveryCodes.svelte";
 

@@ -1,7 +1,8 @@
 <script lang="ts">
-    import { createCurrentUserInfo } from "$lib/api/user/user";
-    import { auth } from "$lib/auth/auth.svelte";
     import type { Snippet } from "svelte";
+
+    import { createCurrentUserInfo } from "#lib/api/user/user.js";
+    import { auth } from "#lib/auth/auth.svelte.js";
 
     // you cant actually do more snippets. that's not how layouts work, Svelte, like you might have
     // more than one snippet for... ACTIONS or idk man. that's just not I mentally imaged it.

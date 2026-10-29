@@ -1,8 +1,9 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import * as LogItem from "$comps/logItem/index";
-    import type { ListDataResponseOauthApplicationDataItem } from "$lib/api/model";
-    import { actionDate } from "$lib/common";
+    import * as LogItem from "$comps/logItem/";
+
+    import type { ListDataResponseOauthApplicationDataItem } from "#lib/api/model/index.js";
+    import { actionDate } from "#lib/common.js";
 
     type Props = {
         item: ListDataResponseOauthApplicationDataItem;

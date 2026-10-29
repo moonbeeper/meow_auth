@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { getHumanDisplayKey, type KeysThatMatter } from "$lib/stupidKeymap";
+    import { getHumanDisplayKey, type KeysThatMatter } from "#lib/stupidKeymap.js";
 
     type Props = {
         /** The key that needs to be pressed to trigger the onKeyDown method */

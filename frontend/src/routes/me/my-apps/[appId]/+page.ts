@@ -1,8 +1,9 @@
-import { getInfoOauthApplication } from "$lib/api";
-import { isOk } from "$lib/api/ignoreThisPlease";
-import { tryCatch } from "$lib/common";
 import { error } from "@sveltejs/kit";
 import z from "zod";
+
+import { isOk } from "#lib/api/ignoreThisPlease.js";
+import { getInfoOauthApplication } from "#lib/api/index.js";
+import { tryCatch } from "#lib/common.js";
 
 import type { PageLoad } from "./$types";
 

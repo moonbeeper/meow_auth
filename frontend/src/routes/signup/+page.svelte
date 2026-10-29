@@ -12,12 +12,13 @@
     import Button from "$comps/button.svelte";
     import Input from "$comps/form/input.svelte";
     import InputError from "$comps/form/inputError.svelte";
-    import { flowOtpRegister } from "$lib/api/auth/auth";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import { auth } from "$lib/auth/auth.svelte";
     import { Control, Field } from "formsnap";
     import { defaults, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { flowOtpRegister } from "#lib/api/auth/auth.js";
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import { auth } from "#lib/auth/auth.svelte.js";
 
     import type { PageProps } from "./$types";
 

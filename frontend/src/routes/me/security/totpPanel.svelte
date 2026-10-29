@@ -3,7 +3,8 @@
     import EmptyBox from "$comps/emptyBox.svelte";
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import Spinner from "$comps/spinner.svelte";
-    import { auth } from "$lib/auth/auth.svelte";
+
+    import { auth } from "#lib/auth/auth.svelte.js";
 
     import TotpEnableDialog from "./totpEnableDialog.svelte";
     import TotpPrompt, { type Props } from "./totpPrompt.svelte";

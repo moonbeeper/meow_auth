@@ -3,9 +3,10 @@
     import * as LogItem from "$comps/logItem/index";
     // "Complex binding patterns require an initialization value" when lang="ts" is not set... OH CMON!
     import Tag from "$comps/tag.svelte";
-    import type { Passkey } from "$lib/api/model";
-    import { actionDate } from "$lib/common";
-    import { getAaguidMetadata } from "$lib/passkey";
+
+    import type { Passkey } from "#lib/api/model/index.js";
+    import { actionDate } from "#lib/common.js";
+    import { getAaguidMetadata } from "#lib/passkey/index.js";
 
     type Props = {
         // id: string;

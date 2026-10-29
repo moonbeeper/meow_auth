@@ -1,6 +1,7 @@
 <script lang="ts">
     import Button from "$comps/button.svelte";
-    import { auth } from "$lib/auth/auth.svelte";
+
+    import { auth } from "#lib/auth/auth.svelte.js";
 
     type Props = {
         recoveryCodes?: string[];

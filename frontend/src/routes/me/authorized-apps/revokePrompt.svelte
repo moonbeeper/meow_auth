@@ -1,9 +1,13 @@
 <script lang="ts">
     import Button from "$comps/button.svelte";
     import * as Dialog from "$comps/dialog";
-    import { createRevokeOauthAuthorization, getListOauthAuthorizationsQueryKey } from "$lib/api";
-    import type { ListDataResponseOauthAuthorizationDataItem } from "$lib/api/model";
-    import queryClient from "$lib/api/tanstackClient";
+
+    import {
+        createRevokeOauthAuthorization,
+        getListOauthAuthorizationsQueryKey
+    } from "#lib/api/index.js";
+    import type { ListDataResponseOauthAuthorizationDataItem } from "#lib/api/model/index.js";
+    import queryClient from "#lib/api/tanstackClient.js";
 
     export type Props = {
         item: ListDataResponseOauthAuthorizationDataItem | null;

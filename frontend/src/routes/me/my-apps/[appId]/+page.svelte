@@ -19,15 +19,19 @@
     import Input from "$comps/form/input.svelte";
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import UploadBox from "$comps/uploadBox.svelte";
-    import { createUpdateOauthApplication, getListOauthApplicationsQueryKey } from "$lib/api";
-    import { isOk } from "$lib/api/ignoreThisPlease";
-    import queryClient from "$lib/api/tanstackClient";
-    import { actionDate } from "$lib/common";
-    import { OauthScope, OauthScopes } from "$lib/oauthScopes";
     import { Control, Field } from "formsnap";
     import { slide } from "svelte/transition";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
+
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import {
+        createUpdateOauthApplication,
+        getListOauthApplicationsQueryKey
+    } from "#lib/api/index.js";
+    import queryClient from "#lib/api/tanstackClient.js";
+    import { actionDate } from "#lib/common.js";
+    import { OauthScope, OauthScopes } from "#lib/oauthScopes.js";
 
     import type { PageProps } from "./$types";
     import DeleteAppDialog from "./deleteAppDialog.svelte";

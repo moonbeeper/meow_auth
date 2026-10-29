@@ -1,4 +1,4 @@
-import queryClient from "$lib/api/tanstackClient";
+import queryClient from "#lib/api/tanstackClient.js";
 
 import { isOk } from "../api/ignoreThisPlease";
 import type { User } from "../api/model";
