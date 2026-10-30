@@ -87,15 +87,28 @@ jwk_active_seconds = 5184000
 jwk_expired_after_seconds = 7776000
 # How often, in seconds, its checked if the JWKs need to be rotated or deleted
 jwk_cycle_after_seconds = 43200
-
-[[oauth.scopes]]
-identifier = "third party only scope"
-allowed_client_type = "third_party"
-
-[[oauth.scopes]]
-identifier = "another third party one"
-allowed_client_type = "third_party"
-
-[[oauth.scopes]]
-identifier = "a first party only scope"
-allowed_client_type = "first_party"
+# The list of additional scopes an application can request. The built in scopes are always available and cannot be
+# removed, these are:
+# - "openid"
+# - "profile"
+# - "email"
+# You can add your own scopes by adding a "[[oauth.scopes]]" table, like this:
+# [[oauth.scopes]]
+# # This is the identifier of the scope, it has to be unique and cannot be empty. It can include spaces
+# # but they would be replaced by underscores when parsed.
+# identifier = "my_scope"
+# # This is the description of the scope, it can be empty. It will be shown to the user in consent prompts
+# # and in the authorization and application management pages. Its a normal string, so you can use any characters
+# # like emojis or "ñ"
+# description = "this is my custom scope scoppy"
+# # These are the client ids that are allowed to add this scope to their authorization requests or creation.
+# # If empty, any client can request this scope
+# allowed_client_ids = ["00000000000000000000000000", "01M625625TDQDVXMGM7V5GEZKN"]
+# # These are the client type that are allowed to add this scope to their authorization requests or creation.
+# # By default, only "third_party" clients can requests this type of scopes.
+# # If you set it as "first_party", only the first party clients can request it. It will be also hidden from
+# # the public scope listing, only appearing as an option on applications with the "first_party" type.
+# # Additionally, if your application type is "first_party", it can request either first or third party scopes.
+# allowed_client_type = "third_party"
+# # These are the user flags that are required for a user to be able to create an application with this scope.
+# required_user_flags = 0

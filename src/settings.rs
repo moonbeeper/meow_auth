@@ -199,6 +199,31 @@ pub struct OauthSettings {
     /// How often, in seconds, its checked if the JWKs need to be rotated or deleted
     #[default(60*60*12)]
     pub jwk_cycle_after_seconds: i64,
+    /// The list of additional scopes an application can request. The built in scopes are always available and cannot be
+    /// removed, these are:
+    ///     - "openid"
+    ///     - "profile"
+    ///     - "email"
+    /// You can add your own scopes by adding a "[[oauth.scopes]]" table, like this:
+    /// [[oauth.scopes]]
+    /// # This is the identifier of the scope, it has to be unique and cannot be empty. It can include spaces
+    /// # but they would be replaced by underscores when parsed.
+    /// identifier = "my_scope"
+    /// # This is the description of the scope, it can be empty. It will be shown to the user in consent prompts
+    /// # and in the authorization and application management pages. Its a normal string, so you can use any characters
+    /// # like emojis or "ñ"
+    /// description = "this is my custom scope scoppy"
+    /// # These are the client ids that are allowed to add this scope to their authorization requests or creation.
+    /// # If empty, any client can request this scope
+    /// allowed_client_ids = ["00000000000000000000000000", "01M625625TDQDVXMGM7V5GEZKN"]
+    /// # These are the client type that are allowed to add this scope to their authorization requests or creation.
+    /// # By default, only "third_party" clients can requests this type of scopes.
+    /// # If you set it as "first_party", only the first party clients can request it. It will be also hidden from
+    /// # the public scope listing, only appearing as an option on applications with the "first_party" type.
+    /// # Additionally, if your application type is "first_party", it can request either first or third party scopes.
+    /// allowed_client_type = "third_party"
+    /// # These are the user flags that are required for a user to be able to create an application with this scope.
+    /// required_user_flags = 0
     pub scopes: Option<Vec<SettingsScopeDef>>,
 }
 
@@ -382,10 +407,6 @@ fn add_root_docs(toml_doc: &mut toml_edit::DocumentMut) {
 
 fn add_table_docs(table: &mut toml_edit::Table, node: &DocNode) {
     for entry in node.children {
-        let Some(item) = table.get_mut(entry.key) else {
-            continue;
-        };
-
         let docs = entry
             .node
             .docs
@@ -395,6 +416,11 @@ fn add_table_docs(table: &mut toml_edit::Table, node: &DocNode) {
             .collect::<Vec<_>>()
             .join("\n");
 
+        let Some(item) = table.get_mut(entry.key) else {
+            add_optional_docs(table, &docs);
+            continue;
+        };
+
         if item.is_table() {
             let table = item.as_table_mut().expect("should be a table");
             if !docs.trim().is_empty() {
@@ -403,12 +429,51 @@ fn add_table_docs(table: &mut toml_edit::Table, node: &DocNode) {
 
             // greaet job bird brain. YOU HAVE tO CYCLE AGAIN OR ELSE table KEYS wont be even seen to add their docs STUPID
             add_table_docs(table, entry.node);
+        } else if item.is_array_of_tables() {
+            let array = item
+                .as_array_of_tables_mut()
+                .expect("should be a array of tables");
+
+            for (i, table) in array.iter_mut().enumerate() {
+                if i == 0 && !docs.trim().is_empty() {
+                    table.decor_mut().set_prefix(format!("{docs:}\n"));
+                }
+                add_table_docs(table, entry.node);
+            }
         } else if !docs.trim().is_empty()
             && let Some(mut key) = table.key_mut(entry.key)
         {
             key.leaf_decor_mut().set_prefix(format!("{docs:}\n"));
         }
     }
+}
+
+fn add_optional_docs(table: &mut toml_edit::Table, docs: &str) {
+    if docs.trim().is_empty() {
+        return;
+    }
+
+    let Some(last_key) = table.iter().last().map(|(k, _)| k.to_string()) else {
+        return;
+    };
+
+    let Some(table) = table.get_mut(&last_key).and_then(|v| v.as_value_mut()) else {
+        return;
+    };
+
+    let table = table.decor_mut();
+
+    let existing_decor = table
+        .suffix()
+        .map(|v| v.as_str())
+        .unwrap_or_default()
+        .unwrap_or_default();
+
+    table.set_suffix(if existing_decor.is_empty() {
+        format!("\n{docs}")
+    } else {
+        format!("{existing_decor}\n{docs}")
+    });
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -507,28 +572,3 @@ macro_rules! doc_node_ignore {
         })*
     };
 }
-
-doc_node_ignore!(
-    u8,
-    u16,
-    u32,
-    u64,
-    u128,
-    usize,
-    i8,
-    i16,
-    i32,
-    i64,
-    i128,
-    isize,
-    f32,
-    f64,
-    bool,
-    char,
-    String,
-    &str,
-    LoggingLevel,
-    Url,
-    SocketAddr,
-    SecretKey
-);
