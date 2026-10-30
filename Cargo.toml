@@ -99,6 +99,7 @@ compact_jwt = "0.6.0"
 arc-swap = "1.9.3"
 dashmap = "6.2.1"
 meow_macros = { path = "macros" }
+time = "0.3.55"
 
 [build-dependencies]
 shadow-rs = "2.0.0"

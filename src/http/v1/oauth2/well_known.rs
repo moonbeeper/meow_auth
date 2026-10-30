@@ -6,12 +6,9 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 use crate::{
     global::GlobalState,
     http::oauth_cors,
-    oauth::{
-        scopes::ALL_SCOPES,
-        types::{
-            CodeChallengeMethod, GrantType, IdTokenSigningAlg, OauthMetadata, OpenIdMetadata,
-            ResponseModes, ResponseType, SubjectTypes, TokenAuthMethod,
-        },
+    oauth::types::{
+        CodeChallengeMethod, GrantType, IdTokenSigningAlg, OauthMetadata, OpenIdMetadata,
+        ResponseModes, ResponseType, SubjectTypes, TokenAuthMethod,
     },
 };
 
@@ -32,11 +29,12 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
     )
 )]
 pub async fn wellknown_oauth(State(global): State<Arc<GlobalState>>) -> Json<OauthMetadata> {
-    let all_scopes = ALL_SCOPES
-        .iter()
-        .map(|v| v.as_str().to_string())
+    let all_scopes = global
+        .oauth_scope_registry
+        .scopes
+        .values()
+        .map(|v| v.identifier.clone())
         .collect::<Vec<_>>();
-
     let authorization_endpoint = make_endpoint("/v1/oauth2/authorize", &global);
     let token_endpoint = make_endpoint("/v1/oauth2/token", &global);
     let jwks_endpoint = make_endpoint("/v1/oauth2/discovery/keys", &global);
@@ -66,9 +64,11 @@ pub async fn wellknown_oauth(State(global): State<Arc<GlobalState>>) -> Json<Oau
     )
 )]
 pub async fn wellknown_openid(State(global): State<Arc<GlobalState>>) -> Json<OpenIdMetadata> {
-    let all_scopes = ALL_SCOPES
-        .iter()
-        .map(|v| v.as_str().to_string())
+    let all_scopes = global
+        .oauth_scope_registry
+        .scopes
+        .values()
+        .map(|v| v.identifier.clone())
         .collect::<Vec<_>>();
 
     let authorization_endpoint = make_endpoint("/v1/oauth2/authorize", &global);

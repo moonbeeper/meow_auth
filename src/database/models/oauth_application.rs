@@ -10,6 +10,32 @@ use crate::database::{
 
 pub type OauthApplicationId = UlidId;
 
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    serde::Serialize,
+    serde::Deserialize,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    sqlx::Type,
+)]
+#[serde(rename_all = "lowercase")]
+#[sqlx(type_name = "oauth_applications_client_type")]
+#[sqlx(rename_all = "lowercase")]
+pub enum ClientType {
+    #[serde(rename = "first_party")]
+    #[sqlx(rename = "first_party")]
+    FirstParty,
+    #[default]
+    #[serde(rename = "third_party")]
+    #[sqlx(rename = "third_party")]
+    ThirdParty,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, TypedBuilder)]
 pub struct OauthApplication {
     #[builder(default = OauthApplicationId::new())]
@@ -22,8 +48,10 @@ pub struct OauthApplication {
     pub public: bool,
     #[builder(default = false)]
     pub disabled: bool,
-    #[builder(default = 0)]
-    pub scopes: i64,
+    #[builder(default = "".to_string())]
+    pub scopes: String,
+    #[builder(default = ClientType::ThirdParty)]
+    pub client_type: ClientType,
     #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
@@ -33,10 +61,21 @@ pub struct OauthApplication {
 impl OauthApplication {
     pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
-            "insert into
-                oauth_applications (id, user_id, name, redirect_uri, secret, public, disabled, scopes, created_at, updated_at)
+            "insert into oauth_applications (
+                id,
+                user_id,
+                name,
+                redirect_uri,
+                secret,
+                public,
+                disabled,
+                scopes,
+                client_type,
+                created_at,
+                updated_at
+            )
              values
-                ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())",
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), now())",
             self.id as OauthApplicationId,
             self.user_id as UserId,
             self.name,
@@ -45,6 +84,7 @@ impl OauthApplication {
             self.public,
             self.disabled,
             self.scopes,
+            self.client_type as ClientType
         )
         .execute(&mut **transaction)
         .await?;
@@ -61,6 +101,7 @@ impl OauthApplication {
                 public = $5,
                 scopes = $6,
                 disabled = $7,
+                client_type = $8,
                 updated_at = now()
              where id = $1",
             self.id as OauthApplicationId,
@@ -69,7 +110,8 @@ impl OauthApplication {
             self.secret,
             self.public,
             self.scopes,
-            self.disabled
+            self.disabled,
+            self.client_type as ClientType
         )
         .execute(&mut **transaction)
         .await?;
@@ -94,7 +136,7 @@ impl OauthApplication {
     ) -> Result<Option<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
-            "select
+            r#"select
                 id,
                 user_id,
                 name,
@@ -103,9 +145,10 @@ impl OauthApplication {
                 public,
                 disabled,
                 scopes,
+                client_type as "client_type: ClientType",
                 created_at,
                 updated_at
-             from oauth_applications where id = $1",
+                from oauth_applications where id = $1"#,
             id as OauthApplicationId
         )
         .fetch_optional(pool)
@@ -120,18 +163,19 @@ impl OauthApplication {
     ) -> Result<Vec<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
-            "select
+            r#"select
                 id,
                 user_id,
-                redirect_uri,
                 name,
+                redirect_uri,
                 secret,
                 public,
                 disabled,
                 scopes,
+                client_type as "client_type: ClientType",
                 created_at,
                 updated_at
-             from oauth_applications where user_id = $1",
+                from oauth_applications where user_id = $1"#,
             user_id as UserId
         )
         .fetch_all(pool)
@@ -146,18 +190,19 @@ impl OauthApplication {
     ) -> Result<Vec<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
-            "select
+            r#"select
                 id,
                 user_id,
-                redirect_uri,
                 name,
+                redirect_uri,
                 secret,
                 public,
                 disabled,
                 scopes,
+                client_type as "client_type: ClientType",
                 created_at,
                 updated_at
-             from oauth_applications where id = any($1)",
+                from oauth_applications where id = any($1)"#,
             &ids as &[OauthApplicationId]
         )
         .fetch_all(pool)
@@ -174,18 +219,19 @@ impl OauthApplication {
     ) -> Result<PaginationResult<Self>, DatabaseError> {
         let data = sqlx::query_as!(
             Self,
-            "select
+            r#"select
                 id,
                 user_id,
-                redirect_uri,
                 name,
+                redirect_uri,
                 secret,
                 public,
                 disabled,
                 scopes,
+                client_type as "client_type: ClientType",
                 created_at,
                 updated_at
-             from oauth_applications where user_id = $1 and ($2::uuid is null or id::uuid > $2) order by created_at asc limit 20+1",
+                from oauth_applications where user_id = $1 and ($2::uuid is null or id::uuid > $2) order by created_at asc limit 20+1"#,
             user_id as UserId,
             from as Option<OauthApplicationId>
         )

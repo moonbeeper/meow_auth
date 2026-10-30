@@ -32,7 +32,7 @@ use crate::{
         helpers::{AuthorizationOutcome, action_new_authorization, action_past_authorized},
         pending_authorization_checks,
         response::{OAUTH_ISSUER, OauthResponse},
-        scopes::{Scope, Scopes},
+        scope::{BUILTIN_SCOPE_OPENID_IDENTIFIER, Scopes},
         secrets::hash_secret,
         types::{
             AuthorizationDecisionRequest, AuthorizationRequest, CodeChallengeMethod, PromptType,
@@ -130,13 +130,13 @@ pub async fn authorize(
         redirect_url = requested_url;
     }
 
-    let mut requested_scopes = Scopes::from_bits(client.scopes); // max client scopes
+    let mut requested_scopes = Scopes::from_str(&client.scopes, &global.oauth_scope_registry); // max client scopes
 
     if let Some(scopes_str) = request.scope.clone() {
-        let requested = Scopes::from_str(&scopes_str);
+        let requested = Scopes::from_str(&scopes_str, &global.oauth_scope_registry);
 
         // if requesting too many scopes stop
-        if !requested_scopes.contains(requested) {
+        if !requested_scopes.contains(requested.clone()) {
             return OauthResponse::new()
                 .error(
                     OauthErrorCodes::InvalidScope,
@@ -149,7 +149,7 @@ pub async fn authorize(
         requested_scopes = requested;
     }
 
-    let is_openid = requested_scopes.has(Scope::OpenId);
+    let is_openid = requested_scopes.has(BUILTIN_SCOPE_OPENID_IDENTIFIER);
 
     if !auth.is_authenticated() {
         if is_openid && request.prompt == Some(PromptType::None) {
@@ -233,6 +233,7 @@ pub async fn authorize(
             &auth,
             &cookies,
             &global.settings,
+            &global.oauth_scope_registry,
             &mut tx,
         )
         .await
@@ -373,8 +374,14 @@ pub async fn finish_authorization(
     };
 
     // re-sanitize scopes just in case Oauth app owner has updated them for some goddamn reason
-    let requested_scopes = Scopes::from_bits(pending_authorization.requested_scopes)
-        .sanitize(Scopes::from_bits(oauth_client.scopes));
+    let requested_scopes = Scopes::from_str(
+        &pending_authorization.requested_scopes,
+        &global.oauth_scope_registry,
+    )
+    .sanitize(Scopes::from_str(
+        &oauth_client.scopes,
+        &global.oauth_scope_registry,
+    ));
 
     let code = nanoid::nanoid!(32);
     let pending_token = OauthPendingToken::builder()
@@ -382,7 +389,7 @@ pub async fn finish_authorization(
         .client_id(oauth_client.id)
         .code_challenge(pending_authorization.code_challenge.clone())
         .nonce(pending_authorization.nonce.clone())
-        .scopes(requested_scopes.bits())
+        .scopes(requested_scopes.to_string())
         .state(pending_authorization.state.clone())
         .user_id(auth.user_id())
         .is_openid(pending_authorization.is_openid)
@@ -391,7 +398,7 @@ pub async fn finish_authorization(
     let new_authorization = OauthAuthorization::builder()
         .user_id(auth.user_id())
         .client_id(oauth_client.id)
-        .scopes(requested_scopes.bits())
+        .scopes(requested_scopes.to_string())
         .build();
 
     let mut tx = global.database.begin().await?;

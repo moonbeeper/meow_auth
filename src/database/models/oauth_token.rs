@@ -17,8 +17,8 @@ pub struct OauthToken {
     pub user_id: UserId,
     pub client_id: OauthApplicationId,
     pub token: String,
-    #[builder(default = 0)]
-    pub scopes: i64,
+    #[builder(default = "".to_string())]
+    pub scopes: String,
     #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]

@@ -16,8 +16,8 @@ pub struct OauthAuthorization {
     pub id: OauthAuthorizationId,
     pub user_id: UserId,
     pub client_id: OauthApplicationId,
-    #[builder(default = 0)]
-    pub scopes: i64,
+    #[builder(default = "".to_string())]
+    pub scopes: String,
     #[builder(default = None)]
     pub last_used_at: Option<chrono::DateTime<chrono::Utc>>,
     #[builder(default = chrono::Utc::now())]

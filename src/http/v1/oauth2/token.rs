@@ -25,7 +25,7 @@ use crate::{
         error::OauthErrorCodes,
         openid::get_id_token_data,
         response::OauthResponse,
-        scopes::Scopes,
+        scope::Scopes,
         secrets::{check_pkce, get_secret_pair, hash_secret, verify_secret},
         types::{GrantType, RevocationRequest, TokenRequest, TokenResponse, TokenType},
         valid_redirect_uri,
@@ -139,12 +139,15 @@ pub async fn token(
     let secret_pain = get_secret_pair(&global.settings);
 
     // re-re-sanitize scopes just innnn case :) (great job past me!!!)
-    let scopes = Scopes::from_bits(pending_token.scopes).sanitize(Scopes::from_bits(client.scopes));
+    let scopes = Scopes::from_str(&pending_token.scopes, &global.oauth_scope_registry).sanitize(
+        Scopes::from_str(&client.scopes, &global.oauth_scope_registry),
+    );
+
     let oauth_token = OauthToken::builder()
         .client_id(client.id)
         .token(secret_pain.hash)
         .user_id(pending_token.user_id)
-        .scopes(scopes.bits())
+        .scopes(scopes.to_string())
         .build();
 
     OauthToken::delete_all_by_user_and_client_id(pending_token.user_id, client.id, &mut tx)
@@ -167,7 +170,7 @@ pub async fn token(
             user,
             pending_token.client_id,
             pending_token.nonce,
-            scopes,
+            &scopes,
             &global.settings,
         );
         let token = current_signer

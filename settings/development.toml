@@ -87,3 +87,15 @@ jwk_active_seconds = 5184000
 jwk_expired_after_seconds = 7776000
 # How often, in seconds, its checked if the JWKs need to be rotated or deleted
 jwk_cycle_after_seconds = 43200
+
+[[oauth.scopes]]
+identifier = "third party only scope"
+allowed_client_type = "third_party"
+
+[[oauth.scopes]]
+identifier = "another third party one"
+allowed_client_type = "third_party"
+
+[[oauth.scopes]]
+identifier = "a first party only scope"
+allowed_client_type = "first_party"

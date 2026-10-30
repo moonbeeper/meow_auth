@@ -1,6 +1,9 @@
 use std::{net::SocketAddr, path::Path};
 
-use crate::crypto::{SecretKey, get_secret_key};
+use crate::{
+    crypto::{SecretKey, get_secret_key},
+    oauth::scope::SettingsScopeDef,
+};
 use anyhow::Context;
 use clap::Parser;
 use config::Config;
@@ -196,6 +199,7 @@ pub struct OauthSettings {
     /// How often, in seconds, its checked if the JWKs need to be rotated or deleted
     #[default(60*60*12)]
     pub jwk_cycle_after_seconds: i64,
+    pub scopes: Option<Vec<SettingsScopeDef>>,
 }
 
 /// Meow Auth settings :3
@@ -408,7 +412,7 @@ fn add_table_docs(table: &mut toml_edit::Table, node: &DocNode) {
 }
 
 #[derive(Debug, Clone, Copy, Default)]
-struct DocNode {
+pub struct DocNode {
     /// the "docs" are the docs of the field it self. **They are used to generate the toml docs**
     /// Visually is this:
     ///
@@ -473,12 +477,12 @@ struct DocNode {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct DocEntry {
+pub struct DocEntry {
     pub key: &'static str,
     pub node: &'static DocNode,
 }
 
-trait HasDocs {
+pub trait HasDocs {
     const DOCS: &'static DocNode;
 }
 
@@ -486,11 +490,16 @@ impl<T: HasDocs> HasDocs for Option<T> {
     const DOCS: &'static DocNode = T::DOCS;
 }
 
+impl<T: HasDocs> HasDocs for Vec<T> {
+    const DOCS: &'static DocNode = T::DOCS;
+}
+
 /// implements an empty DocNode for types that dont really have docs
+#[macro_export]
 macro_rules! doc_node_ignore {
     ($($ty:ty),*) => {
-        $(impl HasDocs for $ty {
-            const DOCS: &'static DocNode = &DocNode {
+        $(impl $crate::settings::HasDocs for $ty {
+            const DOCS: &'static $crate::settings::DocNode = &$crate::settings::DocNode {
                 docs: &[],
                 type_docs: &[],
                 children: &[]

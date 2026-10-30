@@ -22,9 +22,9 @@ pub struct OauthPendingAuthorization {
     #[builder(default = None)]
     pub old_authorization_id: Option<OauthAuthorizationId>,
     #[builder(default = None)]
-    pub old_scopes: Option<i64>, // seems useless
-    #[builder(default = 0)]
-    pub requested_scopes: i64,
+    pub old_scopes: Option<String>, // used for display purposes (for frontend)
+    #[builder(default = "".to_string())]
+    pub requested_scopes: String,
     pub code_challenge: String,
     pub state: Option<String>,
     pub nonce: Option<String>,

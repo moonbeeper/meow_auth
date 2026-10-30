@@ -1,10 +1,11 @@
 use compact_jwt::{OidcSubject, OidcToken};
+use time::OffsetDateTime;
 
 use crate::{
     database::models::{oauth_application::OauthApplicationId, user::User},
     oauth::{
         response::OAUTH_ISSUER,
-        scopes::{Scope, Scopes},
+        scope::{BUILTIN_SCOPE_EMAIL_IDENTIFIER, BUILTIN_SCOPE_PROFILE_IDENTIFIER, Scopes},
     },
     settings::Settings,
 };
@@ -13,7 +14,7 @@ pub fn get_id_token_data(
     user: User,
     client_id: OauthApplicationId,
     nonce: Option<String>,
-    scopes: Scopes,
+    scopes: &Scopes,
     settings: &Settings,
 ) -> OidcToken {
     let now = chrono::Utc::now();
@@ -39,14 +40,19 @@ pub fn get_id_token_data(
 
     let mut standard_claims = base.s_claims.clone();
 
-    if scopes.has(Scope::Profile) {
+    if scopes.has(BUILTIN_SCOPE_PROFILE_IDENTIFIER) {
         standard_claims.name = Some(user.name.clone());
     }
 
-    if scopes.has(Scope::Email) {
+    if scopes.has(BUILTIN_SCOPE_EMAIL_IDENTIFIER) {
         standard_claims.email = Some(user.email.clone());
         standard_claims.email_verified = Some(user.email_verified);
     }
+
+    standard_claims.updated_at = Some(
+        OffsetDateTime::from_unix_timestamp(user.updated_at.timestamp())
+            .expect("failed to convert user updated_at stamp to time's one"),
+    );
 
     base.s_claims = standard_claims;
 

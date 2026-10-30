@@ -30,7 +30,7 @@ use crate::{
         },
         validator::Valid,
     },
-    oauth::{scopes::Scopes, secrets::get_secret_pair},
+    oauth::{scope::Scopes, secrets::get_secret_pair},
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
@@ -98,7 +98,7 @@ pub struct OauthApplicationData {
     pub redirect_uri: Option<String>,
     pub public: Option<bool>,
     pub disabled: Option<bool>,
-    pub scopes: Option<i64>,
+    pub scopes: Option<String>,
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
@@ -149,8 +149,8 @@ pub async fn admin_edit_user_application(
     }
 
     if let Some(scopes) = data.scopes {
-        let scopes = Scopes::from_bits(scopes).sanitize(Scopes::all());
-        app.scopes = scopes.bits();
+        let scopes = Scopes::from_str(&scopes, &global.oauth_scope_registry);
+        app.scopes = scopes.to_string();
         fields_changed.push("scopes");
     }
 

@@ -14,8 +14,8 @@ pub struct OauthPendingToken {
     pub code: OauthPendingTokenId,
     pub user_id: UserId,
     pub client_id: OauthApplicationId,
-    #[builder(default = 0)]
-    pub scopes: i64,
+    #[builder(default = "".to_string())]
+    pub scopes: String,
     pub code_challenge: String,
     pub state: Option<String>,
     pub nonce: Option<String>, // openid id token

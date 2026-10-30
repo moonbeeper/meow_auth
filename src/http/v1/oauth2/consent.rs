@@ -14,7 +14,7 @@ use crate::{
         extractor::Json,
     },
     oauth::{
-        cookies::get_oauth_cookie, response::OauthResponse, scopes::Scopes, types::ConsentMetadata,
+        cookies::get_oauth_cookie, response::OauthResponse, scope::Scopes, types::ConsentMetadata,
     },
 };
 
@@ -58,12 +58,16 @@ pub async fn oauth_consent_info(
         return Err(ApiErrorCodes::FlowNotFound);
     };
 
-    let client_scopes = Scopes::from_bits(client.scopes);
+    let client_scopes = Scopes::from_str(&client.scopes, &global.oauth_scope_registry);
 
-    let new_scopes =
-        Scopes::from_bits(pending_authorization.requested_scopes).sanitize(client_scopes);
+    let new_scopes = Scopes::from_str(
+        &pending_authorization.requested_scopes,
+        &global.oauth_scope_registry,
+    )
+    .sanitize(client_scopes.clone());
+
     let old_scopes = if let Some(old) = pending_authorization.old_scopes {
-        Scopes::from_bits(old).sanitize(client_scopes)
+        Scopes::from_str(&old, &global.oauth_scope_registry).sanitize(client_scopes)
     } else {
         Scopes::default()
     };
@@ -71,8 +75,8 @@ pub async fn oauth_consent_info(
     Ok(Json(ConsentMetadata {
         id: client.id,
         name: client.name,
-        scopes: new_scopes.bits(),
-        old_scopes: old_scopes.bits(),
+        scopes: new_scopes.to_string(),
+        old_scopes: old_scopes.to_string(),
         redirect_url: pending_authorization.redirect_url,
         created_at: client.created_at,
     }))

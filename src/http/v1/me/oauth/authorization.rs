@@ -26,7 +26,7 @@ use crate::{
         },
         v1::types::{AlrightResponse, ListDataRequest, ListDataResponse, OauthAuthorization},
     },
-    oauth::scopes::Scopes,
+    oauth::scope::Scopes,
 };
 
 pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
@@ -79,12 +79,13 @@ pub async fn list_oauth_authorizations(
         .into_iter()
         .map(|v| {
             let app = &app_map[&v.client_id];
-            let scopes = Scopes::from_bits(v.scopes).sanitize(Scopes::from_bits(app.scopes));
+            let scopes = Scopes::from_str(&v.scopes, &global.oauth_scope_registry)
+                .sanitize(Scopes::from_str(&app.scopes, &global.oauth_scope_registry));
             OauthAuthorization {
                 id: v.id,
                 name: app.name.clone(),
                 redirect_uri: app.redirect_uri.clone(),
-                scopes: scopes.bits(),
+                scopes: scopes.to_string(),
                 last_used_at: v.last_used_at,
                 updated_at: v.updated_at,
                 created_at: v.created_at,

@@ -13,7 +13,8 @@ pub mod error;
 pub mod helpers;
 pub mod openid;
 pub mod response;
-pub mod scopes;
+pub mod scope;
+// pub mod scopes;
 pub mod secrets;
 pub mod types;
 

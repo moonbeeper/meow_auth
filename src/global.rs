@@ -7,6 +7,7 @@ use crate::{
     crypto::jwks::JwksKeys,
     database,
     mailer::{self, Mailer},
+    oauth,
     settings::Settings,
 };
 
@@ -17,12 +18,14 @@ pub struct GlobalState {
     pub mailer: Mailer,
     pub webauthn: Arc<Webauthn>,
     pub jwks: JwksKeys,
+    pub oauth_scope_registry: oauth::scope::ScopeRegistry,
 }
 
 impl GlobalState {
     pub async fn new(settings: Settings) -> anyhow::Result<Arc<Self>> {
         tracing::info!("setting up global state");
         let database = database::setup_pg_database(&settings.database).await?;
+
         // build tera templates at startup to panic and exit if templates are nasty. This way... i dont get
         // a poisoned/dead shared LazyLock that cant be used anymore with mailer workers.
         let _ = mailer::resources::build_tera();
@@ -40,6 +43,8 @@ impl GlobalState {
         let jwks_list = JwksKeys::new(&database, &settings)
             .await
             .context("failed to get JWKS")?;
+        let oauth_scope_registry =
+            oauth::scope::ScopeRegistry::new(&settings).context("failed creating oauth context")?;
 
         Ok(Arc::new(Self {
             settings,
@@ -47,6 +52,7 @@ impl GlobalState {
             mailer,
             webauthn: Arc::new(webauth),
             jwks: jwks_list,
+            oauth_scope_registry,
         }))
     }
 }

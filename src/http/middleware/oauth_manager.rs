@@ -17,7 +17,7 @@ use crate::{
         user::UserId,
     },
     global::GlobalState,
-    oauth::{response::OauthResponse, scopes::Scopes, secrets::hash_secret},
+    oauth::{response::OauthResponse, scope::Scopes, secrets::hash_secret},
 };
 
 #[derive(Debug, Clone)]
@@ -51,7 +51,7 @@ impl OauthContext {
 
     pub fn scopes(&self) -> Scopes {
         match self {
-            OauthContext::Authenticated { scopes, .. } => *scopes,
+            OauthContext::Authenticated { scopes, .. } => scopes.clone(),
             OauthContext::Unauthenticated => Scopes::default(),
         }
     }
@@ -160,7 +160,9 @@ async fn do_work(request: &mut Request, header: &HeaderValue, global_state: &Arc
         return;
     };
 
-    let scopes = Scopes::from_bits(token.scopes).sanitize(Scopes::from_bits(client.scopes));
+    let scopes = Scopes::from_str(&token.scopes, &global_state.oauth_scope_registry).sanitize(
+        Scopes::from_str(&client.scopes, &global_state.oauth_scope_registry),
+    );
 
     request
         .extensions_mut()

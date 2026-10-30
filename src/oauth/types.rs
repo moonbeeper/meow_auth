@@ -233,8 +233,8 @@ impl From<OidcToken> for OpenIdUserInfo {
 pub struct ConsentMetadata {
     pub id: UlidId,
     pub name: String,
-    pub scopes: i64,
-    pub old_scopes: i64,
+    pub scopes: String,
+    pub old_scopes: String,
     pub redirect_url: String,
     pub created_at: chrono::DateTime<Utc>,
 }

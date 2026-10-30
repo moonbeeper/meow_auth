@@ -8,8 +8,8 @@ use crate::{
     global::GlobalState,
     http::middleware::{oauth_manager::OauthContext, require_oauth::RequireOauthLayer},
     oauth::{
-        error::OauthErrorCodes, openid::get_id_token_data, response::OauthResponse, scopes::Scope,
-        types::OpenIdUserInfo,
+        error::OauthErrorCodes, openid::get_id_token_data, response::OauthResponse,
+        scope::BUILTIN_SCOPE_OPENID_IDENTIFIER, types::OpenIdUserInfo,
     },
 };
 
@@ -34,7 +34,7 @@ pub async fn openid_userinfo(
     State(global): State<Arc<GlobalState>>,
     Extension(oauth): Extension<OauthContext>,
 ) -> Result<Json<OpenIdUserInfo>, OauthResponse> {
-    if !oauth.scopes().has(Scope::OpenId) {
+    if !oauth.scopes().has(BUILTIN_SCOPE_OPENID_IDENTIFIER) {
         return Err(OauthResponse::new().error(
             OauthErrorCodes::InsufficientScope,
             Some("missing openid scope"),
@@ -50,7 +50,7 @@ pub async fn openid_userinfo(
         user,
         oauth.client_id(),
         None,
-        oauth.scopes(),
+        &oauth.scopes(),
         &global.settings,
     );
 

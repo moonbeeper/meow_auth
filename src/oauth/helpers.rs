@@ -9,7 +9,10 @@ use crate::{
     },
     http::middleware::auth_manager::AuthContext,
     oauth::{
-        cookies::create_oauth_cookie, response::OAUTH_ISSUER, scopes::Scopes, secrets::hash_secret,
+        cookies::create_oauth_cookie,
+        response::OAUTH_ISSUER,
+        scope::{ScopeRegistry, Scopes},
+        secrets::hash_secret,
         types::AuthorizationRequest,
     },
     settings::Settings,
@@ -33,10 +36,11 @@ pub async fn action_past_authorized(
     auth_context: &AuthContext,
     cookies: &Cookies,
     settings: &Settings,
+    scope_registry: &ScopeRegistry,
     tx: &mut PgTransaction<'_>,
 ) -> anyhow::Result<AuthorizationOutcome> {
-    let sanitized_authorization_scopes =
-        Scopes::from_bits(authorization.scopes).sanitize(Scopes::from_bits(oauth_client.scopes));
+    let sanitized_authorization_scopes = Scopes::from_str(&authorization.scopes, scope_registry)
+        .sanitize(Scopes::from_str(&oauth_client.scopes, scope_registry));
 
     if is_openid && request.prompt == Some(PromptType::Consent) {
         return action_new_authorization(
@@ -54,7 +58,7 @@ pub async fn action_past_authorized(
         .await;
     }
 
-    if !sanitized_authorization_scopes.contains(requested_scopes) {
+    if !sanitized_authorization_scopes.contains(requested_scopes.clone()) {
         let pending_auth = OauthPendingAuthorization::builder()
             .client_id(oauth_client.id)
             .code_challenge(request.code_challenge.clone())
@@ -62,14 +66,14 @@ pub async fn action_past_authorized(
             .state(request.state.clone())
             .nonce(request.nonce.clone())
             .user_session(auth_context.session_id())
-            .requested_scopes(requested_scopes.bits())
+            .requested_scopes(requested_scopes.to_string())
             .old_authorization_id(Some(authorization.id))
-            .old_scopes(Some(sanitized_authorization_scopes.bits()))
+            .old_scopes(Some(sanitized_authorization_scopes.to_string()))
             .redirect_url(redirect_url.to_string())
             .is_openid(is_openid)
             .build();
 
-        authorization.scopes = sanitized_authorization_scopes.bits();
+        authorization.scopes = sanitized_authorization_scopes.to_string();
 
         authorization.update(tx).await?;
         pending_auth.delete_all(tx).await?;
@@ -89,7 +93,7 @@ pub async fn action_past_authorized(
         .client_id(oauth_client.id)
         .code_challenge(request.code_challenge.clone())
         .nonce(request.nonce.clone())
-        .scopes(requested_scopes.bits())
+        .scopes(requested_scopes.to_string())
         .state(request.state.clone())
         .user_id(auth_context.user_id())
         .is_openid(is_openid)
@@ -130,7 +134,7 @@ pub async fn action_new_authorization(
         .state(request.state.clone())
         .nonce(request.nonce.clone())
         .user_session(auth_context.session_id())
-        .requested_scopes(requested_scopes.bits())
+        .requested_scopes(requested_scopes.to_string())
         .redirect_url(redirect_url.to_string())
         .old_authorization_id(past_authorization.map(|v| v.id))
         .is_openid(is_openid)

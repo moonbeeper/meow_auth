@@ -262,7 +262,7 @@ pub struct OauthApplication {
     pub name: String,
     pub redirect_uri: String,
     pub public: bool,
-    pub scopes: i64,
+    pub scopes: String,
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
@@ -286,7 +286,7 @@ pub struct OauthAuthorization {
     pub id: UlidId,
     pub name: String,
     pub redirect_uri: String,
-    pub scopes: i64,
+    pub scopes: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_used_at: Option<chrono::DateTime<chrono::Utc>>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
@@ -428,4 +428,23 @@ pub struct PublicKeyCredentialStartOptions {
     /// extensions.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extensions: Option<serde_json::Value>,
+}
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ScopeDef {
+    /// The identifier (or name) of the scope
+    pub identifier: String,
+    /// The description of the scope
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+impl From<crate::oauth::scope::ScopeDef> for ScopeDef {
+    fn from(value: crate::oauth::scope::ScopeDef) -> Self {
+        Self {
+            identifier: value.identifier,
+            description: value.description,
+        }
+    }
 }

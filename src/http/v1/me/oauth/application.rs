@@ -9,7 +9,10 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 use crate::{
     audit::{AuditAction, AuditEntry},
     auth::flags::UserFlag,
-    database::{id::UlidId, models::oauth_application::OauthApplication as DbOauthApplication},
+    database::{
+        id::UlidId,
+        models::oauth_application::{ClientType, OauthApplication as DbOauthApplication},
+    },
     global::GlobalState,
     http::{
         error::{ApiError, ApiErrorCodes},
@@ -18,11 +21,13 @@ use crate::{
             auth_manager::AuthContext, browser_agent_manager::UserAgentContext,
             ip_manager::IpContext, require_user_flag::RequireUserFlagLayer,
         },
-        v1::types::{AlrightResponse, ListDataRequest, ListDataResponse, OauthApplication},
+        v1::types::{
+            AlrightResponse, ListDataRequest, ListDataResponse, OauthApplication, ScopeDef,
+        },
         validator::Valid,
     },
     oauth::{
-        scopes::{Scope, Scopes},
+        scope::{BUILTIN_SCOPE_PROFILE_IDENTIFIER, Scopes},
         secrets::get_secret_pair,
         valid_uri,
     },
@@ -37,6 +42,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .layer(RequireUserFlagLayer::new().forbid(UserFlag::CannotManageOauthApplications))
         .routes(routes!(list_oauth_applications))
         .routes(routes!(get_info_oauth_application))
+        .routes(routes!(available_scopes_oauth_application))
 }
 
 /// List your oauth applications
@@ -90,7 +96,7 @@ pub struct OauthApplicationData {
     #[validate(url(message = "must be a valid url"))]
     pub redirect_uri: String,
     pub public: bool,
-    pub scopes: i64,
+    pub scopes: String,
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
@@ -116,9 +122,9 @@ pub async fn create_oauth_application(
     Extension(user_agent): Extension<UserAgentContext>,
     Valid(Json(request)): Valid<Json<OauthApplicationData>>,
 ) -> Result<Json<OauthApplicationDataResponse>, ApiErrorCodes> {
-    let mut scopes = Scopes::from_bits(request.scopes).sanitize(Scopes::all());
+    let mut scopes = Scopes::from_str(&request.scopes, &global.oauth_scope_registry);
     if scopes.is_empty() {
-        scopes = scopes.add(Scope::Profile);
+        scopes = scopes.add(BUILTIN_SCOPE_PROFILE_IDENTIFIER);
     }
 
     let secret_pair = get_secret_pair(&global.settings);
@@ -135,7 +141,7 @@ pub async fn create_oauth_application(
         .name(request.name)
         .redirect_uri(redirect_uri.to_string())
         .public(request.public)
-        .scopes(scopes.bits())
+        .scopes(scopes.to_string())
         .secret(secret_pair.hash_bytes)
         .user_id(auth.user_id())
         .build();
@@ -224,15 +230,15 @@ pub async fn update_oauth_application(
         return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 
-    let mut scopes = Scopes::from_bits(data.scopes).sanitize(Scopes::all());
+    let mut scopes = Scopes::from_str(&data.scopes, &global.oauth_scope_registry);
     if scopes.is_empty() {
-        scopes = scopes.add(Scope::Profile);
+        scopes = scopes.add(BUILTIN_SCOPE_PROFILE_IDENTIFIER);
     }
 
     app.name = data.name;
     app.redirect_uri = data.redirect_uri;
     app.public = data.public;
-    app.scopes = scopes.bits();
+    app.scopes = scopes.to_string();
 
     let mut tx = global.database.begin().await?;
     app.update(&mut tx).await?;
@@ -350,4 +356,49 @@ pub async fn rotate_secret_oauth_application(
         id: app.id,
         secret: keys.secret,
     }))
+}
+
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, validator::Validate, utoipa::IntoParams)]
+pub struct ScopesOauthApplicationIdQuery {
+    id: Option<UlidId>,
+}
+
+/// Get the usable scopes for a specific application
+#[utoipa::path(
+    get,
+    params(ScopesOauthApplicationIdQuery),
+    path = "/scopes",
+    tags = ["oauth"],
+    responses(
+        (status = 200, description = "available oauth scopes", body = Vec<ScopeDef>),
+        (status = 500, description = "internal server error", body = ApiError)
+    )
+)]
+pub async fn available_scopes_oauth_application(
+    State(global): State<Arc<GlobalState>>,
+    Extension(auth): Extension<AuthContext>,
+    Query(request): Query<ScopesOauthApplicationIdQuery>,
+) -> Result<Json<Vec<ScopeDef>>, ApiErrorCodes> {
+    let (client_id, client_type) = match request.id {
+        Some(id) => {
+            let Ok(Some(app)) = DbOauthApplication::find_by_id(id, &global.database).await else {
+                return Err(ApiErrorCodes::DataNotFound("oauth application"));
+            };
+
+            if app.user_id != auth.user_id() {
+                return Err(ApiErrorCodes::DataNotFound("oauth application"));
+            }
+            (Some(app.id), app.client_type)
+        }
+        None => (None, ClientType::ThirdParty),
+    };
+
+    let scopes = global
+        .oauth_scope_registry
+        .available_scopes(client_id, client_type, auth.user_flags())
+        .into_iter()
+        .map(ScopeDef::from)
+        .collect::<Vec<_>>();
+
+    Ok(Json(scopes))
 }
