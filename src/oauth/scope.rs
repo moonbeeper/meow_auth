@@ -115,31 +115,36 @@ pub struct ScopeRegistry {
 impl ScopeRegistry {
     pub fn new(settings: &Settings) -> anyhow::Result<Self> {
         let mut scopes = HashMap::new();
+        tracing::info!("Registring oauth scopes");
 
-        let Some(scopes_defs) = &settings.oauth.scopes else {
-            return Ok(Self { scopes });
-        };
+        if let Some(scopes_defs) = &settings.oauth.scopes {
+            for scope in scopes_defs {
+                let scope = ScopeDef::from(scope.clone());
+                if scopes.contains_key(&scope.identifier) {
+                    anyhow::bail!("duplicated scope identifer");
+                }
 
-        for scope in scopes_defs {
-            let scope = ScopeDef::from(scope.clone());
-            if scopes.contains_key(&scope.identifier) {
-                anyhow::bail!("duplicated scope identifer");
+                let user_flags = UserFlags::from_bits(scope.required_user_flags);
+                scopes.insert(
+                    scope.identifier.to_lowercase(),
+                    ScopeDef {
+                        required_user_flags: user_flags.bits(),
+                        ..scope
+                    },
+                );
             }
-
-            let user_flags = UserFlags::from_bits(scope.required_user_flags);
-            scopes.insert(
-                scope.identifier.to_lowercase(),
-                ScopeDef {
-                    required_user_flags: user_flags.bits(),
-                    ..scope
-                },
-            );
         }
 
         for scope in BUILTIN_SCOPES {
             let scope = ScopeDef::from(scope.clone());
             scopes.entry(scope.identifier.clone()).or_insert(scope);
         }
+
+        tracing::info!(
+            "Registered {} custom scopes; {} Built in scopes",
+            scopes.len() - BUILTIN_SCOPES.len(),
+            BUILTIN_SCOPES.len()
+        );
 
         Ok(Self { scopes })
     }
