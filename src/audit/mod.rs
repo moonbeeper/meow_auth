@@ -1,10 +1,16 @@
+pub mod actor;
+pub mod changes;
+
 use std::{fmt::Display, net::IpAddr};
 
 use sqlx::PgTransaction;
 
-use crate::database::{
-    id::UlidId,
-    models::{audit_log::AuditLog as DbAuditLog, user::UserId},
+use crate::{
+    audit::{actor::AuditActor, changes::AuditChange},
+    database::{
+        id::UlidId,
+        models::{audit_log::AuditLog as DbAuditLog, user::UserId},
+    },
 };
 
 pub const SYSTEM_USER_ID: UserId = UserId::nil();
@@ -39,6 +45,7 @@ pub enum AuditAction {
     OauthAuthorizationRevoked,
     OauthAuthorizationUpdated,
     OauthAuthorizationsRevoked,
+    OauthTokenRevoked,
     UserUpdated,
 }
 
@@ -72,6 +79,7 @@ impl Display for AuditAction {
             AuditAction::OauthAuthorizationRevoked => write!(f, "oauth_authorization_revoked"),
             AuditAction::OauthAuthorizationUpdated => write!(f, "oauth_authorization_updated"),
             AuditAction::OauthAuthorizationsRevoked => write!(f, "oauth_authorizations_revoked"),
+            AuditAction::OauthTokenRevoked => write!(f, "oauth_token_revoked"),
             AuditAction::UserUpdated => write!(f, "user_updated"),
         }
     }
@@ -83,6 +91,8 @@ pub enum ResourceType {
     OauthApplication,
     OauthAuthorization,
     Passkey,
+    Session,
+    Totp,
 }
 
 impl Display for ResourceType {
@@ -92,6 +102,8 @@ impl Display for ResourceType {
             ResourceType::OauthApplication => write!(f, "oauth_application"),
             ResourceType::OauthAuthorization => write!(f, "oauth_authorization"),
             ResourceType::Passkey => write!(f, "passkey"),
+            ResourceType::Session => write!(f, "session"),
+            ResourceType::Totp => write!(f, "totp"),
         }
     }
 }
@@ -100,7 +112,7 @@ impl Display for ResourceType {
 #[derive(Debug, typed_builder::TypedBuilder)]
 pub struct AuditEntry {
     /// Who performed this action?
-    actor_id: UserId,
+    actor: AuditActor,
     /// Who was affected by this action?
     user_id: UserId,
     /// ... what was the action?
@@ -111,24 +123,27 @@ pub struct AuditEntry {
     /// What specific resource was affected by this action?
     #[builder(default = None)]
     pub resource_id: Option<UlidId>,
+    /// What specific changes were made to the resource by this action?
+    #[builder(default = vec![])]
+    pub changes: Vec<AuditChange>,
     /// What was the IP addr of the actor when this action was performed?
     pub actor_ip: IpAddr,
+    /// What was the aproximate location of the actor when this action was performed?
     pub actor_location: String,
+    /// What was the user agent of the actor when this action was performed?
     pub actor_user_agent: String,
-    /// Any additional data that should be stored with this action?
-    #[builder(default = serde_json::json!({}))]
-    metadata: serde_json::Value,
 }
 
 impl AuditEntry {
     pub async fn save(self, tx: &mut PgTransaction<'_>) -> anyhow::Result<()> {
         let model = DbAuditLog::builder()
-            .actor_id(self.actor_id)
+            .actor_id(self.actor.id())
+            .actor_type(self.actor.to_string())
             .user_id(self.user_id)
             .action(self.action.to_string())
-            .metadata(self.metadata)
             .resource_id(self.resource_id)
             .resource_type(self.resource_type.map(|v| v.to_string()))
+            .changes(serde_json::to_value(self.changes).unwrap_or(serde_json::Value::Null))
             .actor_ip(self.actor_ip.to_string())
             .actor_location(self.actor_location)
             .actor_user_agent(self.actor_user_agent)

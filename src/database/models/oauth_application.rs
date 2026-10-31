@@ -1,11 +1,14 @@
 use sqlx::{PgPool, PgTransaction};
 use typed_builder::TypedBuilder;
 
-use crate::database::{
-    error::DatabaseError,
-    id::UlidId,
-    models::user::UserId,
-    pagination::{PaginatedId, PaginationResult},
+use crate::{
+    audit::changes::{AuditChange, AuditDiff, AuditField},
+    database::{
+        error::DatabaseError,
+        id::UlidId,
+        models::user::UserId,
+        pagination::{PaginatedId, PaginationResult},
+    },
 };
 
 pub type OauthApplicationId = UlidId;
@@ -265,5 +268,53 @@ impl OauthApplication {
 impl PaginatedId for OauthApplication {
     fn paginated_id(&self) -> UlidId {
         self.id
+    }
+}
+
+impl AuditDiff for OauthApplication {
+    fn audit_changes(&self, before: &Self) -> Vec<AuditChange> {
+        let mut changes = Vec::new();
+
+        if self.name != before.name {
+            changes.push(AuditChange::change(
+                AuditField::DisplayName,
+                before.name.clone(),
+                self.name.clone(),
+            ));
+        }
+
+        if self.redirect_uri != before.redirect_uri {
+            changes.push(AuditChange::change(
+                AuditField::RedirectUri,
+                before.redirect_uri.clone(),
+                self.redirect_uri.clone(),
+            ));
+        }
+
+        if self.public != before.public {
+            changes.push(AuditChange::change(
+                AuditField::Public,
+                before.public,
+                self.public,
+            ));
+        }
+
+        if self.scopes != before.scopes {
+            changes.push(AuditChange::change(
+                AuditField::Scopes,
+                before.scopes.clone(),
+                self.scopes.clone(),
+            ));
+        }
+
+        if self.disabled != before.disabled {
+            changes.push(AuditChange::change(
+                AuditField::Enabled,
+                before.disabled,
+                self.disabled,
+            ));
+        }
+
+        changes
     }
 }

@@ -4,7 +4,11 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditField},
+    },
     auth::flags::UserFlag::{self},
     database::models::user::User,
     global::GlobalState,
@@ -76,6 +80,7 @@ pub async fn change_user_name(
         flags = flags.add(UserFlag::HasSetName)
     }
 
+    let old_name = user.name.clone();
     user.name = request.name.clone();
     user.name_updated_at = chrono::Utc::now();
     user.flags = flags.bits();
@@ -85,8 +90,15 @@ pub async fn change_user_name(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::NameChanged)
+        .resource_id(Some(user.id))
+        .resource_type(Some(ResourceType::User))
+        .changes(vec![AuditChange::change(
+            AuditField::Name,
+            &old_name,
+            &user.name,
+        )])
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())

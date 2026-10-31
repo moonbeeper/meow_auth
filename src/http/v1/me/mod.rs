@@ -10,7 +10,7 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{AuditAction, AuditEntry, ResourceType},
     auth::flags::UserFlag,
     database::models::{user::User as DbUser, user_session::UserSession},
     global::GlobalState,
@@ -81,8 +81,10 @@ pub async fn logout(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(crate::audit::actor::AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::SessionRevoked)
+        .resource_id(Some(auth.session_id()))
+        .resource_type(Some(ResourceType::Session))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())

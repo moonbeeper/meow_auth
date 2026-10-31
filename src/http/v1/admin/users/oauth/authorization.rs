@@ -7,7 +7,11 @@ use axum::{
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry, ResourceType},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditField},
+    },
     database::{
         id::UlidId,
         models::{
@@ -138,12 +142,13 @@ pub async fn admin_delete_user_oauth_authorization(
 
     AuditEntry::builder()
         .user_id(app.user_id)
-        .actor_id(auth.user_id())
+        .actor(AuditActor::Admin(auth.user_id()))
         .action(AuditAction::OauthAuthorizationRevoked)
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
         .resource_type(Some(ResourceType::OauthAuthorization))
+        .changes(vec![AuditChange::deleted(AuditField::Scopes, &app.scopes)])
         .resource_id(Some(app.id))
         .build()
         .save(&mut tx)

@@ -7,7 +7,11 @@ use axum::{
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditDiff, AuditField},
+    },
     auth::flags::UserFlag,
     database::{
         id::UlidId,
@@ -151,8 +155,16 @@ pub async fn create_oauth_application(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::OauthApplicationCreated)
+        .resource_id(Some(app.id))
+        .resource_type(Some(ResourceType::OauthApplication))
+        .changes(vec![
+            AuditChange::created(AuditField::DisplayName, &app.name),
+            AuditChange::created(AuditField::RedirectUri, &app.redirect_uri),
+            AuditChange::created(AuditField::Public, app.public),
+            AuditChange::created(AuditField::Scopes, &app.scopes),
+        ])
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
@@ -230,6 +242,7 @@ pub async fn update_oauth_application(
         return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 
+    let before = app.clone();
     let mut scopes = Scopes::from_str(&data.scopes, &global.oauth_scope_registry);
     if scopes.is_empty() {
         scopes = scopes.add(BUILTIN_SCOPE_PROFILE_IDENTIFIER);
@@ -245,8 +258,11 @@ pub async fn update_oauth_application(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::OauthApplicationUpdated)
+        .resource_id(Some(app.id))
+        .resource_type(Some(ResourceType::OauthApplication))
+        .changes(app.audit_changes(&before))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
@@ -291,11 +307,20 @@ pub async fn delete_oauth_application(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::OauthApplicationDeleted)
+        .resource_id(Some(app.id))
+        .resource_type(Some(ResourceType::OauthApplication))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
+        .changes(vec![
+            AuditChange::deleted(AuditField::DisplayName, &app.name),
+            AuditChange::deleted(AuditField::RedirectUri, &app.redirect_uri),
+            AuditChange::deleted(AuditField::Public, app.public),
+            AuditChange::deleted(AuditField::Scopes, &app.scopes),
+            AuditChange::deleted(AuditField::Enabled, !app.disabled),
+        ])
         .build()
         .save(&mut tx)
         .await?;
@@ -341,8 +366,10 @@ pub async fn rotate_secret_oauth_application(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::OauthApplicationKeysRotated)
+        .resource_id(Some(app.id))
+        .resource_type(Some(ResourceType::OauthApplication))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())

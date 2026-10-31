@@ -9,7 +9,11 @@ use url::Url;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditField},
+    },
     auth::flags::UserFlag,
     database::models::{
         oauth_application::OauthApplication, oauth_authorization::OauthAuthorization,
@@ -221,6 +225,8 @@ pub async fn authorize(
         }
     };
 
+    let client_id = client.id;
+    let requested_scopes_str = requested_scopes.to_string();
     let outcome = if let Some(authorization) = authorization {
         println!("past authorizaiton");
         action_past_authorized(
@@ -267,24 +273,33 @@ pub async fn authorize(
         }
     };
 
-    let action = match &outcome {
-        AuthorizationOutcome::AutoApproved(..) => AuditAction::OauthAuthorizationApproved,
-        AuthorizationOutcome::NeedsConsent(..) => AuditAction::OauthAuthorizationIntiated,
+    let (action, changes) = match &outcome {
+        AuthorizationOutcome::AutoApproved(..) => (
+            AuditAction::OauthAuthorizationApproved,
+            vec![AuditChange::created(
+                AuditField::Scopes,
+                &requested_scopes_str,
+            )],
+        ),
+        AuthorizationOutcome::NeedsConsent(..) => (AuditAction::OauthAuthorizationIntiated, vec![]),
     };
 
     if AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(action)
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
+        .resource_id(Some(client_id))
+        .resource_type(Some(ResourceType::OauthApplication))
+        .changes(changes)
         .build()
         .save(&mut tx)
         .await
         .is_err()
     {
-        println!("error making audit entry");
+        println!("error making audiclient.idt entry");
         return OauthResponse::new().error(
             OauthErrorCodes::ServerError,
             None,
@@ -353,11 +368,13 @@ pub async fn finish_authorization(
 
         AuditEntry::builder()
             .user_id(auth.user_id())
-            .actor_id(auth.user_id())
+            .actor(AuditActor::UserSelf(auth.user_id()))
             .action(AuditAction::OauthAuthorizationDenied)
             .actor_ip(ip_ctx.ip_addr())
             .actor_location(ip_ctx.location())
             .actor_user_agent(user_agent.agent())
+            .resource_id(Some(pending_authorization.client_id))
+            .resource_type(Some(ResourceType::OauthApplication))
             .build()
             .save(&mut tx)
             .await?;
@@ -376,6 +393,15 @@ pub async fn finish_authorization(
     // re-sanitize scopes just in case Oauth app owner has updated them for some goddamn reason
     let requested_scopes = Scopes::from_str(
         &pending_authorization.requested_scopes,
+        &global.oauth_scope_registry,
+    )
+    .sanitize(Scopes::from_str(
+        &oauth_client.scopes,
+        &global.oauth_scope_registry,
+    ));
+
+    let old_scopes = Scopes::from_str(
+        &pending_authorization.old_scopes.clone().unwrap_or_default(),
         &global.oauth_scope_registry,
     )
     .sanitize(Scopes::from_str(
@@ -412,19 +438,35 @@ pub async fn finish_authorization(
     pending_token.delete_all(&mut tx).await?;
     pending_token.insert(&mut tx).await?;
 
-    let audit_action = if pending_authorization.old_authorization_id.is_some() {
-        AuditAction::OauthAuthorizationUpdated
+    let (audit_action, changes) = if pending_authorization.old_authorization_id.is_some() {
+        (
+            AuditAction::OauthAuthorizationUpdated,
+            vec![AuditChange::change(
+                AuditField::Scopes,
+                old_scopes.to_string(),
+                requested_scopes.to_string(),
+            )],
+        )
     } else {
-        AuditAction::OauthAuthorizationApproved
+        (
+            AuditAction::OauthAuthorizationApproved,
+            vec![AuditChange::created(
+                AuditField::Scopes,
+                requested_scopes.to_string(),
+            )],
+        )
     };
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(audit_action)
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
+        .resource_id(Some(pending_authorization.client_id))
+        .resource_type(Some(ResourceType::OauthApplication))
+        .changes(changes)
         .build()
         .save(&mut tx)
         .await?;

@@ -8,11 +8,10 @@ use axum::{
     Extension,
     extract::{Path, Query, State},
 };
-use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{AuditAction, AuditEntry, ResourceType, actor::AuditActor, changes::AuditDiff},
     auth::flags::{UserFlag, UserFlags},
     database::{id::UlidId, models::user::User as DbUser},
     global::GlobalState,
@@ -138,16 +137,14 @@ pub async fn admin_edit_user(
         return Err(ApiErrorCodes::DataNotFound("user"));
     };
 
+    let before = user.clone();
     let user_flags = UserFlags::from_bits(user.flags);
-    let mut updated_fields = vec![];
-
     if user_flags.has(UserFlag::SuperAdmin) && !auth.user_flags().has(UserFlag::SuperAdmin) {
         return Err(ApiErrorCodes::ActionBlocked);
     }
 
     if let Some(name) = data.name {
         user.name = name;
-        updated_fields.push("name");
     }
 
     if let Some(email) = data.email {
@@ -156,14 +153,12 @@ pub async fn admin_edit_user(
         };
 
         user.email = email;
-        updated_fields.push("email");
     }
 
     if let Some(flags) = data.flags {
         let flags = UserFlags::from_bits(flags);
 
         user.flags = flags.bits();
-        updated_fields.push("flags");
     }
 
     let mut tx = global.database.begin().await?;
@@ -171,14 +166,14 @@ pub async fn admin_edit_user(
 
     AuditEntry::builder()
         .user_id(user.id)
-        .actor_id(auth.user_id())
+        .actor(AuditActor::Admin(auth.user_id()))
+        .resource_id(Some(user.id))
+        .resource_type(Some(ResourceType::User))
+        .changes(user.audit_changes(&before))
         .action(AuditAction::UserUpdated)
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
-        .metadata(json!({
-            "fields_updated": updated_fields,
-        }))
         .build()
         .save(&mut tx)
         .await?;

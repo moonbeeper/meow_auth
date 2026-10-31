@@ -75,15 +75,15 @@ impl OauthAuthorization {
     pub async fn delete_all_by_client_id(
         client_id: OauthApplicationId,
         transaction: &mut PgTransaction<'_>,
-    ) -> Result<(), DatabaseError> {
-        sqlx::query!(
+    ) -> Result<u64, DatabaseError> {
+        let data = sqlx::query!(
             "delete from oauth_authorizations where client_id = $1",
             client_id as OauthApplicationId,
         )
         .execute(&mut **transaction)
         .await?;
 
-        Ok(())
+        Ok(data.rows_affected())
     }
 
     pub async fn delete_by_id(
@@ -184,6 +184,20 @@ impl OauthAuthorization {
         let data = sqlx::query_scalar!(
             "select count(*) from oauth_authorizations where user_id = $1",
             user_id as UserId,
+        )
+        .fetch_one(pool)
+        .await?;
+
+        Ok(data)
+    }
+
+    pub async fn count_by_app_id(
+        id: OauthApplicationId,
+        pool: &PgPool,
+    ) -> Result<Option<i64>, DatabaseError> {
+        let data = sqlx::query_scalar!(
+            "select count(*) from oauth_authorizations where client_id = $1",
+            id as OauthApplicationId,
         )
         .fetch_one(pool)
         .await?;

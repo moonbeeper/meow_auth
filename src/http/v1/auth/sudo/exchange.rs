@@ -6,7 +6,11 @@ use webauthn_rs::prelude::PasskeyAuthentication;
 use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditField},
+    },
     auth::{
         mailer::AuthMailer,
         otp::verify_otp_code,
@@ -115,8 +119,10 @@ pub async fn sudo_otp_exchange(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::SudoEnabled)
+        .resource_id(Some(auth.user_id()))
+        .resource_type(Some(ResourceType::User))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
@@ -204,8 +210,15 @@ pub async fn sudo_webauthn_exchange(
 
         AuditEntry::builder()
             .user_id(auth.user_id())
-            .actor_id(auth.user_id())
+            .actor(AuditActor::System)
             .action(AuditAction::PasskeyDisabled)
+            .resource_id(Some(passkey.id))
+            .resource_type(Some(ResourceType::Passkey))
+            .changes(vec![AuditChange::change(
+                AuditField::Enabled,
+                !passkey.enabled,
+                passkey.enabled,
+            )])
             .actor_ip(ip_ctx.ip_addr())
             .actor_location(ip_ctx.location())
             .actor_user_agent(user_agent.agent())
@@ -241,8 +254,10 @@ pub async fn sudo_webauthn_exchange(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::SudoEnabled)
+        .resource_id(Some(auth.user_id()))
+        .resource_type(Some(ResourceType::User))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
@@ -338,7 +353,9 @@ pub async fn sudo_totp_exchange(
 
             AuditEntry::builder()
                 .user_id(user.id)
-                .actor_id(user.id)
+                .actor(AuditActor::UserSelf(user.id))
+                .resource_id(Some(db_totp.id))
+                .resource_type(Some(ResourceType::Totp))
                 .action(AuditAction::TotpRecoveryCodeUsed)
                 .actor_ip(ip_ctx.ip_addr())
                 .actor_location(ip_ctx.location())
@@ -372,8 +389,10 @@ pub async fn sudo_totp_exchange(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::SudoEnabled)
+        .resource_id(Some(auth.user_id()))
+        .resource_type(Some(ResourceType::User))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())

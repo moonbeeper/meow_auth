@@ -9,7 +9,7 @@ use url::Url;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry, SYSTEM_USER_ID},
+    audit::{AuditAction, AuditEntry, ResourceType, actor::AuditActor},
     database::models::{
         oauth_application::OauthApplication, oauth_pending_token::OauthPendingToken,
         oauth_token::OauthToken, user::User,
@@ -270,13 +270,15 @@ pub async fn token_revocation(
 
     AuditEntry::builder()
         .user_id(token.user_id)
-        .actor_id(SYSTEM_USER_ID)
-        .action(AuditAction::OauthAuthorizationRevoked)
+        .actor(AuditActor::System)
+        .action(AuditAction::OauthTokenRevoked)
         // yes i am saving the ip and user agent of the revoker, not the user who authorized the app.
         // its intentional, and it wont even be shown to the user
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
+        .resource_id(Some(token.client_id))
+        .resource_type(Some(ResourceType::OauthApplication))
         .build()
         .save(&mut tx)
         .await

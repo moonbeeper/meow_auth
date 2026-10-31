@@ -1,10 +1,13 @@
 use sqlx::{PgPool, PgTransaction};
 use typed_builder::TypedBuilder;
 
-use crate::database::{
-    error::DatabaseError,
-    id::UlidId,
-    pagination::{PaginatedId, PaginationResult},
+use crate::{
+    audit::changes::{AuditChange, AuditDiff},
+    database::{
+        error::DatabaseError,
+        id::UlidId,
+        pagination::{PaginatedId, PaginationResult},
+    },
 };
 
 pub type UserId = UlidId;
@@ -265,5 +268,37 @@ impl User {
 impl PaginatedId for User {
     fn paginated_id(&self) -> UlidId {
         self.id
+    }
+}
+
+impl AuditDiff for User {
+    fn audit_changes(&self, before: &Self) -> Vec<AuditChange> {
+        let mut changes = Vec::new();
+
+        if self.name != before.name {
+            changes.push(AuditChange::change(
+                crate::audit::changes::AuditField::Name,
+                before.name.clone(),
+                self.name.clone(),
+            ));
+        }
+
+        if self.email != before.email {
+            changes.push(AuditChange::change(
+                crate::audit::changes::AuditField::Email,
+                before.email.clone(),
+                self.email.clone(),
+            ));
+        }
+
+        if self.flags != before.flags {
+            changes.push(AuditChange::change(
+                crate::audit::changes::AuditField::Flags,
+                before.flags,
+                self.flags,
+            ));
+        }
+
+        changes
     }
 }

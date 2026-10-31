@@ -4,11 +4,14 @@ use axum::{
     Extension,
     extract::{Path, Query, State},
 };
-use serde_json::json;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry, ResourceType},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditDiff, AuditField},
+    },
     database::{
         id::UlidId,
         models::{
@@ -39,7 +42,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(admin_edit_user_application))
         .routes(routes!(admin_delete_user_application))
         .routes(routes!(admin_rotate_secret_user_application))
-        .routes(routes!(admin_revoke_all_auth_user_application))
+        .routes(routes!(admin_revoke_all_authorizations_application))
 }
 
 /// List oauth applications of a user
@@ -141,32 +144,27 @@ pub async fn admin_edit_user_application(
         return Err(ApiErrorCodes::DataNotFound("oauth application"));
     }
 
-    let mut fields_changed = vec![];
+    let before = app.clone();
 
     if let Some(disabled) = data.disabled {
         app.disabled = disabled;
-        fields_changed.push("disabled");
     }
 
     if let Some(scopes) = data.scopes {
         let scopes = Scopes::from_str(&scopes, &global.oauth_scope_registry);
         app.scopes = scopes.to_string();
-        fields_changed.push("scopes");
     }
 
     if let Some(name) = data.name {
         app.name = name;
-        fields_changed.push("name");
     }
 
     if let Some(redirect_uri) = data.redirect_uri {
         app.redirect_uri = redirect_uri;
-        fields_changed.push("redirect_url");
     }
 
     if let Some(public) = data.public {
         app.public = public;
-        fields_changed.push("public");
     }
 
     let mut tx = global.database.begin().await?;
@@ -174,16 +172,14 @@ pub async fn admin_edit_user_application(
 
     AuditEntry::builder()
         .user_id(app.user_id)
-        .actor_id(auth.user_id())
+        .actor(AuditActor::Admin(auth.user_id()))
         .action(AuditAction::OauthApplicationUpdated)
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
         .resource_type(Some(ResourceType::OauthApplication))
         .resource_id(Some(app.id))
-        .metadata(json!({
-            "fields_changed": fields_changed,
-        }))
+        .changes(app.audit_changes(&before))
         .build()
         .save(&mut tx)
         .await?;
@@ -230,13 +226,20 @@ pub async fn admin_delete_user_application(
 
     AuditEntry::builder()
         .user_id(app.user_id)
-        .actor_id(auth.user_id())
+        .actor(AuditActor::Admin(auth.user_id()))
         .action(AuditAction::OauthApplicationDeleted)
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
         .resource_type(Some(ResourceType::OauthApplication))
         .resource_id(Some(app.id))
+        .changes(vec![
+            AuditChange::deleted(AuditField::DisplayName, &app.name),
+            AuditChange::deleted(AuditField::RedirectUri, &app.redirect_uri),
+            AuditChange::deleted(AuditField::Public, app.public),
+            AuditChange::deleted(AuditField::Scopes, &app.scopes),
+            AuditChange::deleted(AuditField::Enabled, !app.disabled),
+        ])
         .build()
         .save(&mut tx)
         .await?;
@@ -287,7 +290,7 @@ pub async fn admin_rotate_secret_user_application(
 
     AuditEntry::builder()
         .user_id(app.user_id)
-        .actor_id(auth.user_id())
+        .actor(AuditActor::Admin(auth.user_id()))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
@@ -323,7 +326,7 @@ pub async fn admin_rotate_secret_user_application(
         (status = 500, description = "internal server error", body = ApiError)
     )
 )]
-pub async fn admin_revoke_all_auth_user_application(
+pub async fn admin_revoke_all_authorizations_application(
     State(global): State<Arc<GlobalState>>,
     Extension(auth): Extension<AuthContext>,
     Extension(ip_ctx): Extension<IpContext>,
@@ -341,17 +344,25 @@ pub async fn admin_revoke_all_auth_user_application(
 
     let mut tx = global.database.begin().await?;
     app.update(&mut tx).await?;
-    DbOauthAuthorization::delete_all_by_client_id(app.id, &mut tx).await?;
+    let before = DbOauthAuthorization::count_by_app_id(app.id, &global.database)
+        .await?
+        .unwrap_or_default();
+    let after = DbOauthAuthorization::delete_all_by_client_id(app.id, &mut tx).await?;
 
     AuditEntry::builder()
         .user_id(app.user_id)
-        .actor_id(auth.user_id())
+        .actor(AuditActor::Admin(auth.user_id()))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
         .action(AuditAction::OauthAuthorizationsRevoked)
         .resource_type(Some(ResourceType::OauthApplication))
         .resource_id(Some(app.id))
+        .changes(vec![AuditChange::change(
+            AuditField::Count,
+            before,
+            before.cast_unsigned().saturating_sub(after),
+        )])
         .build()
         .save(&mut tx)
         .await?;

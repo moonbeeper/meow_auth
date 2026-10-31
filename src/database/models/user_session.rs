@@ -108,12 +108,12 @@ impl UserSession {
     pub async fn delete_all_by_user_id(
         id: UserId,
         transaction: &mut PgTransaction<'_>,
-    ) -> Result<(), DatabaseError> {
-        sqlx::query!("delete from user_sessions where user_id = $1", id as UserId)
+    ) -> Result<u64, DatabaseError> {
+        let data = sqlx::query!("delete from user_sessions where user_id = $1", id as UserId)
             .execute(&mut **transaction)
             .await?;
 
-        Ok(())
+        Ok(data.rows_affected())
     }
 
     pub async fn find_by_id<'e, E>(

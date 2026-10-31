@@ -4,7 +4,11 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditField},
+    },
     auth::{
         email::{get_token, hash_token},
         flags::UserFlag,
@@ -91,8 +95,10 @@ pub async fn change_user_email(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::EmailChangeRequested)
+        .resource_id(Some(user.id))
+        .resource_type(Some(ResourceType::User))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
@@ -186,6 +192,7 @@ pub async fn exchange_change_user_email(
     }
 
     if email_request.current_email_verified && email_request.new_email_verified {
+        let old_email = user.email.clone();
         user.email = email_request.new_email.clone();
         user.email_verified = true;
 
@@ -195,8 +202,15 @@ pub async fn exchange_change_user_email(
 
         AuditEntry::builder()
             .user_id(auth.user_id())
-            .actor_id(auth.user_id())
+            .actor(AuditActor::UserSelf(auth.user_id()))
             .action(AuditAction::EmailChanged)
+            .resource_id(Some(user.id))
+            .resource_type(Some(ResourceType::User))
+            .changes(vec![AuditChange::change(
+                AuditField::Email,
+                &old_email,
+                &user.email,
+            )])
             .actor_ip(ip_ctx.ip_addr())
             .actor_location(ip_ctx.location())
             .actor_user_agent(user_agent.agent())

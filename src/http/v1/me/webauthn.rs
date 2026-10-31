@@ -11,7 +11,11 @@ use webauthn_rs::prelude::{
 use webauthn_rs_proto::ResidentKeyRequirement;
 
 use crate::{
-    audit::{AuditAction, AuditEntry, ResourceType},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditField},
+    },
     auth::{mailer::AuthMailer, webauthn::get_aaguid},
     database::{
         id::UlidId,
@@ -201,8 +205,12 @@ pub async fn register_passkey_exchange(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::PasskeyAdded)
+        .changes(vec![
+            AuditChange::created(AuditField::DisplayName, &passkey.display_name),
+            AuditChange::created(AuditField::Enabled, passkey.enabled),
+        ])
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
@@ -279,11 +287,17 @@ pub async fn delete_passkey(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::PasskeyRemoved)
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
+        .resource_id(Some(passkey.id))
+        .resource_type(Some(ResourceType::Passkey))
+        .changes(vec![
+            AuditChange::deleted(AuditField::DisplayName, &passkey.display_name),
+            AuditChange::deleted(AuditField::Enabled, passkey.enabled),
+        ])
         .build()
         .save(&mut tx)
         .await?;
@@ -338,13 +352,19 @@ pub async fn rename_passkey(
     }
 
     let mut tx = global.database.begin().await?;
+    let old_name = passkey.display_name.clone();
     passkey.display_name = request.name;
     passkey.update(&mut tx).await?;
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::PasskeyRenamed)
+        .changes(vec![AuditChange::change(
+            AuditField::DisplayName,
+            &old_name,
+            &passkey.display_name,
+        )])
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())

@@ -4,7 +4,11 @@ use axum::{Extension, extract::State};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditField},
+    },
     auth::{
         mailer::AuthMailer,
         totp::{
@@ -160,8 +164,11 @@ pub async fn exchange_totp_options(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::TotpEnabled)
+        .resource_id(Some(db_totp.id))
+        .resource_type(Some(ResourceType::Totp))
+        .changes(vec![AuditChange::change(AuditField::Enabled, false, true)])
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
@@ -243,8 +250,11 @@ pub async fn disable_totp(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::TotpDisabled)
+        .resource_id(Some(db_totp.id))
+        .resource_type(Some(ResourceType::Totp))
+        .changes(vec![AuditChange::change(AuditField::Enabled, true, false)])
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
@@ -322,8 +332,10 @@ pub async fn view_totp_recovery_codes(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::TotpRecoveryCodesSeen)
+        .resource_id(Some(db_totp.id))
+        .resource_type(Some(ResourceType::Totp))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())

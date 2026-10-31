@@ -7,7 +7,11 @@ use webauthn_rs::prelude::{DiscoverableAuthentication, DiscoverableKey, Passkey}
 use webauthn_rs_proto::PublicKeyCredential;
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditField},
+    },
     auth::{
         mailer::AuthMailer,
         otp::{is_flow_correct, verify_otp_code},
@@ -132,8 +136,10 @@ pub async fn flow_otp_exchange(
 
         AuditEntry::builder()
             .user_id(user.id)
-            .actor_id(user.id)
+            .actor(AuditActor::UserSelf(user.id))
             .action(AuditAction::AccountCreated)
+            .resource_id(Some(user.id))
+            .resource_type(Some(ResourceType::User))
             .actor_ip(ip_ctx.ip_addr())
             .actor_location(ip_ctx.location())
             .actor_user_agent(user_agent.agent())
@@ -192,7 +198,9 @@ pub async fn flow_otp_exchange(
 
     AuditEntry::builder()
         .user_id(user.id)
-        .actor_id(user.id)
+        .actor(AuditActor::UserSelf(user.id))
+        .resource_id(Some(session_id))
+        .resource_type(Some(ResourceType::Session))
         .action(AuditAction::SessionCreated)
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
@@ -284,7 +292,27 @@ pub async fn flow_webauthn_exchange(
         let mut tx = global.database.begin().await?;
         db_passkey.enabled = false;
         db_passkey.update(&mut tx).await?;
+
+        AuditEntry::builder()
+            .user_id(user.id)
+            .actor(AuditActor::System)
+            .action(AuditAction::PasskeyDisabled)
+            .resource_id(Some(db_passkey.id))
+            .resource_type(Some(ResourceType::Passkey))
+            .changes(vec![AuditChange::change(
+                AuditField::Enabled,
+                !db_passkey.enabled,
+                db_passkey.enabled,
+            )])
+            .actor_ip(ip_ctx.ip_addr())
+            .actor_location(ip_ctx.location())
+            .actor_user_agent(user_agent.agent())
+            .build()
+            .save(&mut tx)
+            .await?;
+
         tx.commit().await?;
+
         AuthMailer::webauthn_compromised(
             user.name,
             db_passkey.display_name,
@@ -312,7 +340,9 @@ pub async fn flow_webauthn_exchange(
 
     AuditEntry::builder()
         .user_id(user.id)
-        .actor_id(user.id)
+        .actor(AuditActor::UserSelf(user.id))
+        .resource_id(Some(session_id))
+        .resource_type(Some(ResourceType::Session))
         .action(AuditAction::SessionCreated)
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
@@ -411,7 +441,9 @@ pub async fn flow_totp_exchange(
 
             AuditEntry::builder()
                 .user_id(user.id)
-                .actor_id(user.id)
+                .actor(AuditActor::UserSelf(user.id))
+                .resource_id(Some(db_totp.id))
+                .resource_type(Some(ResourceType::Totp))
                 .action(AuditAction::TotpRecoveryCodeUsed)
                 .actor_ip(ip_ctx.ip_addr())
                 .actor_location(ip_ctx.location())
@@ -445,7 +477,9 @@ pub async fn flow_totp_exchange(
 
     AuditEntry::builder()
         .user_id(user.id)
-        .actor_id(user.id)
+        .actor(AuditActor::UserSelf(user.id))
+        .resource_id(Some(session_id))
+        .resource_type(Some(ResourceType::Session))
         .action(AuditAction::SessionCreated)
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())

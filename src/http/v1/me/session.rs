@@ -7,7 +7,11 @@ use axum::{
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    audit::{AuditAction, AuditEntry},
+    audit::{
+        AuditAction, AuditEntry, ResourceType,
+        actor::AuditActor,
+        changes::{AuditChange, AuditField},
+    },
     database::{id::UlidId, models::user_session::UserSession as DbUserSession},
     global::GlobalState,
     http::{
@@ -130,8 +134,10 @@ pub async fn revoke_session(
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::SessionRevoked)
+        .resource_id(Some(session.id))
+        .resource_type(Some(ResourceType::Session))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
@@ -166,22 +172,25 @@ pub async fn revoke_all_sessions(
         return Err(ApiErrorCodes::SudoNotEnabled);
     }
 
-    let Ok(sessions) = DbUserSession::find_many_by_user_id(auth.user_id(), &global.database).await
-    else {
-        return Err(ApiErrorCodes::InternalServerError);
-    };
-    let ids = sessions.into_iter().map(|v| v.id).collect();
-
     let mut tx = global.database.begin().await?;
-    DbUserSession::delete_many_by_id(ids, &mut tx).await?;
+    let before = DbUserSession::count_by_user_id(auth.user_id(), &global.database)
+        .await?
+        .unwrap_or_default();
+    let after = DbUserSession::delete_all_by_user_id(auth.user_id(), &mut tx).await?;
 
     AuditEntry::builder()
         .user_id(auth.user_id())
-        .actor_id(auth.user_id())
+        .actor(AuditActor::UserSelf(auth.user_id()))
         .action(AuditAction::SessionsRevoked)
+        .resource_type(Some(ResourceType::Session))
         .actor_ip(ip_ctx.ip_addr())
         .actor_location(ip_ctx.location())
         .actor_user_agent(user_agent.agent())
+        .changes(vec![AuditChange::change(
+            AuditField::Count,
+            before,
+            before.cast_unsigned().saturating_sub(after),
+        )])
         .build()
         .save(&mut tx)
         .await?;

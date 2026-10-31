@@ -5,13 +5,16 @@ use serde::Deserialize;
 use webauthn_rs::prelude::RegisterPublicKeyCredential;
 use webauthn_rs_proto::PublicKeyCredential;
 
-use crate::database::{
-    self,
-    id::UlidId,
-    models::{
-        user::UserId,
-        user_session::PIDUserSessionId,
-        user_webauthn::{PIDUserWebauthnId, UserWebauthn},
+use crate::{
+    audit::actor::AuditActor,
+    database::{
+        self,
+        id::UlidId,
+        models::{
+            user::UserId,
+            user_session::PIDUserSessionId,
+            user_webauthn::{PIDUserWebauthnId, UserWebauthn},
+        },
     },
 };
 
@@ -173,6 +176,35 @@ impl<L: IntoResponse, R: IntoResponse> IntoResponse for RouteEither<L, R> {
 }
 
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ActorType {
+    System,
+    Admin,
+    UserSelf,
+}
+
+impl From<AuditActor> for ActorType {
+    fn from(value: AuditActor) -> Self {
+        match value {
+            AuditActor::Admin(_) => Self::Admin,
+            AuditActor::System => Self::System,
+            AuditActor::UserSelf(_) => Self::UserSelf,
+        }
+    }
+}
+
+impl From<String> for ActorType {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "admin" => Self::Admin,
+            "system" => Self::System,
+            "user_self" => Self::UserSelf,
+            _ => Self::System,
+        }
+    }
+}
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct AuditLog {
     pub id: UlidId,
     pub action: String,
@@ -183,18 +215,18 @@ pub struct AuditLog {
     pub actor_id: Option<UlidId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub actor_login: Option<String>,
-    pub was_self: bool,
+    pub actor_type: ActorType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resource_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resource_id: Option<UlidId>,
+    pub changes: serde_json::Value,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub actor_ip: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub actor_location: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub actor_user_agent: Option<String>,
-    pub metadata: serde_json::Value,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
@@ -207,13 +239,13 @@ impl From<database::models::audit_log::AuditLogLogin> for AuditLog {
             user_login: Some(value.user_name),
             actor_id: Some(value.actor_id),
             actor_login: Some(value.actor_name),
-            was_self: value.user_id == value.actor_id,
+            actor_type: ActorType::from(value.actor_type),
             resource_type: value.resource_type,
             resource_id: value.resource_id,
+            changes: value.changes,
             actor_ip: Some(value.actor_ip),
             actor_location: Some(value.actor_location),
             actor_user_agent: Some(value.actor_user_agent),
-            metadata: value.metadata,
             created_at: value.created_at,
         }
     }
@@ -221,7 +253,8 @@ impl From<database::models::audit_log::AuditLogLogin> for AuditLog {
 
 impl From<database::models::audit_log::AuditLog> for AuditLog {
     fn from(value: database::models::audit_log::AuditLog) -> Self {
-        let was_self = value.actor_id == value.user_id;
+        let actor_type = ActorType::from(value.actor_type);
+        let was_self = matches!(actor_type, ActorType::UserSelf);
 
         let actor_ip = if was_self { Some(value.actor_ip) } else { None };
 
@@ -244,13 +277,13 @@ impl From<database::models::audit_log::AuditLog> for AuditLog {
             user_login: None,
             actor_id: None,
             actor_login: None,
-            was_self,
+            actor_type,
             resource_type: value.resource_type,
             resource_id: value.resource_id,
+            changes: value.changes,
             actor_ip,
             actor_location,
             actor_user_agent,
-            metadata: value.metadata,
             created_at: value.created_at,
         }
     }

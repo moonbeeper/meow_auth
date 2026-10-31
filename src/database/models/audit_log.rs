@@ -16,16 +16,19 @@ pub struct AuditLog {
     pub id: AuditLogId,
     pub user_id: UserId,
     pub actor_id: UserId,
+    pub actor_type: String,
     pub action: String,
     #[builder(default = None)]
     pub resource_type: Option<String>,
     #[builder(default = None)]
     pub resource_id: Option<UlidId>,
+    #[builder(default = serde_json::json!([]))]
+    pub changes: serde_json::Value,
     pub actor_ip: String,
     pub actor_location: String,
     pub actor_user_agent: String,
-    #[builder(default = serde_json::json!({}))]
-    pub metadata: serde_json::Value,
+    // #[builder(default = serde_json::json!({}))]
+    // pub metadata: serde_json::Value,
     #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
@@ -39,13 +42,14 @@ pub struct AuditLogLogin {
     pub user_name: String,
     pub actor_id: UserId,
     pub actor_name: String,
+    pub actor_type: String,
     pub action: String,
     pub resource_type: Option<String>,
     pub resource_id: Option<UlidId>,
+    pub changes: serde_json::Value,
     pub actor_ip: String,
     pub actor_location: String,
     pub actor_user_agent: String,
-    pub metadata: serde_json::Value,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
@@ -57,27 +61,29 @@ impl AuditLog {
                     id,
                     user_id,
                     actor_id,
+                    actor_type,
                     action,
                     resource_type,
                     resource_id,
+                    changes,
                     actor_ip,
                     actor_location,
                     actor_user_agent,
-                    metadata,
                     created_at
                 )
              values
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now())",
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now())",
             self.id as AuditLogId,
             self.user_id as UserId,
             self.actor_id as UserId,
+            self.actor_type,
             self.action,
             self.resource_type.as_ref(),
             self.resource_id as Option<UlidId>,
+            self.changes,
             self.actor_ip,
             self.actor_location,
             self.actor_user_agent,
-            self.metadata,
         )
         .execute(&mut **transaction)
         .await?;
@@ -92,13 +98,14 @@ impl AuditLog {
                 id,
                 user_id,
                 actor_id,
+                actor_type,
                 action,
                 resource_type,
                 resource_id as "resource_id?: UlidId",
+                changes,
                 actor_ip,
                 actor_location,
                 actor_user_agent,
-                metadata,
                 created_at
              from audit_logs where user_id = $1"#,
             id as UserId
@@ -120,19 +127,23 @@ impl AuditLog {
                 al.user_id,
                 u.name as user_name,
                 al.actor_id,
-                a.name as actor_name,
+                al.actor_type,
+                coalesce(
+                    a.name,
+                    case when al.actor_type = 'system' then 'System' else 'Unknown' end
+                ) as "actor_name!",
                 al.action,
                 al.resource_type,
                 al.resource_id as "resource_id?: UlidId",
+                al.changes,
                 al.actor_ip,
                 al.actor_location,
                 al.actor_user_agent,
-                al.metadata,
                 al.created_at
             from audit_logs al
             join users u on u.id = al.user_id
-            join users a on a.id = al.actor_id
-            where user_id = $1
+            left join users a on a.id = al.actor_id
+            where al.user_id = $1
             "#,
             user_id as UserId
         )
@@ -155,18 +166,22 @@ impl AuditLog {
                 al.user_id,
                 u.name as user_name,
                 al.actor_id,
-                a.name as actor_name,
+                al.actor_type,
+                coalesce(
+                    a.name,
+                    case when al.actor_type = 'system' then 'System' else 'Unknown' end
+                ) as "actor_name!",
                 al.action,
                 al.resource_type,
                 al.resource_id as "resource_id?: UlidId",
+                al.changes,
                 al.actor_ip,
                 al.actor_location,
                 al.actor_user_agent,
-                al.metadata,
                 al.created_at
             from audit_logs al
             join users u on u.id = al.user_id
-            join users a on a.id = al.actor_id
+            left join users a on a.id = al.actor_id
             where al.user_id = $1 and ($2::uuid is null or al.id::uuid < $2) order by created_at desc limit 20+1
             "#,
             user_id as UserId,
@@ -196,13 +211,14 @@ impl AuditLog {
                 id,
                 user_id,
                 actor_id,
+                actor_type,
                 action,
                 resource_type,
                 resource_id as "resource_id?: UlidId",
+                changes,
                 actor_ip,
                 actor_location,
                 actor_user_agent,
-                metadata,
                 created_at
             from audit_logs where user_id = $1 and ($2::uuid is null or id::uuid < $2) order by created_at desc limit 20+1
             "#,
