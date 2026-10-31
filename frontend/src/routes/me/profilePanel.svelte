@@ -34,8 +34,9 @@
             onSuccess: () => {
                 console.log("successfully updated user name");
                 queryClient.invalidateQueries({
-                    queryKey: [getCurrentUserInfoQueryKey(), getCurrentUserAuditLogQueryKey()]
+                    queryKey: getCurrentUserInfoQueryKey()
                 });
+                queryClient.invalidateQueries({ queryKey: getCurrentUserAuditLogQueryKey() });
             }
         }
     }));

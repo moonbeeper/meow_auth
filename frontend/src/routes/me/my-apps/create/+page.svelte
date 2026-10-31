@@ -25,6 +25,7 @@
     import {
         createAvailableScopesOauthApplication,
         createCreateOauthApplication,
+        getCurrentUserAuditLogQueryKey,
         getListOauthApplicationsQueryKey
     } from "#lib/api/index.js";
     import type { OauthApplicationDataResponse } from "#lib/api/model/index.js";
@@ -51,6 +52,7 @@
             onSuccess: () => {
                 console.log("successfully created app");
                 queryClient.invalidateQueries({ queryKey: getListOauthApplicationsQueryKey() });
+                queryClient.invalidateQueries({ queryKey: getCurrentUserAuditLogQueryKey() });
             }
         }
     }));

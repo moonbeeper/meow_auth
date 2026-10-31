@@ -27,6 +27,7 @@
     import { isOk } from "#lib/api/ignoreThisPlease.js";
     import {
         createUpdateOauthApplication,
+        getCurrentUserAuditLogQueryKey,
         getListOauthApplicationsQueryKey
     } from "#lib/api/index.js";
     import queryClient from "#lib/api/tanstackClient.js";
@@ -50,6 +51,7 @@
             onSuccess: () => {
                 console.log("successfully updated user name");
                 queryClient.invalidateQueries({ queryKey: getListOauthApplicationsQueryKey() });
+                queryClient.invalidateQueries({ queryKey: getCurrentUserAuditLogQueryKey() });
             }
         }
     }));
