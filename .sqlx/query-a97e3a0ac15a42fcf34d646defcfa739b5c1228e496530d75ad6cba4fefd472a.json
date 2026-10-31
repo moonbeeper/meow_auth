@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                id,\n                user_id,\n                pid,\n                active_expires_at,\n                sudo_expires_at,\n                expires_at,\n                created_at,\n                updated_at\n             from user_sessions where user_id = $1 and ($2::uuid is null or id::uuid < $2) order by created_at desc limit 20+1",
+  "query": "select\n                id,\n                user_id,\n                pid,\n                active_expires_at,\n                sudo_expires_at,\n                ip,\n                location,\n                user_agent,\n                expires_at,\n                created_at,\n                updated_at\n             from user_sessions where id = $1",
   "describe": {
     "columns": [
       {
@@ -60,6 +60,39 @@
       },
       {
         "ordinal": 5,
+        "name": "ip",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "ip"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "location",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "location"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "user_agent",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "user_sessions",
+            "name": "user_agent"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
         "name": "expires_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -70,7 +103,7 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 9,
         "name": "created_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -81,7 +114,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 10,
         "name": "updated_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -94,7 +127,6 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
         "Uuid"
       ]
     },
@@ -106,8 +138,11 @@
       true,
       false,
       false,
+      false,
+      false,
+      false,
       false
     ]
   },
-  "hash": "79e85fff480ee3f3477cafc3a90896654cbfbd6ef885016e07c13cd5ba9b7e28"
+  "hash": "a97e3a0ac15a42fcf34d646defcfa739b5c1228e496530d75ad6cba4fefd472a"
 }

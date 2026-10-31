@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { goto, refreshAll } from "$app/navigation";
     import EmptyBox from "$comps/emptyBox.svelte";
     import SessionItem from "$comps/items/sessionItem.svelte";
     import LoadingBox from "$comps/loadingBox.svelte";
@@ -8,8 +9,15 @@
     import SvelteVirtualList from "@humanspeak/svelte-virtual-list";
     import { createInfiniteQuery } from "@tanstack/svelte-query";
 
-    import { getListSessionsQueryKey, listSessions } from "#lib/api/sessions/sessions.js";
-    import { actionDate } from "#lib/common.js";
+    import { isOk } from "#lib/api/ignoreThisPlease.js";
+    import {
+        createRevokeAllSessions,
+        createRevokeSession,
+        getListSessionsQueryKey,
+        listSessions
+    } from "#lib/api/sessions/sessions.js";
+    import queryClient from "#lib/api/tanstackClient.js";
+    import Button from "#lib/components/button.svelte";
 
     const sessionQuery = createInfiniteQuery(() => ({
         queryKey: [...getListSessionsQueryKey(), "infinite"],
@@ -41,10 +49,53 @@
             sessionQuery.fetchNextPage();
         }
     }
+
+    const requestRevokeSession = createRevokeSession(() => ({
+        mutation: {
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
+            }
+        }
+    }));
+
+    const requestRevokeAllSessions = createRevokeAllSessions(() => ({
+        mutation: {
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
+                refreshAll();
+            }
+        }
+    }));
+
+    async function handleOnDelete(id: string, isAll: boolean = false) {
+        const res = isAll
+            ? await requestRevokeAllSessions.mutateAsync()
+            : await requestRevokeSession.mutateAsync({ id: id });
+
+        if (!isOk(res)) {
+            if (res.data.code == "SudoNotEnabled") {
+                console.error("sudo not enabled, cannot revoke session. redirecting");
+                await goto(`/auth/sudo?redirect=${encodeURIComponent("/me/security")}`);
+            }
+
+            console.error("failed to revoke session");
+            return;
+        }
+    }
+
     // TODO: add session metadata.
 </script>
 
 <SettingsPanel title="Active sessions" description={panelDescription}>
+    <div class="actions">
+        <Button
+            negative
+            onclick={() => handleOnDelete("", true)}
+            disabled={requestRevokeAllSessions.isPending}
+            loading={requestRevokeAllSessions.isPending}>Revoke all</Button
+        >
+    </div>
+
     {#if sessionQuery.isLoading || sessionQuery.isError}
         <LoadingBox
             what="sessions"
@@ -53,17 +104,25 @@
         />
     {:else if sessionQuery.isSuccess}
         {#if sessionList.length != 0}
-            <LogItem.Container>
-                <SvelteVirtualList
-                    items={sessionList}
-                    onRangeChange={handleRangeChange}
-                    containerClass="vlist-container"
-                    viewportClass="vlist-viewport"
-                >
-                    {#snippet renderItem(session)}
-                        <SessionItem when={actionDate(session.created_at)} />
-                    {/snippet}
-                </SvelteVirtualList>
+            <LogItem.Container collapsible>
+                <div class="content">
+                    {#if sessionList.length > 8}
+                        <SvelteVirtualList
+                            items={sessionList}
+                            onRangeChange={handleRangeChange}
+                            containerClass="vlist-container"
+                            viewportClass="vlist-viewport"
+                        >
+                            {#snippet renderItem(session)}
+                                <SessionItem item={session} onDelete={handleOnDelete} />
+                            {/snippet}
+                        </SvelteVirtualList>
+                    {:else}
+                        {#each sessionList as session}
+                            <SessionItem item={session} onDelete={handleOnDelete} />
+                        {/each}
+                    {/if}
+                </div>
             </LogItem.Container>
         {:else}
             <EmptyBox
@@ -73,3 +132,16 @@
         {/if}
     {/if}
 </SettingsPanel>
+
+<style lang="scss">
+    .content {
+        --vlist-viewport-height: 80dvh;
+    }
+
+    .actions {
+        display: flex;
+        inline-size: 100%;
+        justify-content: end;
+        align-items: center;
+    }
+</style>

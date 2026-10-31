@@ -24,6 +24,9 @@ pub struct UserSession {
     pub expires_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = None)]
     pub sudo_expires_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub ip: String,
+    pub location: String,
+    pub user_agent: String,
     #[builder(default = chrono::Utc::now())]
     pub created_at: chrono::DateTime<chrono::Utc>,
     #[builder(default = chrono::Utc::now())]
@@ -33,14 +36,27 @@ pub struct UserSession {
 impl UserSession {
     pub async fn insert(&self, transaction: &mut PgTransaction<'_>) -> Result<(), DatabaseError> {
         sqlx::query!(
-            "insert into
-                user_sessions (id, user_id, pid, active_expires_at, expires_at, created_at, updated_at)
+            "insert into user_sessions (
+                id,
+                user_id,
+                pid,
+                active_expires_at,
+                ip,
+                location,
+                user_agent,
+                expires_at,
+                created_at,
+                updated_at
+            )
              values
-                ($1, $2, $3, $4, $5, now(), now())",
+                ($1, $2, $3, $4, $5, $6, $7, $8, now(), now())",
             self.id as UserSessionId,
             self.user_id as UserId,
             self.pid as PIDUserSessionId,
             self.active_expires_at,
+            self.ip,
+            self.location,
+            self.user_agent,
             self.expires_at
         )
         .execute(&mut **transaction)
@@ -131,6 +147,9 @@ impl UserSession {
                 pid,
                 active_expires_at,
                 sudo_expires_at,
+                ip,
+                location,
+                user_agent,
                 expires_at,
                 created_at,
                 updated_at
@@ -155,6 +174,9 @@ impl UserSession {
                 pid,
                 active_expires_at,
                 sudo_expires_at,
+                ip,
+                location,
+                user_agent,
                 expires_at,
                 created_at,
                 updated_at
@@ -179,6 +201,9 @@ impl UserSession {
                 pid,
                 active_expires_at,
                 sudo_expires_at,
+                ip,
+                location,
+                user_agent,
                 expires_at,
                 created_at,
                 updated_at
@@ -205,6 +230,9 @@ impl UserSession {
                 pid,
                 active_expires_at,
                 sudo_expires_at,
+                ip,
+                location,
+                user_agent,
                 expires_at,
                 created_at,
                 updated_at
@@ -233,6 +261,9 @@ impl UserSession {
                 pid,
                 active_expires_at,
                 sudo_expires_at,
+                ip,
+                location,
+                user_agent,
                 expires_at,
                 created_at,
                 updated_at
@@ -257,6 +288,9 @@ impl UserSession {
                 pid,
                 active_expires_at,
                 sudo_expires_at,
+                ip,
+                location,
+                user_agent,
                 expires_at,
                 created_at,
                 updated_at

@@ -13,6 +13,6 @@ export interface OauthAuthorization {
     last_used_at?: string | null;
     name: string;
     redirect_uri: string;
-    scopes: number;
+    scopes: string;
     updated_at: string;
 }

@@ -10,7 +10,7 @@ export interface ConsentMetadata {
     created_at: string;
     id: UlidId;
     name: string;
-    old_scopes: number;
+    old_scopes: string;
     redirect_url: string;
-    scopes: number;
+    scopes: string;
 }

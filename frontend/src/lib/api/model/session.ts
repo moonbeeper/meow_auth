@@ -11,5 +11,8 @@ export interface Session {
     created_at: string;
     expires_at: string;
     id: UlidId;
+    ip: string;
+    location: string;
     updated_at: string;
+    user_agent: string;
 }

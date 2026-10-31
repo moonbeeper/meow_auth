@@ -18,7 +18,16 @@
         return actionCategory(intoAuditAction(item.action));
     });
     let who = $derived.by(() => {
-        return item.was_self ? "you" : "admin";
+        switch (item.actor_type) {
+            case "admin":
+                return item.actor_login || "Admin";
+            case "user_self":
+                return item.actor_login || "Yourself";
+            case "system":
+                return "System";
+            default:
+                return "Unknown";
+        }
     });
     let when = $derived.by(() => {
         return actionDate(item.created_at);

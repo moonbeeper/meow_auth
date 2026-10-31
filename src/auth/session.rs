@@ -13,6 +13,7 @@ use crate::{
             user_session::{PIDUserSessionId, UserSession},
         },
     },
+    http::middleware::{browser_agent_manager::UserAgentContext, ip_manager::IpContext},
     settings::Settings,
 };
 
@@ -21,6 +22,8 @@ static COOKIE_SESSION_KEY: OnceLock<cookie::Key> = OnceLock::new();
 pub async fn create_session(
     user_id: UserId,
     tx: &mut PgTransaction<'_>,
+    user_agent: &UserAgentContext,
+    ip: &IpContext,
     settings: &Settings,
 ) -> anyhow::Result<PIDUserSessionId> {
     let expires_at =
@@ -32,6 +35,9 @@ pub async fn create_session(
         .user_id(user_id)
         .active_expires_at(active_expires_at)
         .expires_at(expires_at)
+        .ip(ip.ip_addr().to_string())
+        .location(ip.location())
+        .user_agent(user_agent.agent())
         .build();
 
     session.insert(tx).await?;

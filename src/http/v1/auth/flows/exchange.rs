@@ -189,7 +189,7 @@ pub async fn flow_otp_exchange(
 
     let mut tx = global.database.begin().await?;
 
-    let session_id = create_session(user.id, &mut tx, &global.settings)
+    let session_id = create_session(user.id, &mut tx, &user_agent, &ip_ctx, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed creating session: {}", e);
@@ -331,7 +331,7 @@ pub async fn flow_webauthn_exchange(
     let mut tx = global.database.begin().await?;
     db_passkey.update(&mut tx).await?;
 
-    let session_id = create_session(user.id, &mut tx, &global.settings)
+    let session_id = create_session(user.id, &mut tx, &user_agent, &ip_ctx, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed creating session: {}", e);
@@ -468,7 +468,7 @@ pub async fn flow_totp_exchange(
     flow.state = AuthChallengeState::Completed;
     flow.update(&mut tx).await?;
 
-    let session_id = create_session(user.id, &mut tx, &global.settings)
+    let session_id = create_session(user.id, &mut tx, &user_agent, &ip_ctx, &global.settings)
         .await
         .map_err(|e| {
             tracing::error!("failed creating session: {}", e);

@@ -22,6 +22,7 @@ import { apiUrlForOrval } from "#lib/api/ignoreThisPlease.js";
 import type {
     AlrightResponse,
     ApiError,
+    AvailableScopesOauthApplicationParams,
     ListDataResponseOauthApplication,
     ListDataResponseOauthAuthorization,
     ListOauthApplicationsParams,
@@ -29,6 +30,7 @@ import type {
     OauthApplication,
     OauthApplicationData,
     OauthApplicationDataResponse,
+    ScopeDef,
     UlidId
 } from "../model";
 
@@ -288,6 +290,144 @@ export function createListOauthApplications<
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
         () => getListOauthApplicationsQueryOptions(params?.(), options?.()),
+        queryClient
+    ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+    return query;
+}
+
+export type availableScopesOauthApplicationResponse200 = {
+    data: ScopeDef[];
+    status: 200;
+};
+
+export type availableScopesOauthApplicationResponse500 = {
+    data: ApiError;
+    status: 500;
+};
+
+export type availableScopesOauthApplicationResponseSuccess =
+    availableScopesOauthApplicationResponse200 & {
+        headers: Headers;
+    };
+export type availableScopesOauthApplicationResponseError =
+    availableScopesOauthApplicationResponse500 & {
+        headers: Headers;
+    };
+
+export type availableScopesOauthApplicationResponse =
+    | availableScopesOauthApplicationResponseSuccess
+    | availableScopesOauthApplicationResponseError;
+
+export const getAvailableScopesOauthApplicationUrl = (
+    params?: AvailableScopesOauthApplicationParams
+) => {
+    const normalizedParams = new URLSearchParams();
+
+    Object.entries(params || {}).forEach(([key, value]) => {
+        if (value !== undefined) {
+            normalizedParams.append(key, value === null ? "null" : String(value));
+        }
+    });
+
+    const stringifiedParams = normalizedParams.toString();
+
+    return stringifiedParams.length > 0
+        ? `${apiUrlForOrval}/v1/me/oauth/application/scopes?${stringifiedParams}`
+        : `${apiUrlForOrval}/v1/me/oauth/application/scopes`;
+};
+
+/**
+ * @summary Get the usable scopes for a specific application
+ */
+export const availableScopesOauthApplication = async (
+    params?: AvailableScopesOauthApplicationParams,
+    options?: RequestInit,
+    fetchFn?: typeof globalThis.fetch
+): Promise<availableScopesOauthApplicationResponse> => {
+    const res = await (fetchFn ?? fetch)(getAvailableScopesOauthApplicationUrl(params), {
+        credentials: "include",
+        ...options,
+        method: "GET"
+    });
+
+    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+    const data: availableScopesOauthApplicationResponse["data"] = body ? JSON.parse(body) : {};
+    return {
+        data,
+        status: res.status,
+        headers: res.headers
+    } as availableScopesOauthApplicationResponse;
+};
+
+export const getAvailableScopesOauthApplicationQueryKey = (
+    params?: AvailableScopesOauthApplicationParams
+) => {
+    return ["availableScopesOauthApplication", ...(params ? [params] : [])] as const;
+};
+
+export const getAvailableScopesOauthApplicationQueryOptions = <
+    TData = Awaited<ReturnType<typeof availableScopesOauthApplication>>,
+    TError = ApiError
+>(
+    params?: AvailableScopesOauthApplicationParams,
+    options?: {
+        query?: Partial<
+            CreateQueryOptions<
+                Awaited<ReturnType<typeof availableScopesOauthApplication>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+        fetcher?: typeof globalThis.fetch;
+    }
+) => {
+    const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
+
+    const queryKey = queryOptions?.queryKey ?? getAvailableScopesOauthApplicationQueryKey(params);
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof availableScopesOauthApplication>>> = ({
+        signal
+    }) => availableScopesOauthApplication(params, { signal, ...fetchOptions }, fetcherFn);
+
+    return { queryKey, queryFn, ...queryOptions } as CreateQueryOptions<
+        Awaited<ReturnType<typeof availableScopesOauthApplication>>,
+        TError,
+        TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AvailableScopesOauthApplicationQueryResult = NonNullable<
+    Awaited<ReturnType<typeof availableScopesOauthApplication>>
+>;
+export type AvailableScopesOauthApplicationQueryError = ApiError;
+
+/**
+ * @summary Get the usable scopes for a specific application
+ */
+
+export function createAvailableScopesOauthApplication<
+    TData = Awaited<ReturnType<typeof availableScopesOauthApplication>>,
+    TError = ApiError
+>(
+    params?: () => AvailableScopesOauthApplicationParams,
+    options?: () => {
+        query?: Partial<
+            CreateQueryOptions<
+                Awaited<ReturnType<typeof availableScopesOauthApplication>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+        fetcher?: typeof globalThis.fetch;
+    },
+    queryClient?: () => QueryClient
+): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+    const query = createQuery(
+        () => getAvailableScopesOauthApplicationQueryOptions(params?.(), options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

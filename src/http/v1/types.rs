@@ -48,6 +48,9 @@ pub struct Session {
     pub id: PIDUserSessionId,
     pub active_expires_at: chrono::DateTime<chrono::Utc>,
     pub expires_at: chrono::DateTime<chrono::Utc>,
+    pub ip: String,
+    pub location: String,
+    pub user_agent: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -57,6 +60,9 @@ impl From<database::models::user_session::UserSession> for Session {
         Self {
             id: value.pid,
             active_expires_at: value.active_expires_at,
+            ip: value.ip,
+            location: value.location,
+            user_agent: value.user_agent,
             expires_at: value.expires_at,
             created_at: value.created_at,
             updated_at: value.updated_at,

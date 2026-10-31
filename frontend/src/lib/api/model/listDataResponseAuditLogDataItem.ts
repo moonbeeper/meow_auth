@@ -4,6 +4,7 @@
  * meow_auth2
  * OpenAPI spec version: 0.1.1
  */
+import type { ActorType } from "./actorType.ts";
 import type { UlidId } from "./ulidId.ts";
 
 export type ListDataResponseAuditLogDataItem = {
@@ -15,16 +16,16 @@ export type ListDataResponseAuditLogDataItem = {
     actor_location?: string | null;
     /** @nullable */
     actor_login?: string | null;
+    actor_type: ActorType;
     /** @nullable */
     actor_user_agent?: string | null;
+    changes: unknown;
     created_at: string;
     id: UlidId;
-    metadata: unknown;
     resource_id?: UlidId | null;
     /** @nullable */
     resource_type?: string | null;
     user_id: UlidId;
     /** @nullable */
     user_login?: string | null;
-    was_self: boolean;
 };

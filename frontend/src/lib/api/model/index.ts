@@ -6,6 +6,7 @@
  */
 
 export * from "./_otpExchangeResponse.ts";
+export * from "./actorType.ts";
 export * from "./adminListUsersParams.ts";
 export * from "./adminUserAuditLogParams.ts";
 export * from "./alrightResponse.ts";
@@ -19,6 +20,7 @@ export * from "./authenticationPasskeyRequest.ts";
 export * from "./authMethod.ts";
 export * from "./authorizationDecisionRequest.ts";
 export * from "./authorizationRequest.ts";
+export * from "./availableScopesOauthApplicationParams.ts";
 export * from "./changeEmailRequest.ts";
 export * from "./changeNameRequest.ts";
 export * from "./codeChallengeMethod.ts";
@@ -68,6 +70,7 @@ export * from "./registrationChallengeResponse.ts";
 export * from "./responseModes.ts";
 export * from "./responseType.ts";
 export * from "./revocationRequest.ts";
+export * from "./scopeDef.ts";
 export * from "./session.ts";
 export * from "./startChallengeResponse.ts";
 export * from "./subjectTypes.ts";

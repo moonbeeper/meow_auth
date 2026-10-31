@@ -978,56 +978,56 @@ export const createAdminEditUserApplication = <TError = ApiError, TContext = unk
         queryClient
     );
 };
-export type adminRevokeAllAuthUserApplicationResponse200 = {
+export type adminRevokeAllAuthorizationsApplicationResponse200 = {
     data: OauthApplicationDataResponse;
     status: 200;
 };
 
-export type adminRevokeAllAuthUserApplicationResponse403 = {
+export type adminRevokeAllAuthorizationsApplicationResponse403 = {
     data: ApiError;
     status: 403;
 };
 
-export type adminRevokeAllAuthUserApplicationResponse404 = {
+export type adminRevokeAllAuthorizationsApplicationResponse404 = {
     data: ApiError;
     status: 404;
 };
 
-export type adminRevokeAllAuthUserApplicationResponse500 = {
+export type adminRevokeAllAuthorizationsApplicationResponse500 = {
     data: ApiError;
     status: 500;
 };
 
-export type adminRevokeAllAuthUserApplicationResponseSuccess =
-    adminRevokeAllAuthUserApplicationResponse200 & {
+export type adminRevokeAllAuthorizationsApplicationResponseSuccess =
+    adminRevokeAllAuthorizationsApplicationResponse200 & {
         headers: Headers;
     };
-export type adminRevokeAllAuthUserApplicationResponseError = (
-    | adminRevokeAllAuthUserApplicationResponse403
-    | adminRevokeAllAuthUserApplicationResponse404
-    | adminRevokeAllAuthUserApplicationResponse500
+export type adminRevokeAllAuthorizationsApplicationResponseError = (
+    | adminRevokeAllAuthorizationsApplicationResponse403
+    | adminRevokeAllAuthorizationsApplicationResponse404
+    | adminRevokeAllAuthorizationsApplicationResponse500
 ) & {
     headers: Headers;
 };
 
-export type adminRevokeAllAuthUserApplicationResponse =
-    | adminRevokeAllAuthUserApplicationResponseSuccess
-    | adminRevokeAllAuthUserApplicationResponseError;
+export type adminRevokeAllAuthorizationsApplicationResponse =
+    | adminRevokeAllAuthorizationsApplicationResponseSuccess
+    | adminRevokeAllAuthorizationsApplicationResponseError;
 
-export const getAdminRevokeAllAuthUserApplicationUrl = (id: UlidId, cid: UlidId) => {
+export const getAdminRevokeAllAuthorizationsApplicationUrl = (id: UlidId, cid: UlidId) => {
     return `${apiUrlForOrval}/v1/admin/users/${id}/oauth/application/${cid}/revoke_authorizations`;
 };
 
 /**
  * @summary Revoke all authorizations of an existing oauth application
  */
-export const adminRevokeAllAuthUserApplication = async (
+export const adminRevokeAllAuthorizationsApplication = async (
     id: UlidId,
     cid: UlidId,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
-): Promise<adminRevokeAllAuthUserApplicationResponse> => {
-    const res = await (fetchFn ?? fetch)(getAdminRevokeAllAuthUserApplicationUrl(id, cid), {
+): Promise<adminRevokeAllAuthorizationsApplicationResponse> => {
+    const res = await (fetchFn ?? fetch)(getAdminRevokeAllAuthorizationsApplicationUrl(id, cid), {
         credentials: "include",
         ...options,
         method: "POST"
@@ -1035,36 +1035,38 @@ export const adminRevokeAllAuthUserApplication = async (
 
     const body = [204, 205, 304].includes(res.status) ? null : await res.text();
 
-    const data: adminRevokeAllAuthUserApplicationResponse["data"] = body ? JSON.parse(body) : {};
+    const data: adminRevokeAllAuthorizationsApplicationResponse["data"] = body
+        ? JSON.parse(body)
+        : {};
     return {
         data,
         status: res.status,
         headers: res.headers
-    } as adminRevokeAllAuthUserApplicationResponse;
+    } as adminRevokeAllAuthorizationsApplicationResponse;
 };
 
-export const getAdminRevokeAllAuthUserApplicationMutationKey = () =>
-    ["adminRevokeAllAuthUserApplication"] as const;
+export const getAdminRevokeAllAuthorizationsApplicationMutationKey = () =>
+    ["adminRevokeAllAuthorizationsApplication"] as const;
 
-export const getAdminRevokeAllAuthUserApplicationMutationOptions = <
+export const getAdminRevokeAllAuthorizationsApplicationMutationOptions = <
     TError = ApiError,
     TContext = unknown
 >(options?: {
     mutation?: CreateMutationOptions<
-        Awaited<ReturnType<typeof adminRevokeAllAuthUserApplication>>,
+        Awaited<ReturnType<typeof adminRevokeAllAuthorizationsApplication>>,
         TError,
-        AdminRevokeAllAuthUserApplicationMutationVariables,
+        AdminRevokeAllAuthorizationsApplicationMutationVariables,
         TContext
     >;
     fetch?: RequestInit;
     fetcher?: typeof globalThis.fetch;
 }): CreateMutationOptions<
-    Awaited<ReturnType<typeof adminRevokeAllAuthUserApplication>>,
+    Awaited<ReturnType<typeof adminRevokeAllAuthorizationsApplication>>,
     TError,
-    AdminRevokeAllAuthUserApplicationMutationVariables,
+    AdminRevokeAllAuthorizationsApplicationMutationVariables,
     TContext
 > => {
-    const mutationKey = getAdminRevokeAllAuthUserApplicationMutationKey();
+    const mutationKey = getAdminRevokeAllAuthorizationsApplicationMutationKey();
     const {
         mutation: mutationOptions,
         fetch: fetchOptions,
@@ -1076,33 +1078,36 @@ export const getAdminRevokeAllAuthUserApplicationMutationOptions = <
         : { mutation: { mutationKey }, fetch: undefined };
 
     const mutationFn: MutationFunction<
-        Awaited<ReturnType<typeof adminRevokeAllAuthUserApplication>>,
-        AdminRevokeAllAuthUserApplicationMutationVariables
+        Awaited<ReturnType<typeof adminRevokeAllAuthorizationsApplication>>,
+        AdminRevokeAllAuthorizationsApplicationMutationVariables
     > = (props) => {
         const { id, cid } = props ?? {};
 
-        return adminRevokeAllAuthUserApplication(id, cid, fetchOptions, fetcherFn);
+        return adminRevokeAllAuthorizationsApplication(id, cid, fetchOptions, fetcherFn);
     };
 
     return { mutationFn, ...mutationOptions };
 };
 
-export type AdminRevokeAllAuthUserApplicationMutationResult = NonNullable<
-    Awaited<ReturnType<typeof adminRevokeAllAuthUserApplication>>
+export type AdminRevokeAllAuthorizationsApplicationMutationResult = NonNullable<
+    Awaited<ReturnType<typeof adminRevokeAllAuthorizationsApplication>>
 >;
 
-export type AdminRevokeAllAuthUserApplicationMutationError = ApiError;
-export type AdminRevokeAllAuthUserApplicationMutationVariables = { id: UlidId; cid: UlidId };
+export type AdminRevokeAllAuthorizationsApplicationMutationError = ApiError;
+export type AdminRevokeAllAuthorizationsApplicationMutationVariables = { id: UlidId; cid: UlidId };
 
 /**
  * @summary Revoke all authorizations of an existing oauth application
  */
-export const createAdminRevokeAllAuthUserApplication = <TError = ApiError, TContext = unknown>(
+export const createAdminRevokeAllAuthorizationsApplication = <
+    TError = ApiError,
+    TContext = unknown
+>(
     options?: () => {
         mutation?: CreateMutationOptions<
-            Awaited<ReturnType<typeof adminRevokeAllAuthUserApplication>>,
+            Awaited<ReturnType<typeof adminRevokeAllAuthorizationsApplication>>,
             TError,
-            AdminRevokeAllAuthUserApplicationMutationVariables,
+            AdminRevokeAllAuthorizationsApplicationMutationVariables,
             TContext
         >;
         fetch?: RequestInit;
@@ -1110,13 +1115,13 @@ export const createAdminRevokeAllAuthUserApplication = <TError = ApiError, TCont
     },
     queryClient?: () => QueryClient
 ): CreateMutationResult<
-    Awaited<ReturnType<typeof adminRevokeAllAuthUserApplication>>,
+    Awaited<ReturnType<typeof adminRevokeAllAuthorizationsApplication>>,
     TError,
-    AdminRevokeAllAuthUserApplicationMutationVariables,
+    AdminRevokeAllAuthorizationsApplicationMutationVariables,
     TContext
 > => {
     return createMutation(
-        () => ({ ...getAdminRevokeAllAuthUserApplicationMutationOptions(options?.()) }),
+        () => ({ ...getAdminRevokeAllAuthorizationsApplicationMutationOptions(options?.()) }),
         queryClient
     );
 };

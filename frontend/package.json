@@ -28,7 +28,8 @@
         "@tanstack/svelte-query-devtools": "^6.3.6",
         "bits-ui": "^2.20.2",
         "date-fns": "^4.4.0",
-        "qr": "^0.7.2"
+        "qr": "^0.7.2",
+        "ua-parser-js": "^2.0.10"
     },
     "devDependencies": {
         "@sveltejs/adapter-auto": "^8.0.0",

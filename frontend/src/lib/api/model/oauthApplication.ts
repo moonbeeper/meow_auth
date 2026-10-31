@@ -12,6 +12,6 @@ export interface OauthApplication {
     name: string;
     public: boolean;
     redirect_uri: string;
-    scopes: number;
+    scopes: string;
     updated_at: string;
 }

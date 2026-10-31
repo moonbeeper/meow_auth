@@ -12,6 +12,6 @@ export type ListDataResponseOauthApplicationDataItem = {
     name: string;
     public: boolean;
     redirect_uri: string;
-    scopes: number;
+    scopes: string;
     updated_at: string;
 };

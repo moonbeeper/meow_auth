@@ -9,5 +9,5 @@ export interface OauthApplicationData {
     name: string;
     public: boolean;
     redirect_uri: string;
-    scopes: number;
+    scopes: string;
 }
