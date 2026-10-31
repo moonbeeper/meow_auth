@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into oauth_applications (\n                id,\n                user_id,\n                name,\n                redirect_uri,\n                secret,\n                public,\n                disabled,\n                scopes,\n                client_type,\n                created_at,\n                updated_at\n            )\n             values\n                ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), now())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Varchar",
+        "Text",
+        "Bytea",
+        "Bool",
+        "Bool",
+        "Text",
+        {
+          "Custom": {
+            "name": "oauth_applications_client_type",
+            "kind": {
+              "Enum": [
+                "first_party",
+                "third_party"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "736e9c50f1a5297d4aa5c9c25e30c3419e56ebfb66d0db23fdf2394db59ae91c"
+}

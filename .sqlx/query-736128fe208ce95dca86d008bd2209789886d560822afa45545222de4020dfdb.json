@@ -9,7 +9,7 @@
         "Uuid",
         "Uuid",
         "Text",
-        "Int8"
+        "Text"
       ]
     },
     "nullable": []

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n                id,\n                user_id,\n                actor_id,\n                action,\n                resource_type,\n                resource_id as \"resource_id?: UlidId\",\n                actor_ip,\n                actor_location,\n                actor_user_agent,\n                metadata,\n                created_at\n             from audit_logs where user_id = $1",
+  "query": "select\n                al.id,\n                al.user_id,\n                u.name as user_name,\n                al.actor_id,\n                al.actor_type,\n                coalesce(\n                    a.name,\n                    case when al.actor_type = 'system' then 'System' else 'Unknown' end\n                ) as \"actor_name!\",\n                al.action,\n                al.resource_type,\n                al.resource_id as \"resource_id?: UlidId\",\n                al.changes,\n                al.actor_ip,\n                al.actor_location,\n                al.actor_user_agent,\n                al.created_at\n            from audit_logs al\n            join users u on u.id = al.user_id\n            left join users a on a.id = al.actor_id\n            where al.user_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -27,6 +27,17 @@
       },
       {
         "ordinal": 2,
+        "name": "user_name",
+        "type_info": "Varchar",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
         "name": "actor_id",
         "type_info": "Uuid",
         "origin": {
@@ -37,7 +48,24 @@
         }
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
+        "name": "actor_type",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "audit_logs",
+            "name": "actor_type"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "actor_name!",
+        "type_info": "Varchar",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
         "name": "action",
         "type_info": "Text",
         "origin": {
@@ -48,7 +76,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 7,
         "name": "resource_type",
         "type_info": "Text",
         "origin": {
@@ -59,7 +87,7 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 8,
         "name": "resource_id?: UlidId",
         "type_info": "Uuid",
         "origin": {
@@ -70,7 +98,18 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 9,
+        "name": "changes",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "audit_logs",
+            "name": "changes"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
         "name": "actor_ip",
         "type_info": "Text",
         "origin": {
@@ -81,7 +120,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 11,
         "name": "actor_location",
         "type_info": "Text",
         "origin": {
@@ -92,7 +131,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 12,
         "name": "actor_user_agent",
         "type_info": "Text",
         "origin": {
@@ -103,18 +142,7 @@
         }
       },
       {
-        "ordinal": 9,
-        "name": "metadata",
-        "type_info": "Jsonb",
-        "origin": {
-          "Table": {
-            "table": "audit_logs",
-            "name": "metadata"
-          }
-        }
-      },
-      {
-        "ordinal": 10,
+        "ordinal": 13,
         "name": "created_at",
         "type_info": "Timestamptz",
         "origin": {
@@ -135,6 +163,9 @@
       false,
       false,
       false,
+      false,
+      null,
+      false,
       true,
       true,
       false,
@@ -144,5 +175,5 @@
       false
     ]
   },
-  "hash": "b307eb4ec35a51b31e5d3f5fbf897106c99064ceaf350fc2d8626a9235071f10"
+  "hash": "c5b80910588077e123b44feaa4489334e89a8c91be4f3bfb3142f554f3abbc72"
 }

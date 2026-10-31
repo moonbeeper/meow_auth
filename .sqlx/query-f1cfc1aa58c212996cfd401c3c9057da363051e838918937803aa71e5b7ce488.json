@@ -39,7 +39,7 @@
       {
         "ordinal": 3,
         "name": "scopes",
-        "type_info": "Int8",
+        "type_info": "Text",
         "origin": {
           "Table": {
             "table": "oauth_authorizations",

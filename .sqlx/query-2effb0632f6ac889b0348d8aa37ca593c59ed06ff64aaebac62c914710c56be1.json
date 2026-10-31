@@ -61,7 +61,7 @@
       {
         "ordinal": 5,
         "name": "old_scopes",
-        "type_info": "Int8",
+        "type_info": "Text",
         "origin": {
           "Table": {
             "table": "oauth_pending_authorizations",
@@ -72,7 +72,7 @@
       {
         "ordinal": 6,
         "name": "requested_scopes",
-        "type_info": "Int8",
+        "type_info": "Text",
         "origin": {
           "Table": {
             "table": "oauth_pending_authorizations",
