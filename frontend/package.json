@@ -24,6 +24,7 @@
         "@humanspeak/svelte-virtual-list": "^0.5.15",
         "@internationalized/date": "^3.12.4",
         "@simplewebauthn/browser": "^14.0.0",
+        "@tabler/icons-svelte-runes": "^3.50.0",
         "@tanstack/svelte-query": "^6.3.6",
         "@tanstack/svelte-query-devtools": "^6.3.6",
         "bits-ui": "^2.20.2",

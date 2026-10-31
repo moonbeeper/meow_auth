@@ -434,6 +434,115 @@ export function createAvailableScopesOauthApplication<
     return query;
 }
 
+export type availableScopesOauthGlobalResponse200 = {
+    data: ScopeDef[];
+    status: 200;
+};
+
+export type availableScopesOauthGlobalResponse500 = {
+    data: ApiError;
+    status: 500;
+};
+
+export type availableScopesOauthGlobalResponseSuccess = availableScopesOauthGlobalResponse200 & {
+    headers: Headers;
+};
+export type availableScopesOauthGlobalResponseError = availableScopesOauthGlobalResponse500 & {
+    headers: Headers;
+};
+
+export type availableScopesOauthGlobalResponse =
+    | availableScopesOauthGlobalResponseSuccess
+    | availableScopesOauthGlobalResponseError;
+
+export const getAvailableScopesOauthGlobalUrl = () => {
+    return `${apiUrlForOrval}/v1/me/oauth/application/scopes/global`;
+};
+
+/**
+ * This is primarily used for the oauth consent and authorization screens to show the description of the chosen
+ * scopes
+ * @summary Get all the scopes that are available regardless of application or user flags
+ */
+export const availableScopesOauthGlobal = async (
+    options?: RequestInit,
+    fetchFn?: typeof globalThis.fetch
+): Promise<availableScopesOauthGlobalResponse> => {
+    const res = await (fetchFn ?? fetch)(getAvailableScopesOauthGlobalUrl(), {
+        credentials: "include",
+        ...options,
+        method: "GET"
+    });
+
+    const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+    const data: availableScopesOauthGlobalResponse["data"] = body ? JSON.parse(body) : {};
+    return { data, status: res.status, headers: res.headers } as availableScopesOauthGlobalResponse;
+};
+
+export const getAvailableScopesOauthGlobalQueryKey = () => {
+    return ["availableScopesOauthGlobal"] as const;
+};
+
+export const getAvailableScopesOauthGlobalQueryOptions = <
+    TData = Awaited<ReturnType<typeof availableScopesOauthGlobal>>,
+    TError = ApiError
+>(options?: {
+    query?: Partial<
+        CreateQueryOptions<Awaited<ReturnType<typeof availableScopesOauthGlobal>>, TError, TData>
+    >;
+    fetch?: RequestInit;
+    fetcher?: typeof globalThis.fetch;
+}) => {
+    const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
+
+    const queryKey = queryOptions?.queryKey ?? getAvailableScopesOauthGlobalQueryKey();
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof availableScopesOauthGlobal>>> = ({
+        signal
+    }) => availableScopesOauthGlobal({ signal, ...fetchOptions }, fetcherFn);
+
+    return { queryKey, queryFn, ...queryOptions } as CreateQueryOptions<
+        Awaited<ReturnType<typeof availableScopesOauthGlobal>>,
+        TError,
+        TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AvailableScopesOauthGlobalQueryResult = NonNullable<
+    Awaited<ReturnType<typeof availableScopesOauthGlobal>>
+>;
+export type AvailableScopesOauthGlobalQueryError = ApiError;
+
+/**
+ * @summary Get all the scopes that are available regardless of application or user flags
+ */
+
+export function createAvailableScopesOauthGlobal<
+    TData = Awaited<ReturnType<typeof availableScopesOauthGlobal>>,
+    TError = ApiError
+>(
+    options?: () => {
+        query?: Partial<
+            CreateQueryOptions<
+                Awaited<ReturnType<typeof availableScopesOauthGlobal>>,
+                TError,
+                TData
+            >
+        >;
+        fetch?: RequestInit;
+        fetcher?: typeof globalThis.fetch;
+    },
+    queryClient?: () => QueryClient
+): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+    const query = createQuery(
+        () => getAvailableScopesOauthGlobalQueryOptions(options?.()),
+        queryClient
+    ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+    return query;
+}
+
 export type getInfoOauthApplicationResponse200 = {
     data: OauthApplication;
     status: 200;

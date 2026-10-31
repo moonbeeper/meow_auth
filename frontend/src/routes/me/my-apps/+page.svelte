@@ -8,6 +8,7 @@
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import type { SvelteVirtualListRangeInfo } from "@humanspeak/svelte-virtual-list";
     import SvelteVirtualList from "@humanspeak/svelte-virtual-list";
+    import { IconPlusFilled } from "@tabler/icons-svelte-runes";
     import { createInfiniteQuery } from "@tanstack/svelte-query";
 
     import { getListOauthApplicationsQueryKey, listOauthApplications } from "#lib/api/index.js";
@@ -33,7 +34,7 @@
         const pages = createdAppsQuery.data?.pages ?? [];
         const total = pages.filter((p) => p.status === 200)[0]?.data.total ?? -1;
 
-        return d + (total > 3 ? ` (${total} total)` : "");
+        return d + (total > 1 ? ` (${total} total)` : "");
     });
 
     function handleRangeChange({ atBottom }: SvelteVirtualListRangeInfo) {
@@ -46,7 +47,11 @@
 
 <SettingsPanel title="Created Apps" description={panelDescription} contentSpacing={2}>
     <div class="actions">
-        <Button primary onclick={() => goto("/me/my-apps/create")}>Create App</Button>
+        <Button
+            primary
+            onclick={() => goto("/me/my-apps/create")}
+            symbol_prefix={{ symbol: IconPlusFilled, size: "small" }}>Create App</Button
+        >
     </div>
 
     {#if createdAppsQuery.isLoading || createdAppsQuery.isError}

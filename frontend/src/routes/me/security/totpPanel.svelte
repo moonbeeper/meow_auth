@@ -3,8 +3,10 @@
     import EmptyBox from "$comps/emptyBox.svelte";
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import Spinner from "$comps/spinner.svelte";
+    import { IconEyeFilled, IconSquareRoundedXFilled } from "@tabler/icons-svelte-runes";
 
     import { auth } from "#lib/auth/auth.svelte.js";
+    import Symbol from "#lib/components/symbol.svelte";
 
     import TotpEnableDialog from "./totpEnableDialog.svelte";
     import TotpPrompt, { type Props } from "./totpPrompt.svelte";
@@ -61,10 +63,10 @@ your authentictor app to sign in"
     {:else}
         <div class="actions">
             <Button square primary mute disabled={magicDisable} onclick={() => handleDisable()}
-                ><Spinner /> Disable</Button
+                ><Symbol symbol={IconSquareRoundedXFilled} size="medium" /> Disable</Button
             >
             <Button square mute disabled={magicRecovery} onclick={() => handleViewRecovery()}
-                ><Spinner /> View recovery codes</Button
+                ><Symbol symbol={IconEyeFilled} size="medium" /> View recovery codes</Button
             >
         </div>
         <TotpPrompt bind:open={isPromptOpen} {promptType} />

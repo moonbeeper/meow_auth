@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto, refreshAll } from "$app/navigation";
+    import { IconLogout2 } from "@tabler/icons-svelte-runes";
     import { Avatar } from "bits-ui";
 
     import { isOk } from "#lib/api/ignoreThisPlease.js";
@@ -7,6 +8,7 @@
     import { auth } from "#lib/auth/auth.svelte.js";
 
     import * as Dropdown from "./dropdown";
+    import Symbol from "./symbol.svelte";
 
     type Props = {
         small?: boolean;
@@ -62,7 +64,9 @@
         <Dropdown.Text>
             <p class="user-display">{auth.user.login}</p>
         </Dropdown.Text>
-        <Dropdown.Item onSelect={handleLogout}>Log out</Dropdown.Item>
+        <Dropdown.Item onSelect={handleLogout}>
+            <Symbol symbol={IconLogout2} /> Log out
+        </Dropdown.Item>
     </Dropdown.Root>
 {:else}
     {@render avatar()}

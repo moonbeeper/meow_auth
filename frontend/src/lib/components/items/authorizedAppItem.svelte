@@ -1,10 +1,13 @@
 <script lang="ts">
     import Button from "$comps/button.svelte";
     import * as LogItem from "$comps/logItem/index";
+    import { IconCaretDownFilled, IconTrashXFilled } from "@tabler/icons-svelte-runes";
 
+    import { createAvailableScopesOauthGlobal } from "#lib/api/index.js";
     import type { ListDataResponseOauthAuthorizationDataItem } from "#lib/api/model/index.js";
     import { actionDate } from "#lib/common.js";
-    import { OauthScope, OauthScopes } from "#lib/oauthScopes.js";
+
+    import Symbol from "../symbol.svelte";
 
     type Props = {
         item: ListDataResponseOauthAuthorizationDataItem;
@@ -17,30 +20,49 @@
         return item.name;
     });
     let tag = $derived.by(() => {
-        return "External";
+        return item.client_type == "first_party" ? "First party" : "Third party";
     });
     let when = $derived.by(() => {
         return "last used " + actionDate(item.last_used_at ?? item.created_at);
     });
 
+    const availableScopesQuery = createAvailableScopesOauthGlobal();
+    let availableScopes = $derived.by(() => {
+        const res = availableScopesQuery.data;
+        if (!res || res.status !== 200) return [];
+        return res.data;
+    });
+
     let scopes = $derived.by(() => {
-        return new OauthScopes(item.scopes).remove(OauthScope.OpenId).toStrings();
+        let itemScopes = item.scopes.split(" ");
+        return availableScopes
+            .filter((scope) => itemScopes.includes(scope.identifier))
+            .filter((scope) => scope.identifier != "openid")
+            .map((scope) => scope);
     });
 </script>
 
 <LogItem.Root collapsible>
     <LogItem.Header {title} {tag} {when} />
+    <LogItem.Actions>
+        <Symbol symbol={IconCaretDownFilled} size="medium" />
+    </LogItem.Actions>
     {#snippet inner_content()}
         <div class="meow">
             <div class="access">
                 <p class="can">Can read:</p>
                 <ul class="scopes">
                     {#each scopes as scope}
-                        <li>{scope}</li>
+                        <li>{scope.description}</li>
                     {/each}
                 </ul>
             </div>
-            <Button negative fontSize="small" onclick={() => onRevoke(item)}>Revoke access</Button>
+            <Button
+                negative
+                fontSize="small"
+                onclick={() => onRevoke(item)}
+                symbol_prefix={{ symbol: IconTrashXFilled }}>Revoke access</Button
+            >
         </div>
     {/snippet}
 </LogItem.Root>

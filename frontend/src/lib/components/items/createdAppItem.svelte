@@ -1,9 +1,12 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import * as LogItem from "$comps/logItem/";
+    import { IconCaretRightFilled } from "@tabler/icons-svelte-runes";
 
     import type { ListDataResponseOauthApplicationDataItem } from "#lib/api/model/index.js";
     import { actionDate } from "#lib/common.js";
+
+    import Symbol from "../symbol.svelte";
 
     type Props = {
         item: ListDataResponseOauthApplicationDataItem;
@@ -25,6 +28,6 @@
 <LogItem.Root asButton onclick={() => goto(redirect)}>
     <LogItem.Header {title} {when} />
     <LogItem.Actions>
-        <span>></span>
+        <Symbol symbol={IconCaretRightFilled} size="medium" />
     </LogItem.Actions>
 </LogItem.Root>

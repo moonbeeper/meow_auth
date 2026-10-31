@@ -6,10 +6,16 @@
 
     type Props = { id?: string; size?: FormProps["size"]; children: Snippet; checked?: boolean };
 
-    let { id = getId(), size = "medium", children, checked = $bindable(false) }: Props = $props();
+    let {
+        id = getId(),
+        size = "medium",
+        children,
+        checked = $bindable(false),
+        ...rest
+    }: Props = $props();
 </script>
 
-<label for={id} class="container">
+<label for={id} class="container" {...rest}>
     <Checkbox {id} {size} bind:checked />
 
     <div class="content">
@@ -27,6 +33,8 @@
         border-radius: calc(var(--spacing) * 2);
         padding-inline: calc(var(--spacing) * 3);
         padding-block: calc(var(--spacing) * 2);
+        border: var(--checkbox-box-border-width, 0) solid
+            var(--checkbox-box-border-color, transparent);
 
         transition-property: background-color, background;
         transition-duration: 0.1s;
@@ -40,6 +48,16 @@
 
         @media (prefers-color-scheme: dark) {
             --checkbox-box-hover-color: var(--color-accent-dark);
+        }
+
+        &[data-fs-invalid],
+        &[aria-invalid="true"] {
+            --checkbox-box-border-width: 1px;
+            --checkbox-box-border-color: var(--color-coral-medium);
+
+            @media (prefers-color-scheme: dark) {
+                --checkbox-box-border-color: var(--color-coral-light);
+            }
         }
     }
 

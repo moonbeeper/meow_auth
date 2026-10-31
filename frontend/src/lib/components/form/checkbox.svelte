@@ -1,7 +1,9 @@
 <script lang="ts">
+    import { IconCheckFilled, IconMinus } from "@tabler/icons-svelte-runes";
     import { Checkbox, type WithoutChild } from "bits-ui";
     import type { HTMLInputAttributes } from "svelte/elements";
 
+    import Symbol from "../symbol.svelte";
     import { getId } from "./idShenanigans";
 
     type Props = {
@@ -27,9 +29,9 @@
     {#snippet children({ checked, indeterminate })}
         <span class="content">
             {#if indeterminate}
-                -
+                <Symbol symbol={IconMinus} />
             {:else if checked}
-                V
+                <Symbol symbol={IconCheckFilled} />
             {/if}
         </span>
     {/snippet}

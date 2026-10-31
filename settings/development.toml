@@ -112,3 +112,14 @@ jwk_cycle_after_seconds = 43200
 # allowed_client_type = "third_party"
 # # These are the user flags that are required for a user to be able to create an application with this scope.
 # required_user_flags = 0
+[[oauth.scopes]]
+identifier = "my_scope"
+description = "this is my custom scope scoppy"
+allowed_client_type = "third_party"
+required_user_flags = 0
+
+[[oauth.scopes]]
+identifier = "my_scope_first"
+description = "this is my custom scope scoppy for first party apps"
+allowed_client_type = "first_party"
+required_user_flags = 0

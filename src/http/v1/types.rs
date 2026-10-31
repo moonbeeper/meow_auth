@@ -11,6 +11,7 @@ use crate::{
         self,
         id::UlidId,
         models::{
+            oauth_application::ClientType as DbClienType,
             user::UserId,
             user_session::PIDUserSessionId,
             user_webauthn::{PIDUserWebauthnId, UserWebauthn},
@@ -210,6 +211,15 @@ impl From<String> for ActorType {
     }
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+pub struct AuditLogChange {
+    pub field: String,
+    #[serde(default)]
+    pub before: serde_json::Value,
+    #[serde(default)]
+    pub after: serde_json::Value,
+}
+
 #[derive(Debug, serde::Serialize, utoipa::ToSchema)]
 pub struct AuditLog {
     pub id: UlidId,
@@ -226,7 +236,7 @@ pub struct AuditLog {
     pub resource_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resource_id: Option<UlidId>,
-    pub changes: serde_json::Value,
+    pub changes: Vec<AuditLogChange>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub actor_ip: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -248,7 +258,7 @@ impl From<database::models::audit_log::AuditLogLogin> for AuditLog {
             actor_type: ActorType::from(value.actor_type),
             resource_type: value.resource_type,
             resource_id: value.resource_id,
-            changes: value.changes,
+            changes: serde_json::from_value(value.changes).unwrap_or_default(),
             actor_ip: Some(value.actor_ip),
             actor_location: Some(value.actor_location),
             actor_user_agent: Some(value.actor_user_agent),
@@ -286,11 +296,27 @@ impl From<database::models::audit_log::AuditLog> for AuditLog {
             actor_type,
             resource_type: value.resource_type,
             resource_id: value.resource_id,
-            changes: value.changes,
+            changes: serde_json::from_value(value.changes).unwrap_or_default(),
             actor_ip,
             actor_location,
             actor_user_agent,
             created_at: value.created_at,
+        }
+    }
+}
+
+#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ClientType {
+    FirstParty,
+    ThirdParty,
+}
+
+impl From<DbClienType> for ClientType {
+    fn from(value: DbClienType) -> Self {
+        match value {
+            DbClienType::FirstParty => Self::FirstParty,
+            DbClienType::ThirdParty => Self::ThirdParty,
         }
     }
 }
@@ -302,6 +328,7 @@ pub struct OauthApplication {
     pub redirect_uri: String,
     pub public: bool,
     pub scopes: String,
+    pub client_type: ClientType,
     pub updated_at: chrono::DateTime<chrono::Utc>,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
@@ -314,6 +341,7 @@ impl From<database::models::oauth_application::OauthApplication> for OauthApplic
             redirect_uri: value.redirect_uri,
             public: value.public,
             scopes: value.scopes,
+            client_type: ClientType::from(value.client_type),
             updated_at: value.updated_at,
             created_at: value.created_at,
         }
@@ -326,6 +354,7 @@ pub struct OauthAuthorization {
     pub name: String,
     pub redirect_uri: String,
     pub scopes: String,
+    pub client_type: ClientType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_used_at: Option<chrono::DateTime<chrono::Utc>>,
     pub updated_at: chrono::DateTime<chrono::Utc>,

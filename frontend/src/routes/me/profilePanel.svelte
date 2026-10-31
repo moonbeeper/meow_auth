@@ -14,6 +14,7 @@
     import InputProxy from "$comps/form/inputProxy.svelte";
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import UploadBox from "$comps/uploadBox.svelte";
+    import { IconDeviceFloppyFilled } from "@tabler/icons-svelte-runes";
     import { Control, Field } from "formsnap";
     import { slide } from "svelte/transition";
     import { defaults, setError, superForm } from "sveltekit-superforms";
@@ -21,14 +22,20 @@
 
     import { isOk } from "#lib/api/ignoreThisPlease.js";
     import queryClient from "#lib/api/tanstackClient.js";
-    import { createChangeUserName, getCurrentUserInfoQueryKey } from "#lib/api/user/user.js";
+    import {
+        createChangeUserName,
+        getCurrentUserAuditLogQueryKey,
+        getCurrentUserInfoQueryKey
+    } from "#lib/api/user/user.js";
     import { auth } from "#lib/auth/auth.svelte.js";
 
     const changeUserName = createChangeUserName(() => ({
         mutation: {
             onSuccess: () => {
                 console.log("successfully updated user name");
-                queryClient.invalidateQueries({ queryKey: getCurrentUserInfoQueryKey() });
+                queryClient.invalidateQueries({
+                    queryKey: [getCurrentUserInfoQueryKey(), getCurrentUserAuditLogQueryKey()]
+                });
             }
         }
     }));
@@ -129,9 +136,15 @@
         </div>
         {#if taintedName}
             <div transition:slide>
-                <Button primary disabled={$delayed} loading={$delayed} shouldFill
-                    >Save changes</Button
+                <Button
+                    primary
+                    disabled={$delayed}
+                    loading={$delayed}
+                    shouldFill
+                    symbol_prefix={{ symbol: IconDeviceFloppyFilled }}
                 >
+                    Save changes
+                </Button>
             </div>
         {/if}
     </form>

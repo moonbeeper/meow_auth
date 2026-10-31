@@ -169,6 +169,10 @@ impl ScopeRegistry {
             .cloned()
             .collect::<Vec<_>>()
     }
+
+    pub fn all_registered(&self) -> Vec<ScopeDef> {
+        self.scopes.values().cloned().collect::<Vec<_>>()
+    }
 }
 
 impl IntoIterator for ScopeRegistry {

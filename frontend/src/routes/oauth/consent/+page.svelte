@@ -4,16 +4,30 @@
     import { onMount } from "svelte";
 
     import { isOk } from "#lib/api/ignoreThisPlease.js";
-    import { finishAuthorization, getFinishAuthorizationUrl } from "#lib/api/index.js";
-    import { OauthScope, OauthScopes } from "#lib/oauthScopes.js";
+    import {
+        createAvailableScopesOauthGlobal,
+        finishAuthorization,
+        getFinishAuthorizationUrl
+    } from "#lib/api/index.js";
 
     import type { PageProps } from "./$types";
 
     let { data }: PageProps = $props();
-    let scopes = $derived.by(() => {
-        return new OauthScopes(data.consent.scopes).remove(OauthScope.OpenId).toStrings();
+
+    const availableScopesQuery = createAvailableScopesOauthGlobal();
+    let availableScopes = $derived.by(() => {
+        const res = availableScopesQuery.data;
+        if (!res || res.status !== 200) return [];
+        return res.data;
     });
 
+    let scopes = $derived.by(() => {
+        let itemScopes = data.consent.scopes.split(" ");
+        return availableScopes
+            .filter((scope) => itemScopes.includes(scope.identifier))
+            .filter((scope) => scope.identifier != "openid")
+            .map((scope) => scope);
+    });
     let submit_disabled = $state(true);
     let submit_loading = $state(false);
 
@@ -48,7 +62,7 @@
         <p>It will be able to read:</p>
         <ul class="list">
             {#each scopes as scope}
-                <li>{scope}</li>
+                <li>{scope.description}</li>
             {/each}
         </ul>
     </div>

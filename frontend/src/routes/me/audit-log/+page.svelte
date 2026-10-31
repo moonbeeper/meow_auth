@@ -9,11 +9,11 @@
     import SvelteVirtualList, {
         type SvelteVirtualListRangeInfo
     } from "@humanspeak/svelte-virtual-list";
+    import { IconCaretLeftFilled } from "@tabler/icons-svelte-runes";
     import { createInfiniteQuery } from "@tanstack/svelte-query";
 
     import { currentUserAuditLog, getCurrentUserAuditLogQueryKey } from "#lib/api/user/user.js";
-    import { actionCategory, actionLabel, intoAuditAction } from "#lib/auditLog.js";
-    import { actionDate } from "#lib/common.js";
+    import Symbol from "#lib/components/symbol.svelte";
     import { KeysThatMatter } from "#lib/stupidKeymap.js";
 
     const auditLogQuery = createInfiniteQuery(() => ({
@@ -52,7 +52,12 @@
 </script>
 
 <div class="actions">
-    <Button href="/me">Go back <KeyTag key={KeysThatMatter.Escape} {onKeyDown} /></Button>
+    <Button href="/me"
+        ><Symbol symbol={IconCaretLeftFilled} />Go back <KeyTag
+            key={KeysThatMatter.Escape}
+            {onKeyDown}
+        /></Button
+    >
 </div>
 
 <!-- has to be inside a div to see that its the only child.. DUH DUMB BIRD I MA GODDAMIT -->

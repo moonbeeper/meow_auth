@@ -46,5 +46,6 @@
         border-radius: calc(var(--typical-radius) / 3);
         box-shadow: currentColor 0px 0.1em 0px;
         inline-size: fit-content;
+        transform: translateY(-0.1em);
     }
 </style>

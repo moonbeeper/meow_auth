@@ -28,6 +28,7 @@ export enum AuditAction {
     OauthAuthorizationRevoked = "oauth_authorization_revoked",
     OauthAuthorizationUpdated = "oauth_authorization_updated",
     OauthAuthorizationsRevoked = "oauth_authorizations_revoked",
+    OauthTokenRevoked = "oauth_token_revoked",
     UserUpdated = "user_updated"
 }
 
@@ -66,6 +67,7 @@ const humanReadableAuditActions: Record<AuditAction, string> = {
     [AuditAction.OauthAuthorizationRevoked]: "Revoked OAuth authorization",
     [AuditAction.OauthAuthorizationUpdated]: "Updated OAuth authorization",
     [AuditAction.OauthAuthorizationsRevoked]: "Revoked all OAuth authorizations",
+    [AuditAction.OauthTokenRevoked]: "Revoked OAuth token",
     [AuditAction.UserUpdated]: "Updated user"
 };
 
@@ -97,6 +99,7 @@ export const auditActionCategory: Record<AuditAction, AuditActionCategory> = {
     [AuditAction.OauthAuthorizationRevoked]: AuditActionCategory.OAuth,
     [AuditAction.OauthAuthorizationUpdated]: AuditActionCategory.OAuth,
     [AuditAction.OauthAuthorizationsRevoked]: AuditActionCategory.OAuth,
+    [AuditAction.OauthTokenRevoked]: AuditActionCategory.OAuth,
     [AuditAction.UserUpdated]: AuditActionCategory.Account
 };
 
@@ -111,3 +114,26 @@ export const actionLabel = (action: AuditAction): string => {
 export const actionCategory = (action: AuditAction): string => {
     return auditActionCategory[action] ?? "Unknown";
 };
+
+const auditFieldLabels: Record<string, string> = {
+    name: "Name",
+    email: "Email",
+    flags: "Flags",
+    display_name: "Display name",
+    enabled: "Enabled",
+    scopes: "Scopes",
+    redirect_uri: "Redirect Url",
+    public: "Public",
+    count: "Count"
+};
+export const auditFieldLabel = (field: string): string => {
+    return auditFieldLabels[field] ?? "Unknown";
+};
+
+export function displayValue(value: unknown) {
+    if (value == null || value == undefined) return "";
+    if (typeof value == "string") return value;
+    if (typeof value == "boolean") return value ? "true" : "false";
+    if (typeof value == "number") return value.toString();
+    return JSON.stringify(value);
+}

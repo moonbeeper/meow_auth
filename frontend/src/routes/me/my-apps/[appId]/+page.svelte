@@ -5,21 +5,21 @@
         display_name: z.string().min(3).max(50),
         redirect_uri: z.url()
     });
-    export const schemaScopes = z.object({
-        openid: z.boolean(),
-        profile: z.boolean(),
-        email: z.boolean()
-    });
 </script>
 
 <script lang="ts">
     import { invalidate } from "$app/navigation";
     import Button from "$comps/button.svelte";
-    import CheckboxBox from "$comps/form/checkbox_box.svelte";
     import Input from "$comps/form/input.svelte";
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import UploadBox from "$comps/uploadBox.svelte";
+    import {
+        IconDeviceFloppyFilled,
+        IconRotateClockwise2,
+        IconTrashXFilled
+    } from "@tabler/icons-svelte-runes";
     import { Control, Field } from "formsnap";
+    import { onMount } from "svelte";
     import { slide } from "svelte/transition";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
@@ -31,11 +31,11 @@
     } from "#lib/api/index.js";
     import queryClient from "#lib/api/tanstackClient.js";
     import { actionDate } from "#lib/common.js";
-    import { OauthScope, OauthScopes } from "#lib/oauthScopes.js";
 
     import type { PageProps } from "./$types";
     import DeleteAppDialog from "./deleteAppDialog.svelte";
     import RotateSecretDialog from "./rotateSecretDialog.svelte";
+    import ScopePanel from "./scopePanel.svelte";
 
     let { data }: PageProps = $props();
 
@@ -105,69 +105,7 @@
         return infoDirty ? data.app.name + "*" : data.app.name;
     });
 
-    const rawFormScopes = superForm(defaults(zod4(schemaScopes)), {
-        SPA: true,
-        resetForm: false,
-        validationMethod: "onsubmit", // makes so the error (data-fs-error) doesnt dissapear after blur
-        validators: zod4(schemaScopes),
-        onUpdate: async ({ form }) => {
-            if (!form.valid) {
-                console.warn("somehow the form was submitted without being valid");
-                return;
-            }
-
-            let bits = new OauthScopes(0);
-            if (form.data.openid) bits.add(OauthScope.OpenId);
-            if (form.data.profile) bits.add(OauthScope.Profile);
-            if (form.data.email) bits.add(OauthScope.Email);
-
-            const res = await updateApp.mutateAsync({
-                id: data.app.id,
-                data: {
-                    name: data.app.name,
-                    redirect_uri: data.app.redirect_uri,
-                    public: data.app.public,
-                    scopes: bits.bits
-                }
-            });
-
-            if (!isOk(res)) {
-                console.warn("failed updated user name");
-                return;
-                // setError(form, "display_name", res.data.message ?? "Failed to update name :(");
-            }
-
-            rawFormScopes.reset({
-                data: {
-                    email: form.data.email,
-                    openid: form.data.openid,
-                    profile: form.data.profile
-                },
-                newState: {
-                    email: form.data.email,
-                    openid: form.data.openid,
-                    profile: form.data.profile
-                }
-            });
-            invalidate((url) => url.pathname === "/me/my-apps");
-        }
-    });
-
-    const { form: formScope, enhance: enhanceScope, delayed: delayedScope } = rawFormScopes;
-    let scopeDirty = $derived.by(() => {
-        let bits = new OauthScopes(0);
-        if ($formScope.openid) bits.add(OauthScope.OpenId);
-        if ($formScope.profile) bits.add(OauthScope.Profile);
-        if ($formScope.email) bits.add(OauthScope.Email);
-
-        return bits.bits != data.app.scopes;
-    });
-
-    let titleScopes = $derived.by(() => {
-        return scopeDirty ? "Scopes" + "*" : "Scopes";
-    });
-
-    $effect(() => {
+    onMount(() => {
         rawFormInfo.reset({
             data: {
                 display_name: data.app.name,
@@ -176,21 +114,6 @@
             newState: {
                 display_name: data.app.name,
                 redirect_uri: data.app.redirect_uri
-            }
-        });
-
-        let bits = new OauthScopes(data.app.scopes);
-
-        rawFormScopes.reset({
-            data: {
-                email: bits.has(OauthScope.Email),
-                openid: bits.has(OauthScope.OpenId),
-                profile: bits.has(OauthScope.Profile)
-            },
-            newState: {
-                email: bits.has(OauthScope.Email),
-                openid: bits.has(OauthScope.OpenId),
-                profile: bits.has(OauthScope.Profile)
             }
         });
     });
@@ -242,41 +165,20 @@
         </div>
         {#if infoDirty}
             <div transition:slide>
-                <Button primary disabled={$delayed} loading={$delayed} shouldFill
-                    >Save changes</Button
+                <Button
+                    primary
+                    disabled={$delayed}
+                    loading={$delayed}
+                    shouldFill
+                    symbol_prefix={{ symbol: IconDeviceFloppyFilled }}
                 >
+                    Save changes
+                </Button>
             </div>
         {/if}
     </form>
 </SettingsPanel>
-
-<SettingsPanel
-    title={titleScopes}
-    description="These are the permissions this application can request from users"
-    contentSpacing={2}
->
-    <form class="form" use:enhanceScope>
-        <CheckboxBox size="large" bind:checked={$formScope.openid}>
-            <span class="checkbox-box--title">openid</span>
-            <p class="checkbox-box--description">View meow</p>
-        </CheckboxBox>
-        <CheckboxBox size="large" bind:checked={$formScope.profile}>
-            <span class="checkbox-box--title">profile</span>
-            <p class="checkbox-box--description">View meow</p>
-        </CheckboxBox>
-        <CheckboxBox size="large" bind:checked={$formScope.email}>
-            <span class="checkbox-box--title">email</span>
-            <p class="checkbox-box--description">View meow</p>
-        </CheckboxBox>
-        {#if scopeDirty}
-            <div transition:slide>
-                <Button primary disabled={$delayedScope} loading={$delayedScope} shouldFill
-                    >Save scopes</Button
-                >
-            </div>
-        {/if}
-    </form>
-</SettingsPanel>
+<ScopePanel item={data.app} />
 <SettingsPanel
     title="Danger zone"
     description="These actions are irreversible! Consequences must be acknowledged"
@@ -284,8 +186,16 @@
     contentSpacing={2}
 >
     <!-- <Button>Revoke all authorizations</Button> -->
-    <Button negative onclick={() => (openRotateDialog = true)}>Rotate secret</Button>
-    <Button negative onclick={() => (openDeleteDialog = true)}>Delete this app</Button>
+    <Button
+        negative
+        onclick={() => (openRotateDialog = true)}
+        symbol_prefix={{ symbol: IconRotateClockwise2 }}>Rotate secret</Button
+    >
+    <Button
+        negative
+        onclick={() => (openDeleteDialog = true)}
+        symbol_prefix={{ symbol: IconTrashXFilled }}>Delete this app</Button
+    >
 </SettingsPanel>
 
 <style lang="scss">
@@ -322,18 +232,6 @@
         }
     }
 
-    .checkbox-box--title {
-        font-family: var(--font-mono);
-        font-size: var(--text-small);
-        font-weight: 500;
-    }
-
-    .checkbox-box--description {
-        pointer-events: none;
-        user-select: none;
-        font-size: var(--text-small);
-        color: var(--color-iron-darker);
-    }
     .form {
         display: contents;
     }

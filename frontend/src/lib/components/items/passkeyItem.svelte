@@ -3,10 +3,17 @@
     import * as LogItem from "$comps/logItem/index";
     // "Complex binding patterns require an initialization value" when lang="ts" is not set... OH CMON!
     import Tag from "$comps/tag.svelte";
+    import {
+        IconCaretDownFilled,
+        IconPencilFilled,
+        IconTrashXFilled
+    } from "@tabler/icons-svelte-runes";
 
     import type { Passkey } from "#lib/api/model/index.js";
     import { actionDate } from "#lib/common.js";
     import { getAaguidMetadata } from "#lib/passkey/index.js";
+
+    import Symbol from "../symbol.svelte";
 
     type Props = {
         // id: string;
@@ -44,6 +51,10 @@
     {/if}
     <!-- </div> -->
     <LogItem.Header title={passkey.display_name} {when} />
+    <LogItem.Actions>
+        <Symbol symbol={IconCaretDownFilled} size="medium" />
+    </LogItem.Actions>
+
     <!-- <LogItem.Actions>
         <span>T</span>
     </LogItem.Actions> -->
@@ -53,11 +64,18 @@
             <Button
                 onclick={() => onRename(passkey.id, passkey.display_name)}
                 shouldFill
-                fontSize="small">Rename</Button
+                fontSize="small"
+                symbol_prefix={{ symbol: IconPencilFilled }}>Rename</Button
             >
-            <Button onclick={() => onDelete(passkey.id)} negative shouldFill fontSize="small"
-                >Delete</Button
+            <Button
+                onclick={() => onDelete(passkey.id)}
+                negative
+                shouldFill
+                fontSize="small"
+                symbol_prefix={{ symbol: IconTrashXFilled }}
             >
+                Delete
+            </Button>
         </div>
     {/snippet}
 </LogItem.Root>

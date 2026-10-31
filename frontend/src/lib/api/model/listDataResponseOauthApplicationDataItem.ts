@@ -4,9 +4,11 @@
  * meow_auth2
  * OpenAPI spec version: 0.1.1
  */
+import type { ClientType } from "./clientType.ts";
 import type { UlidId } from "./ulidId.ts";
 
 export type ListDataResponseOauthApplicationDataItem = {
+    client_type: ClientType;
     created_at: string;
     id: UlidId;
     name: string;

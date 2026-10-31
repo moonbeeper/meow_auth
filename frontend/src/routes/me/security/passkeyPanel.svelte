@@ -8,6 +8,7 @@
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/browser";
     import { startRegistration } from "@simplewebauthn/browser";
+    import { IconPlusFilled } from "@tabler/icons-svelte-runes";
 
     import { isOk } from "#lib/api/ignoreThisPlease.js";
     import {
@@ -201,7 +202,8 @@
                 gooder={userFinishedAttestation}
                 onclick={handleAddPasskey}
                 disabled={isAddingPasskey}
-                loading={isAddingPasskey}>{buttonText}</Button
+                loading={isAddingPasskey}
+                symbol_prefix={{ symbol: IconPlusFilled, size: "small" }}>{buttonText}</Button
             >
         </div>
     {/if}

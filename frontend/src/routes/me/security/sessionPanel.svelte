@@ -7,6 +7,7 @@
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import type { SvelteVirtualListRangeInfo } from "@humanspeak/svelte-virtual-list";
     import SvelteVirtualList from "@humanspeak/svelte-virtual-list";
+    import { IconTrashFilled } from "@tabler/icons-svelte-runes";
     import { createInfiniteQuery } from "@tanstack/svelte-query";
 
     import { isOk } from "#lib/api/ignoreThisPlease.js";
@@ -18,6 +19,7 @@
     } from "#lib/api/sessions/sessions.js";
     import queryClient from "#lib/api/tanstackClient.js";
     import Button from "#lib/components/button.svelte";
+    import Symbol from "#lib/components/symbol.svelte";
 
     const sessionQuery = createInfiniteQuery(() => ({
         queryKey: [...getListSessionsQueryKey(), "infinite"],
@@ -92,8 +94,11 @@
             negative
             onclick={() => handleOnDelete("", true)}
             disabled={requestRevokeAllSessions.isPending}
-            loading={requestRevokeAllSessions.isPending}>Revoke all</Button
+            loading={requestRevokeAllSessions.isPending}
+            symbol_prefix={{ symbol: IconTrashFilled }}>Revoke all</Button
         >
+
+        <!-- <Symbol symbol={IconTrashFilled} /> -->
     </div>
 
     {#if sessionQuery.isLoading || sessionQuery.isError}

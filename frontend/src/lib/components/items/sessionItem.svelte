@@ -1,5 +1,6 @@
 <script lang="ts">
     import * as LogItem from "$comps/logItem/index";
+    import { IconCaretDownFilled, IconTrashXFilled } from "@tabler/icons-svelte-runes";
     // "Complex binding patterns require an initialization value" when lang="ts" is not set... OH CMON!
     import { UAParser } from "ua-parser-js";
 
@@ -7,6 +8,7 @@
     import { actionDate } from "#lib/common.js";
 
     import Button from "../button.svelte";
+    import Symbol from "../symbol.svelte";
 
     type Props = {
         item: ListDataResponseSessionDataItem;
@@ -43,16 +45,22 @@
 <LogItem.Root collapsible>
     <LogItem.Header {title} {tag} {when} />
     <LogItem.Actions>
-        <span>T</span>
+        <Symbol symbol={IconCaretDownFilled} size="medium" />
     </LogItem.Actions>
 
     {#snippet inner_content()}
         <div class="meow">
             <span><b>Expires {expires}</b></span>
 
-            <Button negative shouldFill fontSize="small" onclick={() => onDelete(item.id)}
-                >Revoke</Button
+            <Button
+                negative
+                shouldFill
+                fontSize="small"
+                onclick={() => onDelete(item.id)}
+                symbol_prefix={{ symbol: IconTrashXFilled }}
             >
+                Revoke
+            </Button>
         </div>
     {/snippet}
 </LogItem.Root>
@@ -66,6 +74,5 @@
         flex: 1;
         flex-wrap: wrap;
         align-items: center;
-        justify-content: center;
     }
 </style>

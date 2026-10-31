@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.1
  */
 import type { ActorType } from "./actorType.ts";
+import type { AuditLogChange } from "./auditLogChange.ts";
 import type { UlidId } from "./ulidId.ts";
 
 export interface AuditLog {
@@ -19,7 +20,7 @@ export interface AuditLog {
     actor_type: ActorType;
     /** @nullable */
     actor_user_agent?: string | null;
-    changes: unknown;
+    changes: AuditLogChange[];
     created_at: string;
     id: UlidId;
     resource_id?: UlidId | null;

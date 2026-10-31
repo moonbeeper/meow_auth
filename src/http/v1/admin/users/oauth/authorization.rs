@@ -28,8 +28,8 @@ use crate::{
             ip_manager::IpContext,
         },
         v1::types::{
-            AlrightResponse, IdParam, ListDataRequest, ListDataResponse, OauthApplication,
-            OauthAuthorization, TwoIdParam,
+            AlrightResponse, ClientType, IdParam, ListDataRequest, ListDataResponse,
+            OauthApplication, OauthAuthorization, TwoIdParam,
         },
     },
     oauth::scope::Scopes,
@@ -91,6 +91,7 @@ pub async fn admin_list_user_oauth_authorizations(
                 name: app.name.clone(),
                 redirect_uri: app.redirect_uri.clone(),
                 scopes: scopes.to_string(),
+                client_type: ClientType::from(app.client_type),
                 last_used_at: v.last_used_at,
                 updated_at: v.updated_at,
                 created_at: v.created_at,

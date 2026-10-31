@@ -1,9 +1,10 @@
 <script lang="ts">
-    import type { Snippet } from "svelte";
+    import type { ComponentProps, Snippet } from "svelte";
     import type { HTMLAnchorAttributes, HTMLButtonAttributes } from "svelte/elements";
     import { slide } from "svelte/transition";
 
     import Spinner from "./spinner.svelte";
+    import Symbol from "./symbol.svelte";
 
     type ButtonProps = HTMLButtonAttributes &
         Props & {
@@ -27,6 +28,8 @@
         shouldFill?: boolean;
         square?: boolean;
         className?: string;
+        symbol_prefix?: ComponentProps<typeof Symbol>;
+        symbol_suffix?: ComponentProps<typeof Symbol>;
     };
 
     export type ButtonOrLinkProps = ButtonProps | LinkProps;
@@ -45,6 +48,8 @@
         square = false,
         className,
         href,
+        symbol_prefix,
+        symbol_suffix,
         ...rest
     }: ButtonOrLinkProps = $props();
 
@@ -65,7 +70,25 @@
         {href}
         {...rest as HTMLAnchorAttributes}
     >
+        {#if loading}
+            <span class="spinner" transition:slide={{ axis: "x", duration: 200 }}>
+                <Spinner />
+            </span>
+        {/if}
+
+        {#if symbol_prefix && !loading}
+            <span class="symbol" out:slide={{ axis: "x", duration: 200 }}>
+                <Symbol {...symbol_prefix} />
+            </span>
+        {/if}
+
         {@render children()}
+
+        {#if symbol_suffix && !loading}
+            <span class="symbol" transition:slide={{ axis: "x", duration: 200 }}>
+                <Symbol {...symbol_suffix} />
+            </span>
+        {/if}
     </a>
 {:else}
     <button
@@ -84,7 +107,20 @@
                 <Spinner />
             </span>
         {/if}
+
+        {#if symbol_prefix && !loading}
+            <span class="symbol" transition:slide={{ axis: "x", duration: 200 }}>
+                <Symbol {...symbol_prefix} />
+            </span>
+        {/if}
+
         {@render children()}
+
+        {#if symbol_suffix && !loading}
+            <span class="symbol" transition:slide={{ axis: "x", duration: 200 }}>
+                <Symbol {...symbol_suffix} />
+            </span>
+        {/if}
     </button>
 {/if}
 
@@ -229,5 +265,11 @@
     .button.square,
     .button.mute {
         --button-background: var(--button-background-muted);
+    }
+
+    .symbol {
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
     }
 </style>

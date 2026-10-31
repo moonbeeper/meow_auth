@@ -47,6 +47,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .routes(routes!(list_oauth_applications))
         .routes(routes!(get_info_oauth_application))
         .routes(routes!(available_scopes_oauth_application))
+        .routes(routes!(available_scopes_oauth_global))
 }
 
 /// List your oauth applications
@@ -424,6 +425,33 @@ pub async fn available_scopes_oauth_application(
         .oauth_scope_registry
         .available_scopes(client_id, client_type, auth.user_flags())
         .into_iter()
+        .map(ScopeDef::from)
+        .collect::<Vec<_>>();
+
+    Ok(Json(scopes))
+}
+
+/// Get all the scopes that are available regardless of application or user flags
+///
+/// This is primarily used for the oauth consent and authorization screens to show the description of the chosen
+/// scopes
+#[utoipa::path(
+    get,
+    path = "/scopes/global",
+    tags = ["oauth"],
+    responses(
+        (status = 200, description = "all global oauth scopes", body = Vec<ScopeDef>),
+        (status = 500, description = "internal server error", body = ApiError)
+    )
+)]
+pub async fn available_scopes_oauth_global(
+    State(global): State<Arc<GlobalState>>,
+) -> Result<Json<Vec<ScopeDef>>, ApiErrorCodes> {
+    let scopes = global
+        .oauth_scope_registry
+        .all_registered()
+        .iter()
+        .cloned()
         .map(ScopeDef::from)
         .collect::<Vec<_>>();
 

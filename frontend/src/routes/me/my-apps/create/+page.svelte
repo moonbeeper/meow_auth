@@ -5,9 +5,7 @@
         display_name: z.string().min(3).max(50),
         redirect_uri: z.url(),
         public: z.boolean().default(true),
-        openid: z.boolean().default(false),
-        profile: z.boolean().default(false),
-        email: z.boolean().default(false)
+        scopes: z.record(z.string(), z.boolean()).default({})
     });
 </script>
 
@@ -18,23 +16,35 @@
     import Input from "$comps/form/input.svelte";
     import SettingsPanel from "$comps/settingsPanel.svelte";
     import UploadBox from "$comps/uploadBox.svelte";
+    import { IconSquareRoundedPlusFilled } from "@tabler/icons-svelte-runes";
     import { Control, Field } from "formsnap";
     import { defaults, setError, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
 
     import { isOk } from "#lib/api/ignoreThisPlease.js";
     import {
+        createAvailableScopesOauthApplication,
         createCreateOauthApplication,
         getListOauthApplicationsQueryKey
     } from "#lib/api/index.js";
     import type { OauthApplicationDataResponse } from "#lib/api/model/index.js";
     import queryClient from "#lib/api/tanstackClient.js";
-    import { OauthScope, OauthScopes } from "#lib/oauthScopes.js";
+    import LoadingBox from "#lib/components/loadingBox.svelte";
 
     import AfterCreationDialog from "./afterCreationDialog.svelte";
 
     let openDialog = $state(false);
     let createdApp = $state<OauthApplicationDataResponse | null>(null);
+
+    const availableScopesQuery = createAvailableScopesOauthApplication();
+
+    let availableScopes = $derived.by(() => {
+        const res = availableScopesQuery.data;
+        if (!res || res.status !== 200) return [];
+        return res.data;
+    });
+    let scopesLoading = $derived(availableScopesQuery.isPending);
+    let scopesReady = $state(false);
 
     const createApp = createCreateOauthApplication(() => ({
         mutation: {
@@ -50,29 +60,31 @@
         resetForm: false,
         validationMethod: "onsubmit", // makes so the error (data-fs-error) doesnt dissapear after blur
         validators: zod4(schema),
+        dataType: "json",
         onUpdate: async ({ form }) => {
             if (!form.valid) {
                 console.warn("somehow the form was submitted without being valid");
                 return;
             }
 
-            let bits = new OauthScopes(0);
-            if (form.data.openid) bits.add(OauthScope.OpenId);
-            if (form.data.profile) bits.add(OauthScope.Profile);
-            if (form.data.email) bits.add(OauthScope.Email);
+            const selected_scopes = Object.entries(form.data.scopes)
+                .filter(([_, checked]) => checked)
+                .map(([identifier, _]) => identifier)
+                .join(" ");
+            const scopes = selected_scopes.length == 0 ? "profile" : selected_scopes;
 
             const res = await createApp.mutateAsync({
                 data: {
                     name: form.data.display_name,
                     redirect_uri: form.data.redirect_uri,
                     public: form.data.public,
-                    scopes: bits.bits
+                    scopes: scopes
                 }
             });
 
             if (!isOk(res)) {
-                console.warn("failed updated user name");
-                setError(form, "display_name", res.data.message ?? "Failed to update name :(");
+                console.warn("failed updated scopes");
+                setError(form, "display_name", res.data.message ?? "Failed to create application");
                 return;
             }
 
@@ -84,6 +96,16 @@
     });
 
     const { form, enhance, delayed } = rawForm;
+    $effect(() => {
+        if (scopesLoading || scopesReady) return;
+        if (availableScopesQuery.isError) return;
+        if (!availableScopesQuery.data) return;
+
+        $form.scopes = Object.fromEntries(
+            availableScopes.map((scope) => [scope.identifier, false])
+        );
+        scopesReady = true;
+    });
 </script>
 
 <AfterCreationDialog bind:open={openDialog} item={createdApp} />
@@ -139,36 +161,48 @@
         description="These are the permissions your application can request from users"
         contentSpacing={2}
     >
-        <!-- <form class="form" use:enhanceScope> -->
-        <CheckboxBox size="large" bind:checked={$form.openid}>
-            <span class="checkbox-box--title">openid</span>
-            <p class="checkbox-box--description">View meow</p>
-        </CheckboxBox>
-        <CheckboxBox size="large" bind:checked={$form.profile}>
-            <span class="checkbox-box--title">profile</span>
-            <p class="checkbox-box--description">View meow</p>
-        </CheckboxBox>
-        <CheckboxBox size="large" bind:checked={$form.email}>
-            <span class="checkbox-box--title">email</span>
-            <p class="checkbox-box--description">View meow</p>
-        </CheckboxBox>
-        <!-- {#if scopeDirty}
-            <div transition:slide>
-                <Button primary disabled={$delayedScope} loading={$delayedScope} shouldFill
-                    >Save changes</Button
+        {#if scopesLoading || !scopesReady}
+            <LoadingBox
+                what="scopes"
+                loaded={scopesLoading || !scopesReady}
+                hasError={availableScopesQuery.isError}
+            />
+        {:else}
+            {#each availableScopes as scope (scope.identifier)}
+                <Field form={rawForm} name="scopes">
+                    <Control>
+                        {#snippet children({ props })}
+                            <CheckboxBox
+                                size="large"
+                                bind:checked={$form.scopes[scope.identifier]}
+                                {...props}
+                            >
+                                <span class="checkbox-box--title">{scope.identifier}</span>
+                                {#if scope.description}
+                                    <p class="checkbox-box--description">{scope.description}</p>
+                                {/if}
+                            </CheckboxBox>
+                        {/snippet}
+                    </Control></Field
                 >
-            </div>
+            {/each}
         {/if}
-    </form> -->
     </SettingsPanel>
     <SettingsPanel
         title="Create application"
         description="Ah, a new digital child that will have access to user's accounts"
         contentSpacing={2}
     >
-        <Button primary square type="submit" disabled={$delayed} loading={$delayed}
-            >Create application</Button
+        <Button
+            primary
+            square
+            type="submit"
+            disabled={$delayed || scopesLoading}
+            loading={$delayed}
+            symbol_prefix={{ symbol: IconSquareRoundedPlusFilled, size: "medium" }}
         >
+            Create application
+        </Button>
     </SettingsPanel>
 </form>
 
