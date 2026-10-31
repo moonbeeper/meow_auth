@@ -77,9 +77,8 @@ pub async fn register_passkey_options(
     };
     let credential_ids = passkeys
         .iter()
-        .map(|v| base64urlsafedata::HumanBinaryData::from(v.credential_id.clone()))
+        .map(|v| base64urlsafedata::HumanBinaryData::from(v.credential_id.clone()).to_vec())
         .collect();
-
     // exclude credentials are the pid of the already stored passkeys
     let (mut client_challenge, data) = global.webauthn.start_passkey_registration(
         user.id.into(),

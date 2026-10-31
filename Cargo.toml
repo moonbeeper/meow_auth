@@ -21,7 +21,7 @@ axum-valid = { version = "0.25.0", default-features = false, features = [
     "validator",
     "basic",
 ] }
-base64urlsafedata = "0.5.5"
+base64urlsafedata = "0.6.2"
 blake3 = "1.8.7"
 chacha20poly1305 = "0.11.0"
 chrono = { version = "0.4.45", features = ["serde"] }
@@ -84,12 +84,12 @@ utoipa = { version = "6.0.0", features = [
 utoipa-axum = "0.3.0"
 utoipa-scalar = { version = "0.4.0", features = ["axum"] }
 uuid = { version = "1.29.0", features = ["v4"] }
-webauthn-rs = { version = "0.5.5", features = [
+webauthn-rs = { version = "0.6.2", features = [
     "conditional-ui",
     "danger-allow-state-serialisation",
     "danger-credential-internals",
 ] }
-webauthn-rs-proto = "0.5.5"
+webauthn-rs-proto = "0.6.2"
 regex = "1.13.1"
 hmac = "0.13.0"
 validator = { version = "0.21.0", features = ["derive"] }

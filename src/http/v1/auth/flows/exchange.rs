@@ -272,10 +272,10 @@ pub async fn flow_webauthn_exchange(
 
     let challenge: DiscoverableAuthentication = serde_json::from_value(db_challenge.big_data)?;
 
-    let auth_result = global.webauthn.finish_discoverable_authentication(
+    let auth_result = global.webauthn.finish_discoverable_authentication_v2(
         &request,
         challenge,
-        &[DiscoverableKey::from(&passkey)],
+        DiscoverableKey::from(&passkey),
     )?;
 
     let Ok(Some(user)) = User::find_by_id(db_passkey.user_id, &global.database).await else {
