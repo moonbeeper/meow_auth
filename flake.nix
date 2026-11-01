@@ -5,6 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     crane.url = "github:ipetkov/crane";
+    crane.inputs.nixpkgs.follows = "nixpkgs";
 
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -30,7 +31,7 @@
           src = craneLib.path ./.;
           strictDeps = true;
 
-          SQLX_OFFLINE = true;
+          SQLX_OFFLINE = "true";
           CARGO_PROFILE = "dist";
           RUSTFLAGS = "-C link-arg=-fuse-ld=mold";
 
@@ -59,6 +60,8 @@
             # MY_CUSTOM_VAR = "some value";
           }
         );
+
+
       in
       {
         # checks = {
