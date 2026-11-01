@@ -15,8 +15,8 @@ use crate::{
     },
 };
 
-static EMAIL_LOGO: &[u8] = include_bytes!("../../assets/email_logo.png");
-static EMAIL_LOGO_URI: LazyLock<String> = LazyLock::new(|| {
+pub static EMAIL_LOGO: &[u8] = include_bytes!("../../assets/email_logo.png");
+pub static EMAIL_LOGO_URI: LazyLock<String> = LazyLock::new(|| {
     format!(
         "data:image/png;base64,{}",
         data_encoding::BASE64.encode(EMAIL_LOGO)

@@ -13,6 +13,7 @@ use axum::{
         HeaderValue, Method,
         header::{AUTHORIZATION, CONTENT_TYPE, RETRY_AFTER},
     },
+    response::IntoResponse,
     routing::get,
 };
 use tokio::net::TcpSocket;
@@ -32,6 +33,7 @@ use crate::{
         ip_manager::IpManagerLayer, oauth_manager::OauthManagerLayer,
         ratelimit_manager::RatelimitLayer,
     },
+    mailer::resources::{EMAIL_LOGO, EMAIL_LOGO_URI},
     manager::WatcherChild,
     ratelimiter,
 };
@@ -64,6 +66,7 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
     OpenApiRouter::with_openapi(openapi)
         .nest("/v1", v1::routes(global.clone()))
         .nest_service("/assets", ServeDir::new("assets"))
+        .route("/email.png", get(email_logo))
         .layer(AuthManagerLayer::new(global.clone()))
         .layer(OauthManagerLayer::new(global.clone()))
         .layer(CookieManagerLayer::new())
@@ -160,4 +163,8 @@ pub fn cors(origin: &str) -> CorsLayer {
             Method::PATCH,
         ])
         .max_age(Duration::from_secs(7200))
+}
+
+async fn email_logo() -> impl IntoResponse {
+    ([(CONTENT_TYPE, "image/png")], EMAIL_LOGO)
 }
