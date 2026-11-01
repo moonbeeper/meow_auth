@@ -54,7 +54,7 @@
           commonArgs
           // {
             cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-
+            meta.mainProgram = "meow_auth2";
             # Additional environment variables or build phases/hooks can be set
             # here *without* rebuilding all dependency crates
             # MY_CUSTOM_VAR = "some value";
