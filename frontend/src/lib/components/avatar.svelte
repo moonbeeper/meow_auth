@@ -47,7 +47,7 @@
     <div class="container">
         <Avatar.Root class={["avatar", { small }]}>
             <div class="inner">
-                <Avatar.Image src="https://github.com/moonbeeper.png" alt="Moonbeeper's avatar" />
+                <Avatar.Image src="https://github.com/identicons/app/oauth_app/3137776" alt="hi" />
                 <Avatar.Fallback>HB</Avatar.Fallback>
             </div>
         </Avatar.Root>
