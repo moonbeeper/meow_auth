@@ -49,11 +49,11 @@
         >
     {/if}
 </SettingsPanel>
-
+<!--
 <SettingsPanel
     title="Delete account"
     description="Delete your account and everything associated with it, including authorized apps and created apps."
     negative
 >
     <Button negative symbol_prefix={{ symbol: IconTrashXFilled }}>Delete account</Button>
-</SettingsPanel>
+</SettingsPanel> -->
