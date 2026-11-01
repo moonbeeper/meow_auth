@@ -25,7 +25,7 @@ frontend = "http://localhost:5173"
 # - The connecting user ip from the `CF-Connecting-IP` header instead of the raw addr
 # - The connecting user city from the `cf-ipcity` header
 # - The connecting user country from the `cf-ipcountry` header
-# 
+#
 # This requires you to configure Cloudflare to send those headers to the app. By going to your dashboard,
 # select your domain > "Rules" > "Settings" > "Managed Transforms" > Enable "Add visitor location headers"
 is_under_cloudflare = false
@@ -40,15 +40,15 @@ min_connections = 1
 max_connections = 10
 
 [mailer]
-smtp_host = "smtp.purelymail.com"
-smtp_username = "auth@meowish.net"
-smtp_password = "qax*UAW0czw6zpj.fbf"
-smtp_port = 587
-smtp_secure = true
-from_email = "auth@meowish.net"
+smtp_host = "localhost"
+smtp_username = ""
+smtp_password = ""
+smtp_port = 1025
+smtp_secure = false
+from_email = "meow@meow.com"
 # Whether the app should check on start up and exit if the SMTP connection to the email server fails
 # (eg. its unreachable)
-test_connection = true
+test_connection = false
 
 [session]
 # The name of the Cookie used to store the session id
