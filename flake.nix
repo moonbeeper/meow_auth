@@ -38,7 +38,7 @@
           nativeBuildInputs = with pkgs; [
             perl
             pkg-config
-            mold-wrapped
+            mold
             # Add additional build inputs here
           ];
           buildInputs = [

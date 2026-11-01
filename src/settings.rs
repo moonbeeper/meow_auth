@@ -252,6 +252,7 @@ impl Settings {
             .add_source(
                 config::File::with_name(&format!("settings/{environment}.toml")).required(false),
             )
+            .add_source(config::File::with_name(&format!("{environment}.toml")).required(false))
             .add_source(config::Environment::with_prefix("MEOW").separator("__"))
             .build()?;
 
