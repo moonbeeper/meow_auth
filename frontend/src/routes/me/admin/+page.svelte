@@ -67,6 +67,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Admin - Meow Auth</title>
+</svelte:head>
+
 <SettingsPanel title="Registered users" description={panelDescription}>
     <div class="actions">
         <Symbol symbol={IconSearch} size="medium" />

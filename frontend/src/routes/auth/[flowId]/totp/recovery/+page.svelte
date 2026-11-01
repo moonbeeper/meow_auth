@@ -97,6 +97,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Two-Factor Recovery - Meow Auth</title>
+</svelte:head>
+
 <AuthBox.Root>
     <AuthBox.Header
         title="Enter your Two-Factor recovery code"

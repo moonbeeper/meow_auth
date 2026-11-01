@@ -67,6 +67,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Authorized Apps - Meow Auth</title>
+</svelte:head>
+
 <RevokePrompt item={revokePromptItem} user={userInfo} bind:open={revokePromptOpen} />
 <SettingsPanel title="Authorized Apps" description={panelDescription}>
     {#if authorizedAppsQuery.isLoading || authorizedAppsQuery.isError}

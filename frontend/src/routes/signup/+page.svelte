@@ -51,6 +51,10 @@
     const { form, enhance, delayed } = rawForm;
 </script>
 
+<svelte:head>
+    <title>Sign up - Meow Auth</title>
+</svelte:head>
+
 <AuthBox.Root>
     <AuthBox.Header title="Sign up" />
     <form class="form" use:enhance method="post">

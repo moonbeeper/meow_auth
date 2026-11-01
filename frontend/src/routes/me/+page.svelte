@@ -24,6 +24,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>Me - Meow Auth</title>
+</svelte:head>
+
 <ProfilePanel />
 
 <SettingsPanel

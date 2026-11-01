@@ -7,6 +7,10 @@
     import TotpPanel from "./totpPanel.svelte";
 </script>
 
+<svelte:head>
+    <title>Security - Meow Auth</title>
+</svelte:head>
+
 <TotpPanel />
 
 <PasskeyPanel />

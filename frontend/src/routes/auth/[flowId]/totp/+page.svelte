@@ -92,6 +92,10 @@
     const { form, enhance, delayed } = rawForm;
 </script>
 
+<svelte:head>
+    <title>Two-Factor Authentication - Meow Auth</title>
+</svelte:head>
+
 <AuthBox.Root>
     <AuthBox.Header
         title="Enter your Two-Factor code"

@@ -175,6 +175,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>Log in - Meow Auth</title>
+</svelte:head>
+
 <AuthBox.Root>
     <AuthBox.Header title={greeting} />
     <form class="form" use:enhance method="post">

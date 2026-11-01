@@ -51,6 +51,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>Consent - Meow Auth</title>
+</svelte:head>
+
 <AuthBox.Root>
     <div class="who-to-who">
         <div class="figure--image">A</div>

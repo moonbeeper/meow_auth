@@ -51,6 +51,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Audit Log - Meow Auth</title>
+</svelte:head>
+
 <div class="actions">
     <Button href="/me" symbol_prefix={{ symbol: IconCaretLeftFilled }}>
         Go back <KeyTag key={KeysThatMatter.Escape} {onKeyDown} />

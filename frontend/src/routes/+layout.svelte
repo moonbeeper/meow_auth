@@ -18,6 +18,10 @@
     // });
 </script>
 
+<svelte:head>
+    <title>Meow Auth</title>
+</svelte:head>
+
 <QueryClientProvider client={queryClient}>
     <Header />
     {@render children()}

@@ -144,6 +144,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>Log in - Meow Auth</title>
+</svelte:head>
+
 <AuthBox.Root>
     <AuthBox.Header
         title="Check your email!"

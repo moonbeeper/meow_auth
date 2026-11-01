@@ -109,6 +109,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Sudo - Meow Auth</title>
+</svelte:head>
+
 <AuthBox.Root>
     <AuthBox.Header title={greeting} subtitle="Pick how you'd like to prove it's you" />
     {#if data.options.includes("passkey")}

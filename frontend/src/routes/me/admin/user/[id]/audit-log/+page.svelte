@@ -46,6 +46,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Audit Log - Meow Auth</title>
+</svelte:head>
+
 <!-- has to be inside a div to see that its the only child.. DUH DUMB BIRD I MA GODDAMIT -->
 <div>
     <SettingsPanel title="Audit log" description={panelDescription}>

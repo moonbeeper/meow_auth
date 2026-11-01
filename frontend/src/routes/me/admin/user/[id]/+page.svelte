@@ -88,6 +88,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>Overview - Meow Auth</title>
+</svelte:head>
+
 <SettingsPanel
     title="Profile"
     description="The identity an user sees when they sign in to other apps"
