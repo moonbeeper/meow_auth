@@ -71,7 +71,7 @@ tower = "0.5.3"
 tower-cookies = { version = "0.11.0", features = ["private"] }
 tower-http = { version = "0.7.1", features = ["cors", "fs"] }
 tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt", "json"] }
 typed-builder = "0.23.2"
 ulid = { version = "3.0.0", features = ["serde", "uuid"] }
 url = { version = "2.5.8", features = ["serde"] }

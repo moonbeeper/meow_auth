@@ -12,6 +12,8 @@ master_key = "df2f3ba178ecaa9968c042e230661d668e96f73881da2968a525af802d72692c"
 [logging]
 enabled = true
 level = "info"
+# The format of the logs. By default, its "human". The other option is "json".
+format = "human"
 
 [http]
 bind = "127.0.0.1:8081"

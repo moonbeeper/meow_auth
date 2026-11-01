@@ -33,7 +33,7 @@ use crate::{
         ip_manager::IpManagerLayer, oauth_manager::OauthManagerLayer,
         ratelimit_manager::RatelimitLayer,
     },
-    mailer::resources::{EMAIL_LOGO, EMAIL_LOGO_URI},
+    mailer::resources::EMAIL_LOGO,
     manager::WatcherChild,
     ratelimiter,
 };

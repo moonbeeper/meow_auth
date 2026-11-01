@@ -36,6 +36,7 @@ doc_node_ignore!(
     String,
     &str,
     settings::LoggingLevel,
+    settings::LoggingFormat,
     url::Url,
     std::net::SocketAddr,
     crypto::SecretKey,

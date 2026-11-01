@@ -18,6 +18,16 @@ pub struct Logging {
     #[default = true]
     pub enabled: bool,
     pub level: LoggingLevel,
+    /// The format of the logs. By default, its "human". The other option is "json".
+    pub format: LoggingFormat,
+}
+
+#[derive(Default, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LoggingFormat {
+    #[default]
+    Human,
+    Json,
 }
 
 #[derive(Default, Debug, serde::Serialize, serde::Deserialize)]
