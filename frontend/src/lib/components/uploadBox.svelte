@@ -1,6 +1,7 @@
 <div class="upload-zone">
     <p><a href="#main">Upload image</a> or drag and drop</p>
-    <span class="subtitle">PNG, JPEG or WEBP (max. 256x256, 256KiB)</span>
+    <!-- <span class="subtitle">PNG, JPEG or WEBP (max. 256x256, 256KiB)</span> -->
+    <span class="subtitle">I'm sadly a placeholder</span>
 </div>
 
 <style lang="scss">
