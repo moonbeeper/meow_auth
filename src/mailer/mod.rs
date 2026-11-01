@@ -40,11 +40,13 @@ pub struct Mailer {
 impl Mailer {
     pub async fn new(settings: &Settings) -> anyhow::Result<Self> {
         let mut transport_builder = match settings.mailer.smtp_secure {
-            true => AsyncSmtpTransport::<Tokio1Executor>::relay(&settings.mailer.smtp_host)
-                .map_err(|e| {
-                    tracing::error!("something went wrong while setting up the mailer: {}", e);
-                    e
-                })?,
+            true => {
+                AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&settings.mailer.smtp_host)
+                    .map_err(|e| {
+                        tracing::error!("something went wrong while setting up the mailer: {}", e);
+                        e
+                    })?
+            }
             false => {
                 AsyncSmtpTransport::<Tokio1Executor>::builder_dangerous(&settings.mailer.smtp_host)
             }
