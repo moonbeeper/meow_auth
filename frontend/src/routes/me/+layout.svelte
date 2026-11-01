@@ -12,10 +12,10 @@
         children: Snippet;
     } = $props();
 
-    const userQuery = createCurrentUserInfo();
-    $effect(() => {
-        auth.sync(userQuery.data, userQuery.isPending);
-    });
+    // const userQuery = createCurrentUserInfo();
+    // $effect(() => {
+    //     auth.sync(userQuery.data, userQuery.isPending);
+    // });
 </script>
 
 <main id="main" class="grid" tabindex="-1">

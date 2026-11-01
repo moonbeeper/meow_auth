@@ -7,6 +7,8 @@
 
 export * from "./_otpExchangeResponse.ts";
 export * from "./actorType.ts";
+export * from "./adminListUserApplicationsParams.ts";
+export * from "./adminListUserOauthAuthorizationsParams.ts";
 export * from "./adminListUsersParams.ts";
 export * from "./adminUserAuditLogParams.ts";
 export * from "./alrightResponse.ts";
@@ -39,6 +41,7 @@ export * from "./idTokenSigningAlg.ts";
 export * from "./jwkKey.ts";
 export * from "./jwkKeySet.ts";
 export * from "./listApplicationsParams.ts";
+export * from "./listDataRequest.ts";
 export * from "./listDataResponseAuditLog.ts";
 export * from "./listDataResponseAuditLogDataItem.ts";
 export * from "./listDataResponseOauthApplication.ts";

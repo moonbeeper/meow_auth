@@ -305,7 +305,7 @@ impl From<database::models::audit_log::AuditLog> for AuditLog {
     }
 }
 
-#[derive(Debug, serde::Serialize, utoipa::ToSchema)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ClientType {
     FirstParty,
@@ -317,6 +317,15 @@ impl From<DbClienType> for ClientType {
         match value {
             DbClienType::FirstParty => Self::FirstParty,
             DbClienType::ThirdParty => Self::ThirdParty,
+        }
+    }
+}
+
+impl From<ClientType> for DbClienType {
+    fn from(value: ClientType) -> Self {
+        match value {
+            ClientType::FirstParty => Self::FirstParty,
+            ClientType::ThirdParty => Self::ThirdParty,
         }
     }
 }

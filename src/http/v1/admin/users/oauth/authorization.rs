@@ -44,11 +44,11 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 /// List oauth authorizations of a user
 #[utoipa::path(
     get,
-    params(ListDataRequest),
     path = "/list",
     tags = ["admin"],
     params(
         ("id" = UlidId, description = "the id of the user"),
+        ListDataRequest
     ),
     responses(
         (status = 200, description = "list of oauth authorizations", body = ListDataResponse<OauthApplication>),

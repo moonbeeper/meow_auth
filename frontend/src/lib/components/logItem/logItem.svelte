@@ -12,6 +12,8 @@
         collapsible?: boolean;
         collapsible_bg?: boolean;
         asButton?: boolean;
+        asLink?: boolean;
+        href?: string;
         inner_content?: Snippet;
     };
 
@@ -20,6 +22,8 @@
         collapsible = false,
         collapsible_bg = true,
         asButton = false,
+        asLink = false,
+        href = "#",
         inner_content,
         ...rest
     }: CollapsibleProps | Props = $props();
@@ -53,6 +57,10 @@
     <button class="panel" {...rest}>
         {@render children()}
     </button>
+{:else if asLink}
+    <a class="panel" {href}>
+        {@render children()}
+    </a>
 {:else}
     <div class="panel">
         {@render children()}

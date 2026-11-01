@@ -1,69 +1,124 @@
-<main id="main" class="grid">
-    <div class="settings">
-        <section class="settings--panel">
-            <header class="settings--header">
-                <h2>oh ah god</h2>
-                <p>meow</p>
-            </header>
-            <div class="settings--panel-content">
-                <button class="button">oh god</button>
-            </div>
-        </section>
+<script lang="ts">
+    import EmptyBox from "$comps/emptyBox.svelte";
+    import AuthorizedAppItem from "$comps/items/authorizedAppItem.svelte";
+    import LoadingBox from "$comps/loadingBox.svelte";
+    import * as LogItem from "$comps/logItem";
+    import SettingsPanel from "$comps/settingsPanel.svelte";
+    import type { SvelteVirtualListRangeInfo } from "@humanspeak/svelte-virtual-list";
+    import SvelteVirtualList from "@humanspeak/svelte-virtual-list";
+    import { IconSearch } from "@tabler/icons-svelte-runes";
+    import { createInfiniteQuery } from "@tanstack/svelte-query";
+
+    import { adminListUsers, getAdminListUsersQueryKey } from "#lib/api/index.js";
+    import type { ListDataResponseOauthAuthorizationDataItem } from "#lib/api/model/index.js";
+    import {
+        getListOauthAuthorizationsQueryKey,
+        listOauthAuthorizations
+    } from "#lib/api/oauth/oauth.js";
+    import Input from "#lib/components/form/input.svelte";
+    import AdminUserItem from "#lib/components/items/adminUserItem.svelte";
+    import Symbol from "#lib/components/symbol.svelte";
+
+    let search = $state("");
+    let debouncedSearch = $state("");
+
+    $effect(() => {
+        const v = search.trim();
+        const timeout = setTimeout(() => {
+            debouncedSearch = v;
+        }, 300);
+        return () => clearTimeout(timeout);
+    });
+
+    const usersQuery = createInfiniteQuery(() => ({
+        queryKey: [
+            ...getAdminListUsersQueryKey({ search: debouncedSearch, pagination: {} }),
+            "infinite"
+        ],
+        queryFn: ({ pageParam, signal }) =>
+            adminListUsers(
+                { pagination: { from: pageParam, want_total: true }, search: debouncedSearch },
+                { signal }
+            ),
+        initialPageParam: undefined as string | undefined,
+        getNextPageParam: (lastPage) => {
+            if (lastPage.status !== 200) return undefined;
+            return lastPage.data.next ?? undefined;
+        }
+    }));
+
+    const userList = $derived.by(() => {
+        const pages = usersQuery.data?.pages ?? [];
+        return pages.filter((p) => p.status === 200).flatMap((p) => p.data.data);
+    });
+
+    let panelDescription = $derived.by(() => {
+        const d = "The list of registered users";
+        const pages = usersQuery.data?.pages ?? [];
+        const total = pages.filter((p) => p.status === 200)[0]?.data.total ?? -1;
+
+        return d + (total > 0 ? ` (${total} total)` : "");
+    });
+
+    function handleRangeChange({ atBottom }: SvelteVirtualListRangeInfo) {
+        if (atBottom && usersQuery.hasNextPage && !usersQuery.isFetchingNextPage) {
+            usersQuery.fetchNextPage();
+        }
+    }
+</script>
+
+<SettingsPanel title="Registered users" description={panelDescription}>
+    <div class="actions">
+        <Symbol symbol={IconSearch} size="medium" />
+        <Input placeholder="Search by user or email" bind:value={search} />
     </div>
-</main>
+
+    {#if usersQuery.isLoading || usersQuery.isError}
+        <LoadingBox
+            what="authorized apps"
+            loaded={!usersQuery.isLoading}
+            hasError={usersQuery.isError}
+        />
+    {:else if usersQuery.isSuccess}
+        {#if userList.length != 0}
+            <LogItem.Container>
+                <div class="content">
+                    {#if userList.length > 8}
+                        <SvelteVirtualList
+                            items={userList}
+                            onRangeChange={handleRangeChange}
+                            containerClass="vlist-container"
+                            viewportClass="vlist-viewport"
+                        >
+                            {#snippet renderItem(app)}
+                                <AdminUserItem item={app} />
+                            {/snippet}
+                        </SvelteVirtualList>
+                    {:else}
+                        {#each userList as app}
+                            <AdminUserItem item={app} />
+                        {/each}
+                    {/if}
+                </div>
+            </LogItem.Container>
+        {:else}
+            <EmptyBox
+                title="No users found"
+                subtitle="There are no registered users matching your search criteria or... there are no users at all"
+            />
+        {/if}
+    {/if}
+</SettingsPanel>
 
 <style lang="scss">
-    .aa {
-        position: relative;
-        width: 96px;
-        height: 96px;
-        aspect-ratio: 1;
-        /* border: 1px solid var(--color-iron-dark); */
-
-        &::before {
-            position: absolute;
-            content: "";
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 1px solid var(--color-iron-darkest);
-        }
+    .content {
+        --vlist-viewport-height: 80dvh;
     }
-
-    .audit-log {
+    .actions {
         display: flex;
-        border-bottom: 1px solid var(--color-iron-dark);
-        border-inline: 1px solid var(--color-iron-dark);
-
-        padding-block: calc(var(--spacing) * 3);
-        padding-inline: calc(var(--spacing) * 5);
+        inline-size: 100%;
+        justify-content: end;
         align-items: center;
         gap: calc(var(--spacing) * 4);
-        text-align: start;
-
-        &:first-child {
-            border-top-left-radius: var(--typical-radius);
-            border-top-right-radius: var(--typical-radius);
-            border-top: 1px solid var(--color-iron-dark);
-        }
-
-        &:last-child {
-            border-bottom-left-radius: var(--typical-radius);
-            border-bottom-right-radius: var(--typical-radius);
-            border-bottom: 1px solid var(--color-iron-dark);
-        }
-
-        .content {
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .baba {
-            flex-direction: column;
-            align-items: center;
-        }
     }
 </style>

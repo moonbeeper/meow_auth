@@ -37,10 +37,17 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         .nest("/{id}/audit", audit_log::routes())
 }
 
+#[derive(Debug, serde::Deserialize, utoipa::ToSchema, utoipa::IntoParams)]
+pub struct AdminListUsesRequest {
+    #[serde(flatten)]
+    pub pagination: ListDataRequest,
+    pub search: Option<String>,
+}
+
 /// List registered users
 #[utoipa::path(
     get,
-    params(ListDataRequest),
+    params(AdminListUsesRequest),
     path = "/list",
     tags = ["admin"],
     responses(
@@ -51,11 +58,12 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 )]
 pub async fn admin_list_users(
     State(global): State<Arc<GlobalState>>,
-    Query(request): Query<ListDataRequest>,
+    Query(request): Query<AdminListUsesRequest>,
 ) -> Result<Json<ListDataResponse<User>>, ApiErrorCodes> {
-    let Ok(paginated) = DbUser::find_many_paginated(
-        request.from,
-        request.want_total.unwrap_or_default(),
+    let Ok(paginated) = DbUser::find_many_paginated_admin(
+        request.pagination.from,
+        request.pagination.want_total.unwrap_or_default(),
+        request.search,
         &global.database,
     )
     .await
@@ -148,9 +156,11 @@ pub async fn admin_edit_user(
     }
 
     if let Some(email) = data.email {
-        let Ok(None) = DbUser::find_by_email(email.clone(), &global.database).await else {
-            return Err(ApiErrorCodes::EmailAlreadyAssociated);
-        };
+        if email != user.email {
+            let Ok(None) = DbUser::find_by_email(email.clone(), &global.database).await else {
+                return Err(ApiErrorCodes::EmailAlreadyAssociated);
+            };
+        }
 
         user.email = email;
     }

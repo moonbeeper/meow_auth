@@ -2,7 +2,10 @@ use sqlx::{PgPool, PgTransaction};
 use typed_builder::TypedBuilder;
 
 use crate::{
-    audit::changes::{AuditChange, AuditDiff},
+    audit::{
+        SYSTEM_USER_ID,
+        changes::{AuditChange, AuditDiff},
+    },
     database::{
         error::DatabaseError,
         id::UlidId,
@@ -235,6 +238,45 @@ impl User {
                 updated_at
              from users where ($1::uuid is null or id::uuid > $1) order by created_at asc limit 20+1",
             from as Option<UserId>
+        )
+        .fetch_all(pool)
+        .await?;
+
+        let total_rows = if want_total {
+            Self::count_all(pool).await?
+        } else {
+            None
+        };
+
+        Ok(PaginationResult::new(data, total_rows))
+    }
+
+    pub async fn find_many_paginated_admin(
+        from: Option<UserId>,
+        want_total: bool,
+        search: Option<String>,
+        pool: &PgPool,
+    ) -> Result<PaginationResult<Self>, DatabaseError> {
+        let data = sqlx::query_as!(
+            Self,
+            "select
+                id,
+                pid,
+                name,
+                email,
+                email_verified,
+                totp_enabled,
+                has_webauthn,
+                flags,
+                name_updated_at,
+                created_at,
+                updated_at
+             from users where id != $3::uuid and ($1::uuid is null or id::uuid > $1)
+             and ($2::text is null or name ilike '%' || $2 || '%' or email ilike '%' || $2 || '%')
+             order by created_at asc limit 20+1",
+            from as Option<UserId>,
+            search,
+            SYSTEM_USER_ID as UlidId
         )
         .fetch_all(pool)
         .await?;

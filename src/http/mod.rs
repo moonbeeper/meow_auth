@@ -52,7 +52,8 @@ use crate::{
     ),
     components(
         schemas(
-            error::ApiErrorCodesFlattened
+            error::ApiErrorCodesFlattened,
+            v1::types::ListDataRequest
         )
     )
 )]

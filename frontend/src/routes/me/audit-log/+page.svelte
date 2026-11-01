@@ -52,12 +52,9 @@
 </script>
 
 <div class="actions">
-    <Button href="/me"
-        ><Symbol symbol={IconCaretLeftFilled} />Go back <KeyTag
-            key={KeysThatMatter.Escape}
-            {onKeyDown}
-        /></Button
-    >
+    <Button href="/me" symbol_prefix={{ symbol: IconCaretLeftFilled }}>
+        Go back <KeyTag key={KeysThatMatter.Escape} {onKeyDown} />
+    </Button>
 </div>
 
 <!-- has to be inside a div to see that its the only child.. DUH DUMB BIRD I MA GODDAMIT -->

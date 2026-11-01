@@ -53,15 +53,6 @@
         await goto("/me/my-apps");
     }
 
-    let title = $derived.by(() => {
-        if (currentStep == 0) {
-            return "Are you sure you want to delete this app?";
-        } else if (currentStep == 1) {
-            return "New app secret generated";
-        }
-        return "Are you sure you want to delete this app?";
-    });
-
     $effect(() => {
         if (!open) {
             resetDialog();

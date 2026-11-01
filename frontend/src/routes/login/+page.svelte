@@ -226,7 +226,7 @@
         &.error {
             --text-color: var(--color-coral-medium);
             @media (prefers-color-scheme: dark) {
-                ----text-color: var(--color-coral-light);
+                --text-color: var(--color-coral-light);
             }
         }
     }

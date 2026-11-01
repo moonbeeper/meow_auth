@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-pub const SYSTEM_USER_ID: UserId = UserId::nil();
+pub const SYSTEM_USER_ID: UlidId = UlidId(ulid::Ulid::from_bytes(1u128.to_be_bytes()));
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub enum AuditAction {

@@ -27,7 +27,7 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
         ListDataRequest
     ),
     responses(
-        (status = 200, description = "current user audit log", body = AuditLog),
+        (status = 200, description = "current user audit log", body = ListDataResponse<AuditLog>),
         (status = 403, description = "current user not allowed to do action", body = ApiError),
         (status = 500, description = "internal server error", body = ApiError)
     )

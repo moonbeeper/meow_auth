@@ -26,16 +26,12 @@ pub type OauthApplicationId = UlidId;
     Ord,
     sqlx::Type,
 )]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 #[sqlx(type_name = "oauth_applications_client_type")]
-#[sqlx(rename_all = "lowercase")]
+#[sqlx(rename_all = "snake_case")]
 pub enum ClientType {
-    #[serde(rename = "first_party")]
-    #[sqlx(rename = "first_party")]
     FirstParty,
     #[default]
-    #[serde(rename = "third_party")]
-    #[sqlx(rename = "third_party")]
     ThirdParty,
 }
 
@@ -312,6 +308,13 @@ impl AuditDiff for OauthApplication {
                 AuditField::Enabled,
                 before.disabled,
                 self.disabled,
+            ));
+        }
+        if self.client_type != before.client_type {
+            changes.push(AuditChange::change(
+                AuditField::Flags,
+                before.client_type,
+                self.client_type,
             ));
         }
 

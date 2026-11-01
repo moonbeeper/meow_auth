@@ -20,11 +20,13 @@ import type {
 import { apiUrlForOrval } from "#lib/api/ignoreThisPlease.js";
 
 import type {
+    AdminListUserApplicationsParams,
+    AdminListUserOauthAuthorizationsParams,
     AdminListUsersParams,
     AdminUserAuditLogParams,
     AlrightResponse,
     ApiError,
-    AuditLog,
+    ListDataResponseAuditLog,
     ListDataResponseOauthApplication,
     ListDataResponseSession,
     ListDataResponseUser,
@@ -62,10 +64,43 @@ export type adminListUsersResponseError = (
 
 export type adminListUsersResponse = adminListUsersResponseSuccess | adminListUsersResponseError;
 
-export const getAdminListUsersUrl = (params?: AdminListUsersParams) => {
+export const getAdminListUsersUrl = (params: AdminListUsersParams) => {
     const normalizedParams = new URLSearchParams();
+    const formObjectParameters = new Map<string, string>([["pagination", "flatten"]]);
 
     Object.entries(params || {}).forEach(([key, value]) => {
+        if (
+            typeof value === "object" &&
+            value !== null &&
+            !Array.isArray(value) &&
+            !(value instanceof Date) &&
+            formObjectParameters.has(key)
+        ) {
+            const commaParts: string[] = [];
+            Object.entries(value).forEach(([subKey, subValue]) => {
+                const items = (Array.isArray(subValue) ? subValue : [subValue])
+                    .filter((v) => v !== undefined)
+                    .map((v) =>
+                        v === null
+                            ? "null"
+                            : v instanceof Date
+                              ? v.toISOString()
+                              : typeof v === "object"
+                                ? JSON.stringify(v)
+                                : String(v)
+                    );
+                if (formObjectParameters.get(key) === "flatten") {
+                    items.forEach((item) => normalizedParams.append(subKey, item));
+                } else if (items.length > 0) {
+                    commaParts.push(subKey, ...items);
+                }
+            });
+            if (commaParts.length > 0) {
+                normalizedParams.append(key, commaParts.join(","));
+            }
+            return;
+        }
+
         if (value !== undefined) {
             normalizedParams.append(key, value === null ? "null" : String(value));
         }
@@ -82,7 +117,7 @@ export const getAdminListUsersUrl = (params?: AdminListUsersParams) => {
  * @summary List registered users
  */
 export const adminListUsers = async (
-    params?: AdminListUsersParams,
+    params: AdminListUsersParams,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
 ): Promise<adminListUsersResponse> => {
@@ -106,7 +141,7 @@ export const getAdminListUsersQueryOptions = <
     TData = Awaited<ReturnType<typeof adminListUsers>>,
     TError = ApiError
 >(
-    params?: AdminListUsersParams,
+    params: AdminListUsersParams,
     options?: {
         query?: Partial<
             CreateQueryOptions<Awaited<ReturnType<typeof adminListUsers>>, TError, TData>
@@ -140,7 +175,7 @@ export function createAdminListUsers<
     TData = Awaited<ReturnType<typeof adminListUsers>>,
     TError = ApiError
 >(
-    params?: () => AdminListUsersParams,
+    params: () => AdminListUsersParams,
     options?: () => {
         query?: Partial<
             CreateQueryOptions<Awaited<ReturnType<typeof adminListUsers>>, TError, TData>
@@ -151,7 +186,7 @@ export function createAdminListUsers<
     queryClient?: () => QueryClient
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
-        () => getAdminListUsersQueryOptions(params?.(), options?.()),
+        () => getAdminListUsersQueryOptions(params(), options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -426,7 +461,7 @@ export const createAdminEditUser = <TError = ApiError, TContext = unknown>(
     return createMutation(() => ({ ...getAdminEditUserMutationOptions(options?.()) }), queryClient);
 };
 export type adminUserAuditLogResponse200 = {
-    data: AuditLog;
+    data: ListDataResponseAuditLog;
     status: 200;
 };
 
@@ -587,8 +622,23 @@ export type adminListUserApplicationsResponse =
     | adminListUserApplicationsResponseSuccess
     | adminListUserApplicationsResponseError;
 
-export const getAdminListUserApplicationsUrl = (id: UlidId) => {
-    return `${apiUrlForOrval}/v1/admin/users/${id}/oauth/application/list`;
+export const getAdminListUserApplicationsUrl = (
+    id: UlidId,
+    params?: AdminListUserApplicationsParams
+) => {
+    const normalizedParams = new URLSearchParams();
+
+    Object.entries(params || {}).forEach(([key, value]) => {
+        if (value !== undefined) {
+            normalizedParams.append(key, value === null ? "null" : String(value));
+        }
+    });
+
+    const stringifiedParams = normalizedParams.toString();
+
+    return stringifiedParams.length > 0
+        ? `${apiUrlForOrval}/v1/admin/users/${id}/oauth/application/list?${stringifiedParams}`
+        : `${apiUrlForOrval}/v1/admin/users/${id}/oauth/application/list`;
 };
 
 /**
@@ -596,10 +646,11 @@ export const getAdminListUserApplicationsUrl = (id: UlidId) => {
  */
 export const adminListUserApplications = async (
     id: UlidId,
+    params?: AdminListUserApplicationsParams,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
 ): Promise<adminListUserApplicationsResponse> => {
-    const res = await (fetchFn ?? fetch)(getAdminListUserApplicationsUrl(id), {
+    const res = await (fetchFn ?? fetch)(getAdminListUserApplicationsUrl(id, params), {
         credentials: "include",
         ...options,
         method: "GET"
@@ -611,8 +662,11 @@ export const adminListUserApplications = async (
     return { data, status: res.status, headers: res.headers } as adminListUserApplicationsResponse;
 };
 
-export const getAdminListUserApplicationsQueryKey = (id: UlidId) => {
-    return ["adminListUserApplications", ...(id ? [id] : [])] as const;
+export const getAdminListUserApplicationsQueryKey = (
+    id: UlidId,
+    params?: AdminListUserApplicationsParams
+) => {
+    return ["adminListUserApplications", ...(id ? [id] : []), ...(params ? [params] : [])] as const;
 };
 
 export const getAdminListUserApplicationsQueryOptions = <
@@ -620,6 +674,7 @@ export const getAdminListUserApplicationsQueryOptions = <
     TError = ApiError
 >(
     id: UlidId,
+    params?: AdminListUserApplicationsParams,
     options?: {
         query?: Partial<
             CreateQueryOptions<Awaited<ReturnType<typeof adminListUserApplications>>, TError, TData>
@@ -630,11 +685,11 @@ export const getAdminListUserApplicationsQueryOptions = <
 ) => {
     const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
 
-    const queryKey = queryOptions?.queryKey ?? getAdminListUserApplicationsQueryKey(id);
+    const queryKey = queryOptions?.queryKey ?? getAdminListUserApplicationsQueryKey(id, params);
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListUserApplications>>> = ({
         signal
-    }) => adminListUserApplications(id, { signal, ...fetchOptions }, fetcherFn);
+    }) => adminListUserApplications(id, params, { signal, ...fetchOptions }, fetcherFn);
 
     return {
         queryKey,
@@ -662,6 +717,7 @@ export function createAdminListUserApplications<
     TError = ApiError
 >(
     id: () => UlidId,
+    params?: () => AdminListUserApplicationsParams,
     options?: () => {
         query?: Partial<
             CreateQueryOptions<Awaited<ReturnType<typeof adminListUserApplications>>, TError, TData>
@@ -672,7 +728,7 @@ export function createAdminListUserApplications<
     queryClient?: () => QueryClient
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
-        () => getAdminListUserApplicationsQueryOptions(id(), options?.()),
+        () => getAdminListUserApplicationsQueryOptions(id(), params?.(), options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -1297,8 +1353,23 @@ export type adminListUserOauthAuthorizationsResponse =
     | adminListUserOauthAuthorizationsResponseSuccess
     | adminListUserOauthAuthorizationsResponseError;
 
-export const getAdminListUserOauthAuthorizationsUrl = (id: UlidId) => {
-    return `${apiUrlForOrval}/v1/admin/users/${id}/oauth/authorization/list`;
+export const getAdminListUserOauthAuthorizationsUrl = (
+    id: UlidId,
+    params?: AdminListUserOauthAuthorizationsParams
+) => {
+    const normalizedParams = new URLSearchParams();
+
+    Object.entries(params || {}).forEach(([key, value]) => {
+        if (value !== undefined) {
+            normalizedParams.append(key, value === null ? "null" : String(value));
+        }
+    });
+
+    const stringifiedParams = normalizedParams.toString();
+
+    return stringifiedParams.length > 0
+        ? `${apiUrlForOrval}/v1/admin/users/${id}/oauth/authorization/list?${stringifiedParams}`
+        : `${apiUrlForOrval}/v1/admin/users/${id}/oauth/authorization/list`;
 };
 
 /**
@@ -1306,10 +1377,11 @@ export const getAdminListUserOauthAuthorizationsUrl = (id: UlidId) => {
  */
 export const adminListUserOauthAuthorizations = async (
     id: UlidId,
+    params?: AdminListUserOauthAuthorizationsParams,
     options?: RequestInit,
     fetchFn?: typeof globalThis.fetch
 ): Promise<adminListUserOauthAuthorizationsResponse> => {
-    const res = await (fetchFn ?? fetch)(getAdminListUserOauthAuthorizationsUrl(id), {
+    const res = await (fetchFn ?? fetch)(getAdminListUserOauthAuthorizationsUrl(id, params), {
         credentials: "include",
         ...options,
         method: "GET"
@@ -1325,8 +1397,15 @@ export const adminListUserOauthAuthorizations = async (
     } as adminListUserOauthAuthorizationsResponse;
 };
 
-export const getAdminListUserOauthAuthorizationsQueryKey = (id: UlidId) => {
-    return ["adminListUserOauthAuthorizations", ...(id ? [id] : [])] as const;
+export const getAdminListUserOauthAuthorizationsQueryKey = (
+    id: UlidId,
+    params?: AdminListUserOauthAuthorizationsParams
+) => {
+    return [
+        "adminListUserOauthAuthorizations",
+        ...(id ? [id] : []),
+        ...(params ? [params] : [])
+    ] as const;
 };
 
 export const getAdminListUserOauthAuthorizationsQueryOptions = <
@@ -1334,6 +1413,7 @@ export const getAdminListUserOauthAuthorizationsQueryOptions = <
     TError = ApiError
 >(
     id: UlidId,
+    params?: AdminListUserOauthAuthorizationsParams,
     options?: {
         query?: Partial<
             CreateQueryOptions<
@@ -1348,11 +1428,12 @@ export const getAdminListUserOauthAuthorizationsQueryOptions = <
 ) => {
     const { query: queryOptions, fetch: fetchOptions, fetcher: fetcherFn } = options ?? {};
 
-    const queryKey = queryOptions?.queryKey ?? getAdminListUserOauthAuthorizationsQueryKey(id);
+    const queryKey =
+        queryOptions?.queryKey ?? getAdminListUserOauthAuthorizationsQueryKey(id, params);
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListUserOauthAuthorizations>>> = ({
         signal
-    }) => adminListUserOauthAuthorizations(id, { signal, ...fetchOptions }, fetcherFn);
+    }) => adminListUserOauthAuthorizations(id, params, { signal, ...fetchOptions }, fetcherFn);
 
     return {
         queryKey,
@@ -1380,6 +1461,7 @@ export function createAdminListUserOauthAuthorizations<
     TError = ApiError
 >(
     id: () => UlidId,
+    params?: () => AdminListUserOauthAuthorizationsParams,
     options?: () => {
         query?: Partial<
             CreateQueryOptions<
@@ -1394,7 +1476,7 @@ export function createAdminListUserOauthAuthorizations<
     queryClient?: () => QueryClient
 ): CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
     const query = createQuery(
-        () => getAdminListUserOauthAuthorizationsQueryOptions(id(), options?.()),
+        () => getAdminListUserOauthAuthorizationsQueryOptions(id(), params?.(), options?.()),
         queryClient
     ) as CreateQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

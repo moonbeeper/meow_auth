@@ -15,7 +15,7 @@ use crate::{
     database::{
         id::UlidId,
         models::{
-            oauth_application::OauthApplication as DbOauthApplication,
+            oauth_application::{self, OauthApplication as DbOauthApplication},
             oauth_authorization::OauthAuthorization as DbOauthAuthorization,
         },
     },
@@ -28,8 +28,8 @@ use crate::{
             ip_manager::IpContext,
         },
         v1::types::{
-            AlrightResponse, IdParam, ListDataRequest, ListDataResponse, OauthApplication,
-            TwoIdParam,
+            AlrightResponse, ClientType, IdParam, ListDataRequest, ListDataResponse,
+            OauthApplication, TwoIdParam,
         },
         validator::Valid,
     },
@@ -48,11 +48,11 @@ pub fn routes() -> OpenApiRouter<Arc<GlobalState>> {
 /// List oauth applications of a user
 #[utoipa::path(
     get,
-    params(ListDataRequest),
     path = "/list",
     tags = ["admin"],
     params(
         ("id" = UlidId, description = "the id of the user"),
+        ListDataRequest
     ),
     responses(
         (status = 200, description = "list of oauth applications", body = ListDataResponse<OauthApplication>),
@@ -99,7 +99,7 @@ pub struct OauthApplicationData {
     pub name: Option<String>,
     #[validate(url(message = "must be a valid url"))]
     pub redirect_uri: Option<String>,
-    pub public: Option<bool>,
+    pub client_type: Option<ClientType>,
     pub disabled: Option<bool>,
     pub scopes: Option<String>,
 }
@@ -163,8 +163,8 @@ pub async fn admin_edit_user_application(
         app.redirect_uri = redirect_uri;
     }
 
-    if let Some(public) = data.public {
-        app.public = public;
+    if let Some(client_type) = data.client_type {
+        app.client_type = oauth_application::ClientType::from(client_type);
     }
 
     let mut tx = global.database.begin().await?;

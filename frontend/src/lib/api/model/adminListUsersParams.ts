@@ -4,16 +4,12 @@
  * meow_auth2
  * OpenAPI spec version: 0.1.1
  */
-import type { UlidId } from "./ulidId.ts";
+import type { ListDataRequest } from "./listDataRequest.ts";
 
 export type AdminListUsersParams = {
+    pagination: ListDataRequest;
     /**
-     * The id of the last item from the previous page. Normally provided in the `next` field of the previous response.
-     */
-    from?: UlidId | null;
-    /**
-     * If the total number of items should be returned.
      * @nullable
      */
-    want_total?: boolean | null;
+    search?: string | null;
 };
