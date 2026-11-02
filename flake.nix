@@ -39,7 +39,7 @@
               ./assets
               ./migrations
               ./.sqlx
-            ] ++ lib.optionals (builtins.pathExists ./.git) [ ./.git ];
+            ];
           };
           strictDeps = true;
 
@@ -68,6 +68,9 @@
           // {
             cargoArtifacts = craneLib.buildDepsOnly commonArgs;
             meta.mainProgram = "meow_auth2";
+
+            GIT_COMMIT = self.rev or self.dirtyRev or "oh god";
+            GIT_SHORT_COMMIT = self.rev or self.dirtyRev or "oh noes";
             SOURCE_DATE_EPOCH = toString (self.lastModified or 6769676967);
             # Additional environment variables or build phases/hooks can be set
             # here *without* rebuilding all dependency crates
