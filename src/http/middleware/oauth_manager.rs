@@ -120,10 +120,20 @@ where
     }
 }
 
+#[tracing::instrument(
+    skip_all,
+    name = "oauth_manager",
+    fields(
+        token_id = tracing::field::Empty,
+        user_id = tracing::field::Empty,
+        client_id = tracing::field::Empty,
+        scopes = tracing::field::Empty,
+    )
+)]
 async fn do_work(request: &mut Request, header: &HeaderValue, global_state: &Arc<GlobalState>) {
     let token = match header.to_str() {
         Err(e) => {
-            tracing::error!("failed parsing token header value: {}", e);
+            tracing::error!(error = %e, "failed parsing token header value");
             request
                 .extensions_mut()
                 .insert(OauthContext::Unauthenticated);
@@ -135,9 +145,6 @@ async fn do_work(request: &mut Request, header: &HeaderValue, global_state: &Arc
             .trim(),
     };
 
-    let span = tracing::info_span!("oauth_manager");
-    let _guard = span.enter();
-
     let hashed_token = hash_secret(token, &global_state.settings);
 
     let Ok(Some(token)) = OauthToken::find_by_token(hashed_token, &global_state.database).await
@@ -148,6 +155,10 @@ async fn do_work(request: &mut Request, header: &HeaderValue, global_state: &Arc
             .insert(OauthContext::Unauthenticated);
         return;
     };
+
+    tracing::Span::current().record("token_id", tracing::field::display(token.id));
+    tracing::Span::current().record("user_id", tracing::field::display(token.user_id));
+    tracing::Span::current().record("client_id", tracing::field::display(token.client_id));
 
     // gotta fetch client to be able to remove scopes that arent anymore allowed by the client
     let Ok(Some(client)) =
@@ -163,6 +174,7 @@ async fn do_work(request: &mut Request, header: &HeaderValue, global_state: &Arc
     let scopes = Scopes::from_str(&token.scopes, &global_state.oauth_scope_registry).sanitize(
         Scopes::from_str(&client.scopes, &global_state.oauth_scope_registry),
     );
+    tracing::Span::current().record("scopes", tracing::field::display(&scopes));
 
     request
         .extensions_mut()

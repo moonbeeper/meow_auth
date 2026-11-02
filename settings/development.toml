@@ -15,6 +15,12 @@ level = "info"
 # The format of the logs. By default, its "human". The other option is "json".
 format = "human"
 
+[logging.otlp]
+# Whether the app should send traces and metrics to an OTLP endpoint
+enabled = false
+level = "info"
+# The OTLP endpoint to send traces and metrics to.
+
 [http]
 bind = "127.0.0.1:8081"
 # The URL where this app is reachable. Its used to build absolute URLs (for OAuth), so it has
@@ -27,7 +33,7 @@ frontend = "http://localhost:5173"
 # - The connecting user ip from the `CF-Connecting-IP` header instead of the raw addr
 # - The connecting user city from the `cf-ipcity` header
 # - The connecting user country from the `cf-ipcountry` header
-#
+# 
 # This requires you to configure Cloudflare to send those headers to the app. By going to your dashboard,
 # select your domain > "Rules" > "Settings" > "Managed Transforms" > Enable "Add visitor location headers"
 is_under_cloudflare = false

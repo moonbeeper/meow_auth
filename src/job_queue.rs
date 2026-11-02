@@ -386,6 +386,14 @@ impl WorkerMaster {
         Ok(result)
     }
 
+    #[tracing::instrument(
+        skip_all,
+        name = "worker_job",
+        fields(
+            job_id = %job.id,
+            handler = %job.handler
+        )
+    )]
     pub async fn run(
         &self,
         job: QueuedJobData,
@@ -395,11 +403,7 @@ impl WorkerMaster {
         let job_id = job.id;
 
         let Some(handler) = self.job_handlers.get(job.handler.as_str()) else {
-            tracing::error!(
-                job_id = job_id.to_string(),
-                handler = job.handler.as_str(),
-                "the requested handler is not registered"
-            );
+            tracing::error!("the requested handler is not registered");
 
             self.release_fail(
                 job.id,
@@ -417,12 +421,9 @@ impl WorkerMaster {
             tick.tick().await;
             loop {
                 tick.tick().await;
-                Self::heartbeat(job_id, &pool).await.unwrap_or_else(|_| {
-                    tracing::error!(
-                        job_id = job_id.to_string(),
-                        "failed to save heartbeat for job"
-                    )
-                });
+                Self::heartbeat(job_id, &pool)
+                    .await
+                    .unwrap_or_else(|_| tracing::error!("failed to save heartbeat for job"));
             }
         });
 
@@ -431,6 +432,7 @@ impl WorkerMaster {
         match handler(job.input).await {
             Ok(()) => self.release_success(job.id).await?,
             Err(e) => {
+                tracing::error!(error= ?e, "job failed");
                 self.release_fail(job.id, false, Some(e.to_string()))
                     .await?
             }

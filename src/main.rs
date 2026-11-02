@@ -34,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
     println!("Hello, world!");
     settings::update_cli();
     let settings = settings::Settings::new().context("Failed to parse settings.")?;
-    logger::init(&settings.logging);
+    let logger = logger::init(&settings.logging);
 
     tracing::info!(
         "starting meow auth v{} ({})",
@@ -71,6 +71,12 @@ async fn main() -> anyhow::Result<()> {
     }
 
     tracing::info!("goodnight, sweet bits and flying toasters with wings");
+
+    if let Some(provider) = logger
+        && let Err(e) = provider.shutdown()
+    {
+        tracing::error!(error = %e, "failed to shutdown otlp tracer provider");
+    }
 
     Ok(())
 }

@@ -20,6 +20,8 @@ pub struct Logging {
     pub level: LoggingLevel,
     /// The format of the logs. By default, its "human". The other option is "json".
     pub format: LoggingFormat,
+    #[serde(default)]
+    pub otlp: OtlpSettings,
 }
 
 #[derive(Default, Debug, serde::Serialize, serde::Deserialize)]
@@ -39,6 +41,19 @@ pub enum LoggingLevel {
     Error,
     Debug,
     Trace,
+}
+
+#[derive(
+    SmartDefault, Debug, serde::Serialize, serde::Deserialize, meow_macros::ExtractStructDocs,
+)]
+pub struct OtlpSettings {
+    /// Whether the app should send traces and metrics to an OTLP endpoint
+    #[default = false]
+    pub enabled: bool,
+    /// The OTLP endpoint to send traces and metrics to.
+    #[default(None)]
+    pub endpoint: Option<String>,
+    pub level: LoggingLevel,
 }
 
 impl std::fmt::Display for LoggingLevel {

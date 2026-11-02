@@ -20,8 +20,10 @@ use tokio::net::TcpSocket;
 use tower_cookies::CookieManagerLayer;
 use tower_http::{
     cors::{self, CorsLayer},
-    services::ServeDir,
+    request_id::{PropagateRequestIdLayer, SetRequestIdLayer},
+    trace::{DefaultOnResponse, TraceLayer},
 };
+use tracing::Level;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable};
@@ -31,7 +33,7 @@ use crate::{
     http::middleware::{
         auth_manager::AuthManagerLayer, browser_agent_manager::UserAgentManagerLayer,
         ip_manager::IpManagerLayer, oauth_manager::OauthManagerLayer,
-        ratelimit_manager::RatelimitLayer,
+        ratelimit_manager::RatelimitLayer, request_id,
     },
     mailer::resources::EMAIL_LOGO,
     manager::WatcherChild,
@@ -65,8 +67,6 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
     let openapi = ApiDocs::openapi();
     OpenApiRouter::with_openapi(openapi)
         .nest("/v1", v1::routes(global.clone()))
-        .nest_service("/assets", ServeDir::new("assets"))
-        .route("/email.png", get(email_logo))
         .layer(AuthManagerLayer::new(global.clone()))
         .layer(OauthManagerLayer::new(global.clone()))
         .layer(CookieManagerLayer::new())
@@ -75,6 +75,17 @@ fn router(global: Arc<GlobalState>) -> OpenApiRouter {
         .layer(UserAgentManagerLayer::new())
         // below the auth manager layer so we don't gotta check for auth (useless) on these static handlers
         .merge(root::routes())
+        .layer(PropagateRequestIdLayer::new(request_id::REQUEST_ID))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(request_id::RequestIdSpan)
+                .on_response(DefaultOnResponse::new().level(Level::INFO)),
+        )
+        .layer(SetRequestIdLayer::new(
+            request_id::REQUEST_ID,
+            request_id::RequestIdUlid,
+        ))
+        .route("/email.png", get(email_logo))
         .with_state(global)
     // middlewares go from bottom to top for requests, and top to bottom for responses.
 }
@@ -136,6 +147,7 @@ pub fn oauth_cors() -> CorsLayer {
         .allow_methods([Method::GET, Method::POST])
         .expose_headers([
             RETRY_AFTER,
+            request_id::REQUEST_ID,
             ratelimiter::RATELIMIT_LIMIT,
             ratelimiter::RATELIMIT_REMAINING,
             ratelimiter::RATELIMIT_RESET,
@@ -150,6 +162,7 @@ pub fn cors(origin: &str) -> CorsLayer {
         .allow_headers([CONTENT_TYPE, AUTHORIZATION])
         .expose_headers([
             RETRY_AFTER,
+            request_id::REQUEST_ID,
             ratelimiter::RATELIMIT_LIMIT,
             ratelimiter::RATELIMIT_REMAINING,
             ratelimiter::RATELIMIT_RESET,

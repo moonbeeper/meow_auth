@@ -186,7 +186,6 @@ pub async fn authorize(
         OauthAuthorization::find_by_user_and_client_id(auth.user_id(), client.id, &global.database)
             .await
     else {
-        println!("error finding existing authorization");
         return OauthResponse::new().error(
             OauthErrorCodes::ServerError,
             None,
@@ -216,7 +215,6 @@ pub async fn authorize(
     let mut tx = match global.database.begin().await {
         Ok(v) => v,
         Err(_) => {
-            println!("error create tx before outcome");
             return OauthResponse::new().error(
                 OauthErrorCodes::ServerError,
                 None,
@@ -228,7 +226,6 @@ pub async fn authorize(
     let client_id = client.id;
     let requested_scopes_str = requested_scopes.to_string();
     let outcome = if let Some(authorization) = authorization {
-        println!("past authorizaiton");
         action_past_authorized(
             &request,
             client,
@@ -244,7 +241,6 @@ pub async fn authorize(
         )
         .await
     } else {
-        println!("new authorizaiton");
         action_new_authorization(
             &request,
             client,
@@ -262,9 +258,7 @@ pub async fn authorize(
 
     let outcome = match outcome {
         Ok(v) => v,
-        Err(e) => {
-            println!("error matching outcome");
-            println!("error: {:?}", e);
+        Err(_) => {
             return OauthResponse::new().error(
                 OauthErrorCodes::ServerError,
                 None,
@@ -299,7 +293,6 @@ pub async fn authorize(
         .await
         .is_err()
     {
-        println!("error making audiclient.idt entry");
         return OauthResponse::new().error(
             OauthErrorCodes::ServerError,
             None,
@@ -308,7 +301,6 @@ pub async fn authorize(
     };
 
     if tx.commit().await.is_err() {
-        println!("error committing tx");
         return OauthResponse::new().error(
             OauthErrorCodes::ServerError,
             None,

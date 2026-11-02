@@ -3,6 +3,7 @@ pub mod browser_agent_manager;
 pub mod ip_manager;
 pub mod oauth_manager;
 pub mod ratelimit_manager;
+pub mod request_id;
 pub mod require_auth;
 pub mod require_oauth;
 pub mod require_user_flag;

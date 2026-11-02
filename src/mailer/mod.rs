@@ -75,9 +75,10 @@ impl Mailer {
         })
     }
 
+    #[tracing::instrument(skip_all, name = "mailer")]
     pub async fn mail(&self, email: &Email) -> MailerResult<()> {
         let m = Message::builder()
-            .from(format!("System <{}>", self.settings.mailer.from_email).parse()?)
+            .from(format!("Meow Auth <{}>", self.settings.mailer.from_email).parse()?)
             .to(email.to.parse()?)
             .subject(email.subject.clone());
 

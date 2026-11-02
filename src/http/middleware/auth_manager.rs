@@ -131,6 +131,15 @@ where
     }
 }
 
+#[tracing::instrument(
+    skip_all,
+    name = "auth_manager",
+    fields(
+        pid = tracing::field::Empty,
+        user_id = tracing::field::Empty,
+        session_id = tracing::field::Empty,
+    )
+)]
 async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<GlobalState>) {
     let Some(cookie) = get_session_cookie(cookies, &global_state.settings) else {
         // tracing::info!("no cookies for me :(");
@@ -144,7 +153,7 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
     let pid = match cookie.value().parse::<PIDUserSessionId>() {
         Ok(pid) => pid,
         Err(e) => {
-            tracing::error!("failed parsing PID cookie value: {}", e);
+            tracing::error!(error = %e, "failed parsing PID cookie value");
             delete_session_cookie(cookies, &global_state.settings);
             request
                 .extensions_mut()
@@ -153,8 +162,7 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
         }
     };
 
-    let span = tracing::info_span!("auth_manager", pid = %pid);
-    let _guard = span.enter();
+    tracing::Span::current().record("pid", tracing::field::display(pid));
 
     let Ok(Some(mut session)) = UserSession::find_by_pid(pid, &global_state.database).await else {
         tracing::error!("failed fetching from db or session does not exist");
@@ -164,6 +172,9 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
             .insert(AuthContext::Unauthenticated);
         return;
     };
+
+    tracing::Span::current().record("user_id", tracing::field::display(session.user_id));
+    tracing::Span::current().record("session_id", tracing::field::display(session.id));
 
     let Ok(Some(user_flags)) = User::get_flags_by_id(session.user_id, &global_state.database).await
     else {
@@ -199,7 +210,7 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
             if let Err(e) =
                 renew_session(&mut session, &global_state.database, &global_state.settings).await
             {
-                tracing::error!("failed renewing session: {}", e);
+                tracing::error!(error = %e, "failed renewing session");
                 delete_session_cookie(cookies, &global_state.settings);
                 request
                     .extensions_mut()
@@ -227,7 +238,7 @@ async fn do_work(request: &mut Request, cookies: &Cookies, global_state: &Arc<Gl
         if let Err(e) =
             renew_session(&mut session, &global_state.database, &global_state.settings).await
         {
-            tracing::error!("failed renewing session: {}", e);
+            tracing::error!(error = %e, "failed renewing session");
             delete_session_cookie(cookies, &global_state.settings);
             request
                 .extensions_mut()

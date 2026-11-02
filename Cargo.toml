@@ -69,7 +69,7 @@ toml_edit = "0.25.17"
 totp-rs = { version = "6.0.0", features = ["otpauth"] }
 tower = "0.5.3"
 tower-cookies = { version = "0.11.0", features = ["private"] }
-tower-http = { version = "0.7.1", features = ["cors", "fs"] }
+tower-http = { version = "0.7.1", features = ["cors", "fs", "request-id", "trace"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt", "json"] }
 typed-builder = "0.23.2"
@@ -100,6 +100,10 @@ arc-swap = "1.9.3"
 dashmap = "6.2.1"
 meow_macros = { path = "macros" }
 time = "0.3.55"
+opentelemetry-otlp = "0.33.1"
+opentelemetry = "0.33.1"
+opentelemetry_sdk = "0.33.1"
+tracing-opentelemetry = "0.34.0"
 
 [build-dependencies]
 shadow-rs = "2.0.0"

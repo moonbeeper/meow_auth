@@ -75,6 +75,7 @@ where
                     .extensions_mut()
                     .insert(UserAgentContext(ua.to_string()));
             } else {
+                tracing::error!("failed to extract user agent, rejected request");
                 // TODO: i dont know... maybe this isnt the right thing to do. Like maybe i should just let it go
                 // thorugh and that's it... hm
                 return Ok(ApiErrorCodes::MissingUserAgent.into_response());

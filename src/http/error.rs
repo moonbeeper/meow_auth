@@ -108,7 +108,8 @@ impl From<()> for ApiErrorCodes {
 
 // TODO: Should trace the error.
 impl From<anyhow::Error> for ApiErrorCodes {
-    fn from(_: anyhow::Error) -> Self {
+    fn from(e: anyhow::Error) -> Self {
+        tracing::error!(error = ?e, "unknown error");
         Self::InternalServerError
     }
 }
@@ -168,6 +169,9 @@ impl ApiErrorCodes {
 
 impl IntoResponse for ApiErrorCodes {
     fn into_response(self) -> axum::response::Response {
+        if self.status_code().is_server_error() {
+            tracing::error!(error = ?self, status = &self.status_code().as_u16(), "requested errored out");
+        }
         let body = self.as_api_error();
         (self.status_code(), axum::Json(body)).into_response()
     }
