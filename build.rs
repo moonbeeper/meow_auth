@@ -30,7 +30,7 @@ fn hook(mut file: &File) -> SdResult<()> {
         file,
         r#"#[allow(clippy::all, clippy::pedantic, clippy::restriction, clippy::nursery)]
         pub const COMMIT_HASH: &str = "{commit}";
-        pub const SHORT_HASH: &str = "{short}";
+        pub const SHORT_COMMIT: &str = "{short}";
         "#
     )?;
     Ok(())
