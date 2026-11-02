@@ -70,7 +70,7 @@
             meta.mainProgram = "meow_auth2";
 
             GIT_COMMIT = self.rev or self.dirtyRev or "oh god";
-            GIT_SHORT_COMMIT = self.rev or self.dirtyRev or "oh noes";
+            GIT_SHORT_COMMIT = self.shortRev or self.dirtyShortRev or "oh noes";
             SOURCE_DATE_EPOCH = toString (self.lastModified or 6769676967);
             # Additional environment variables or build phases/hooks can be set
             # here *without* rebuilding all dependency crates
