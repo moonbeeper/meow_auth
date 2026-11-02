@@ -39,8 +39,7 @@
               ./assets
               ./migrations
               ./.sqlx
-              ./.git
-            ];
+            ] ++ lib.optionals (builtins.pathExists ./.git) [ ./.git ];
           };
           strictDeps = true;
 
