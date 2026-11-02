@@ -1,0 +1,11 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "meow-frontend",
+    "compatibility_date": "2026-11-02",
+    "observability": {
+        "enabled": true
+    },
+    "assets": {
+        "directory": "build"
+    }
+}

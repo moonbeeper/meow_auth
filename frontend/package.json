@@ -10,14 +10,15 @@
     "scripts": {
         "dev": "vite dev",
         "build": "vite build",
-        "preview": "vite preview",
+        "preview": "yarn build && wrangler dev",
         "prepare": "svelte-kit sync || echo ''",
         "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
         "fmt": "oxfmt",
         "fmt:check": "oxfmt --check",
         "api": "orval",
-        "update-aaguid": "node scripts/updateAaguidList.ts && oxfmt --write src/lib/passkey/aaguid.ts"
+        "update-aaguid": "node scripts/updateAaguidList.ts && oxfmt --write src/lib/passkey/aaguid.ts",
+        "deploy": "yarn build && wrangler deploy"
     },
     "dependencies": {
         "@fontsource-variable/inter": "^5.3.0",
@@ -49,6 +50,7 @@
         "sveltekit-superforms": "^3.0.0",
         "typescript": "~6",
         "vite": "^8.3.5",
+        "wrangler": "^4.156.2",
         "zod": "^4.6.7"
     },
     "packageManager": "yarn@4.18.1"

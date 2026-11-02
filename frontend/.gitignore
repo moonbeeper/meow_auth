@@ -30,3 +30,6 @@ vite.config.ts.timestamp-*
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+.dev.vars*
+!.dev.vars.example
