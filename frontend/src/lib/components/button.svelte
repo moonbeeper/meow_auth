@@ -220,6 +220,7 @@
         @media (prefers-color-scheme: dark) {
             --button-background: var(--color-coral-light);
             --button-background-muted: var(--color-coral-darker);
+            --button-color-muted: var(--color-iron-darkest);
         }
     }
 
@@ -265,6 +266,7 @@
     .button.square,
     .button.mute {
         --button-background: var(--button-background-muted);
+        --button-color: var(--button-color-muted, var(--button-color, inherit));
     }
 
     .symbol {

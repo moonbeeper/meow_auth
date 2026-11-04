@@ -14,6 +14,7 @@
     import type { PageProps } from "./$types";
 
     let { data }: PageProps = $props();
+    let enableOptions = $derived(data.options);
 
     const greetings = [
         "Hmmmmm... you look familiar",
@@ -115,13 +116,21 @@
 
 <AuthBox.Root>
     <AuthBox.Header title={greeting} subtitle="Pick how you'd like to prove it's you" />
-    {#if data.options.includes("passkey")}
+    {#if enableOptions.includes("passkey")}
         <Button primary fontSize="medium" onclick={handlePasskey}>Use a Passkey</Button>
     {/if}
-    {#if data.options.includes("totp")}
-        <Button primary fontSize="medium" onclick={handleTotp}>Use a 2FA Code</Button>
+    {#if enableOptions.includes("totp")}
+        <Button primary={!enableOptions.includes("passkey")} fontSize="medium" onclick={handleTotp}
+            >Use a 2FA Code</Button
+        >
     {/if}
-    {#if data.options.includes("otp")}
-        <Button fontSize="medium" onclick={handleOtp}>Use an Email Code</Button>
+    {#if enableOptions.includes("otp")}
+        <Button
+            primary={!enableOptions.includes("totp")}
+            negative={enableOptions.includes("totp")}
+            mute
+            fontSize="medium"
+            onclick={handleOtp}>Use an Email Code</Button
+        >
     {/if}
 </AuthBox.Root>

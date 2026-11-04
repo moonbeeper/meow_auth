@@ -73,6 +73,9 @@
     const { form, enhance, delayed, isTainted, tainted } = rawForm;
 
     let formFilled = $state(false);
+    let userEmail = $derived.by(() => {
+        return auth.user?.email ?? "unknown@invalid";
+    });
 
     $effect(() => {
         const user = auth.user;
@@ -121,7 +124,7 @@
         <div class="flex flex-col gap-2 text-start">
             <label>Email address</label>
             <InputProxy>
-                <Input value="meow@meow.com" placeholder="Email address" readonly type="email" />
+                <Input value={userEmail} placeholder="Email address" readonly type="email" />
                 <a href="#main" class="email-button">Change Email</a>
             </InputProxy>
             <!-- <div class="flex input input--proxy">

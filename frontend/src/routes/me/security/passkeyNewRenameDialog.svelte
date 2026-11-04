@@ -9,6 +9,7 @@
 </script>
 
 <script lang="ts">
+    import { goto } from "$app/navigation";
     import Button from "$comps/button.svelte";
     import * as Dialog from "$comps/dialog";
     import Input from "$comps/form/input.svelte";
@@ -67,6 +68,10 @@
             });
 
             if (!isOk(res)) {
+                if (res.data.code == "SudoNotEnabled") {
+                    console.error("sudo not enabled, cannot enable totp. redirecting");
+                    await goto(`/auth/sudo?redirect=${encodeURIComponent("/me/security")}`);
+                }
                 console.error("failed updating passkey name");
                 open = false;
 
