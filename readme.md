@@ -189,9 +189,6 @@ cargo build --profile dist # "dist" is a custom profile that is defined in the C
 SQLX_OFFLINE=true cargo build --profile dist
 ```
 
-> [!WARNING]
-> The backend WILL NOT run if you don't have a `.env` in the root of current working directory.
-
 `SQLX_OFFLINE=true` builds against the query cache in [.sqlx](.sqlx), so it only works while that cache matches the queries. if you touched the queries, run `cargo sqlx prepare` against a live database first (and commit it), or just build without `SQLX_OFFLINE` while the database is reachable.
 
 ### the frontend

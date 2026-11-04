@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, path::Path};
+use std::{io::ErrorKind, net::SocketAddr, path::Path};
 
 use crate::{
     crypto::{SecretKey, get_secret_key},
@@ -269,7 +269,14 @@ pub struct Settings {
 
 impl Settings {
     pub fn new() -> anyhow::Result<Self> {
-        dotenvy::dotenv().context("Failed to load .env* file")?;
+        match dotenvy::dotenv() {
+            Err(dotenvy::Error::Io(e)) if e.kind() == ErrorKind::NotFound => {
+                println!("No .env file found to load, continuing");
+            }
+            Err(e) => return Err(e).context("Failed to load .env* file"),
+            _ => {}
+        };
+
         let environment = std::env::var("WORK_ENV").unwrap_or_else(|_| "development".to_string());
         println!("Loading settings for environment '{environment}'");
         // Self::create_if_not_exists(&environment)?; shouldn't be auto creating the file.
