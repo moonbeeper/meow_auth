@@ -1,5 +1,7 @@
 # Meow auth2
 
+![meow auth2 authentication server](.github/splash.png)
+
 > [!NOTE]
 > wok IN progress >:3
 
